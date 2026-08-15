@@ -95,6 +95,49 @@ indexes), Phase 5B (admin panel persistence), and all of criteria 40–57.
 belongs to a different product (`mr-medico`) and may be in use; adding a directory schema would
 mean sharing a database, an auth user pool and a storage bucket across two products.
 
+### B-3 — No write access to the GitHub repository
+
+**Status:** OPEN. Phase 0 is committed locally but **cannot be pushed.**
+
+Every available push path returns 403:
+
+```
+git push -u origin claude/website-recreation-reference-wjlht1
+  → fatal: ... The requested URL returned error: 403
+
+git -c http.extraheader="AUTHORIZATION: bearer $GITHUB_TOKEN" push ...
+  → 403
+
+GitHub MCP create_or_update_file
+  → 403 Resource not accessible by integration
+```
+
+The failure is from GitHub, not the egress proxy — the proxy's `recentRelayFailures` contains
+no `github.com` entries, only the blocked reference domain.
+
+**Cause.** The GitHub identity connected to this session is **`mohammedrehman33`**
+(Muhammad-Rehman, marham.pk). The repository is **`naveedrehman1611-alt/101toplistings`** — a
+different account. That identity has read access but not write, and the GitHub App installation
+is likewise read-only for this repo. `add_repo` with `access: "push"` reports the repo already
+attached and does not change the result.
+
+The repository is also completely empty: `list_branches` returns `[]` and there are no commits,
+so the designated branch `claude/website-recreation-reference-wjlht1` does not exist on the
+remote yet.
+
+**Resolution options.**
+
+1. Grant `mohammedrehman33` write access to `naveedrehman1611-alt/101toplistings` (invite as a
+   collaborator with Write, or add via a team).
+2. Install/authorise the Claude GitHub App on `naveedrehman1611-alt` with read **and write**
+   for this repo. An admin can do this at https://claude.ai/admin-settings/claude-in-slack.
+3. Re-run this work in a session connected to the `naveedrehman1611-alt` account.
+4. Point the work at a repository owned by `mohammedrehman33` instead.
+
+**Local state is safe meanwhile:** commit `5051ec9` holds all of Phase 0. Nothing is lost as
+long as the container is not reclaimed — but this container *is* ephemeral, so the work is not
+durable until a push succeeds.
+
 ---
 
 ## DECISIONS TAKEN (user delegated these)

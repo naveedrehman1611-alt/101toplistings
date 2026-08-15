@@ -45,6 +45,7 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
 |---|---|---|---|
 | B-1 | `101toplistings.com` denied by network egress policy (403 on CONNECT, both `curl` and `WebFetch`) | Phases 1, 2, 8; criteria 1, 2, 6 | User — allowlist domain in environment network policy |
 | B-2 | Supabase project `cwnqvngpjxvodbvdhpzf` returns `You do not have permission to perform this action` | Phases 3, 3B, 5B; all DB/RLS/PostGIS criteria | User — connect the owning Supabase account, or nominate an accessible project |
+| B-3 | No write access to `naveedrehman1611-alt/101toplistings` — push returns 403 on every path; session identity is `mohammedrehman33` | **All phases** — no work can be delivered to the remote | User — grant write access or authorise the GitHub App |
 
 ---
 
