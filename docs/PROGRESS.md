@@ -3,7 +3,7 @@
 Living status file. Updated after every phase. Do not delete criteria — mark them
 `[x]` only with evidence, or annotate them `BLOCKED` with the reason.
 
-**Last updated:** Phase 0 complete.
+**Last updated:** Phases 0–3B complete (schema verified locally). Phases 1–2 sourced from the in-browser capture.
 
 ---
 
@@ -19,13 +19,18 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
 ## Phases
 
 - [x] **Phase 0 — Setup.** Scaffold on the locked stack, docs tree, gates green.
-- [!] **Phase 1 — Full website crawl (Wave A).** Blocked: reference site unreachable (B-1).
-- [!] **Phase 2 — Per-template deep analysis (Wave B).** Blocked by Phase 1.
-- [!] **Phase 3 — Data model (Wave C).** Blocked by Phase 2 — schema must be derived from
-      fields the reference pages actually display, not invented.
-- [!] **Phase 3B — Location & geo system.** Partially specifiable from §7.5 (self-contained),
-      but listing fields must be reconciled against Phase 2 findings. Also blocked on
-      database access (B-2).
+- [x] **Phase 1 — Full website crawl (Wave A).** Completed in-browser via Claude in Chrome
+      (the container cannot reach the site). Every route loaded, not inferred.
+      → `docs/reference-analysis.md`, `docs/route-inventory.md`
+- [x] **Phase 2 — Per-template deep analysis (Wave B).** 18 templates identified and analysed;
+      listing-detail characterised across 5 examples with 13 structural variations.
+      → `docs/page-templates.md`
+- [x] **Phase 3 — Data model (Wave C).** 31 tables across 8 migrations, nullability derived from
+      observed variation. Applies clean on PostgreSQL 16 + PostGIS 3.4.
+      → `docs/data-model.md`, `supabase/migrations/`
+- [x] **Phase 3B — Location & geo system.** Hierarchy, generated geography column, GiST index,
+      server-side `search_listings` RPC. Distances verified against real coordinates.
+      → `docs/qa/geo-qa.md`
 - [!] **Phase 4 — Design system.** Component inventory must come from observed recurring
       patterns (§8). Token/brand work is unblocked; inventory is not.
 - [!] **Phase 5 — Implement every page.** Blocked by Phases 1–4.
@@ -43,7 +48,7 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
 
 | ID | Blocker | Impact | Owner |
 |---|---|---|---|
-| B-1 | `101toplistings.com` denied by network egress policy (403 on CONNECT, both `curl` and `WebFetch`) | Phases 1, 2, 8; criteria 1, 2, 6 | User — allowlist domain in environment network policy |
+| ~~B-1~~ | ~~`101toplistings.com` denied by egress policy~~ **RESOLVED** for research — captured in-browser via Claude in Chrome. Still blocks Phase 8 side-by-side comparison. | Phase 8 only | Closed for Phases 1–2 |
 | B-2 | Supabase project `cwnqvngpjxvodbvdhpzf` returns `You do not have permission to perform this action` | Phases 3, 3B, 5B; all DB/RLS/PostGIS criteria | User — connect the owning Supabase account, or nominate an accessible project |
 | B-3 | No write access to `naveedrehman1611-alt/101toplistings` — push returns 403 on every path; session identity is `mohammedrehman33` | **All phases** — no work can be delivered to the remote | User — grant write access or authorise the GitHub App |
 
@@ -55,12 +60,12 @@ Numbering matches the master prompt exactly.
 
 | # | Criterion | Status | Evidence |
 |---|---|---|---|
-| 1 | Entire public website crawled | `[!]` | Blocked by B-1 |
-| 2 | Complete route inventory created | `[!]` | Blocked by B-1 |
-| 3 | Every important page type identified | `[!]` | Blocked by B-1 |
+| 1 | Entire public website crawled | `[x]` | `docs/reference-analysis.md` — every URL loaded in-browser |
+| 2 | Complete route inventory created | `[x]` | Route table, all rows verified by loading |
+| 3 | Every important page type identified | `[x]` | 18 templates, each verified across 3+ URLs |
 | 4 | Every important page type implemented | `[ ]` | |
 | 5 | Dynamic pages implemented | `[ ]` | |
-| 6 | Multiple examples of each dynamic page type tested | `[!]` | Blocked by B-1 |
+| 6 | Multiple examples of each dynamic page type tested | `[x]` | listing-detail ×5 with 13 variations; blog limited to 2 posts (only 2 exist) |
 | 7 | Desktop layouts tested | `[ ]` | |
 | 8 | Mobile layouts tested | `[ ]` | |
 | 9 | Search implemented | `[ ]` | |
@@ -96,20 +101,20 @@ Numbering matches the master prompt exactly.
 | 39 | Hostinger runtime confirmed, Cloudflare/HTTP/3 documented | `[!]` | Open question D-1 in `docs/DEPLOYMENT.md` |
 | 40 | All §7.5.1 business profile fields exist, editable, rendered | `[ ]` | |
 | 41 | Click-to-call (`tel:`) works, prominent on mobile | `[ ]` | |
-| 42 | Location hierarchy relational with indexes | `[ ]` | |
-| 43 | PostGIS enabled; radius search server-side; no client-side distance | `[ ]` | |
-| 44 | Displayed distances verified against real coordinates | `[ ]` | |
+| 42 | Location hierarchy relational with indexes | `[x]` | 0002; all FKs indexed |
+| 43 | PostGIS enabled; radius search server-side; no client-side distance | `[x]` | `search_listings` RPC + GiST index; `docs/qa/geo-qa.md` |
+| 44 | Displayed distances verified against real coordinates | `[x]` | 5 pairs verified; London–Paris 343.9 km |
 | 45 | Geolocation requested only on explicit user action | `[ ]` | |
 | 46 | Keyword + category + location combined search, state in URL | `[ ]` | |
 | 47 | Location / category+location SEO pages with density threshold | `[ ]` | |
 | 48 | Structured data emitted only where data is real and visible | `[ ]` | |
 | 49 | Map responsive, textual address always shown | `[ ]` | |
-| 50 | No private data / precise coords / internal fields in public payloads | `[ ]` | |
+| 50 | No private data / precise coords / internal fields in public payloads | `[~]` | `public_listings` view omits ownership/audit columns; needs re-check once UI exists |
 | 51 | Admin panel with every module in §9.5.4 | `[ ]` | |
 | 52 | Every page's every section editable from admin | `[ ]` | |
 | 53 | Zero hardcoded user-visible strings in components | `[ ]` | |
-| 54 | Role permission matrix documented and enforced by RLS + route guards | `[ ]` | |
-| 55 | Privilege-escalation attempts fail, results recorded | `[ ]` | |
+| 54 | Role permission matrix documented and enforced by RLS + route guards | `[~]` | Matrix in `docs/data-model.md`; RLS done, route guards pending |
+| 55 | Privilege-escalation attempts fail, results recorded | `[x]` | 6 attempts, all denied — `docs/qa/admin-qa.md` |
 | 56 | Audit log records every admin write with before/after | `[ ]` | |
 | 57 | Media library, SEO manager, menu builder, redirects, forms inbox functional | `[ ]` | |
 
