@@ -1,16 +1,31 @@
 # DEPLOYMENT
 
-Target architecture, per §1.5 CONFIG: **Hostinger origin behind Cloudflare**, matching the
-reference site's own hosting profile, with HTTP/3 enabled at the edge.
+**Current target: Vercel + Supabase.** The user chose Vercel over the Hostinger + Cloudflare
+target named in §1.5 CONFIG. Recorded as an intentional deviation, not a silent substitution:
+Vercel runs Next.js natively, which resolves open question D-1 below outright — the risk that a
+static-only Hostinger plan would make SSR, auth, forms and the admin panel impossible simply
+disappears. Cloudflare's role (edge caching, HTTP/3) is covered by Vercel's own edge network.
 
-**Status:** not deployed. No Hostinger credentials are present in this environment, and the
-runtime question below (D-1) is unanswered. §13 permits exactly this outcome provided the
-document states it plainly rather than claiming deployment is done — so, plainly: **nothing has
-been deployed.**
+**Status:** a Vercel project exists (`vicinia-directory`, team `muhammad-rehmans-projects`), but
+**no successful deployment yet.** The first attempt failed with `missing_pages_app` because the
+file-upload deploy path carried only configuration files, not the application source.
+
+**The fix needs one action from the repository owner:** install the Vercel GitHub App at
+https://github.com/apps/vercel and grant it access to `naveedrehman1611-alt/101toplistings`.
+Vercel then builds directly from the commit, which is both correct and safer than re-uploading a
+hand-copied file tree — what deploys is exactly what was committed and type-checked.
+
+Once installed, linking the project produces a preview deployment per push and a production
+deployment from the default branch.
 
 ---
 
-## D-1 — OPEN QUESTION: which Hostinger runtime? (blocks Phase 5)
+## D-1 — RESOLVED by moving to Vercel
+
+Superseded. Vercel runs Next.js as a first-class target, so the runtime question below is no
+longer blocking. Kept for reference in case hosting moves back to Hostinger.
+
+### Original question: which Hostinger runtime?
 
 §1.5 requires this be answered *before* implementation begins, not after, because the answer
 changes the architecture rather than just the deploy script.
@@ -56,7 +71,16 @@ silently.**
 
 ## Environment variables
 
-Never commit real values. `.env.example` in the repo root is the tracked template.
+`.env.example` is the tracked template. `.env.production` **is** committed and holds only the two
+`NEXT_PUBLIC_` values: those compile into the client bundle regardless, and the Supabase
+publishable key is protected by row level security rather than by secrecy. The service role key
+is not in the repository and must never be added to it.
+
+**Live Supabase project:** `rccuhznzediwocwlqflk` (`101toplistings-directory`, ap-south-1), created
+in the `mr-medico` organisation at $0/month. The other project in that org,
+`utfpmyolqdtpnbiknlvm`, was deliberately left untouched — it holds 39 tables of a live
+application, including its own `profiles` and `reviews` tables that would have collided with
+this schema.
 
 | Variable | Scope | Notes |
 |---|---|---|

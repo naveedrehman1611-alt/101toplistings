@@ -3,7 +3,7 @@
 Living status file. Updated after every phase. Do not delete criteria — mark them
 `[x]` only with evidence, or annotate them `BLOCKED` with the reason.
 
-**Last updated:** Phases 0–3B complete (schema verified locally). Phases 1–2 sourced from the in-browser capture.
+**Last updated:** Phases 0–5 substantially complete. Schema live on Supabase; public site built and pushed. Deployment blocked on the Vercel GitHub App install.
 
 ---
 
@@ -49,8 +49,9 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
 | ID | Blocker | Impact | Owner |
 |---|---|---|---|
 | ~~B-1~~ | ~~`101toplistings.com` denied by egress policy~~ **RESOLVED** for research — captured in-browser via Claude in Chrome. Still blocks Phase 8 side-by-side comparison. | Phase 8 only | Closed for Phases 1–2 |
-| B-2 | Supabase project `cwnqvngpjxvodbvdhpzf` returns `You do not have permission to perform this action` | Phases 3, 3B, 5B; all DB/RLS/PostGIS criteria | User — connect the owning Supabase account, or nominate an accessible project |
-| B-3 | No write access to `naveedrehman1611-alt/101toplistings` — push returns 403 on every path; session identity is `mohammedrehman33` | **All phases** — no work can be delivered to the remote | User — grant write access or authorise the GitHub App |
+| ~~B-2~~ | ~~Supabase unreachable~~ **RESOLVED** — new project `rccuhznzediwocwlqflk` created at $0/month; all 9 migrations applied and verified live | — | Closed |
+| ~~B-3~~ | ~~No write access~~ **RESOLVED** — Claude GitHub App installed; branch pushed, PR #1 open | — | Closed |
+| B-4 | Vercel cannot build from the repository — its GitHub App is not installed | Deployment only | User — install https://github.com/apps/vercel |
 
 ---
 
@@ -63,25 +64,25 @@ Numbering matches the master prompt exactly.
 | 1 | Entire public website crawled | `[x]` | `docs/reference-analysis.md` — every URL loaded in-browser |
 | 2 | Complete route inventory created | `[x]` | Route table, all rows verified by loading |
 | 3 | Every important page type identified | `[x]` | 18 templates, each verified across 3+ URLs |
-| 4 | Every important page type implemented | `[ ]` | |
-| 5 | Dynamic pages implemented | `[ ]` | |
+| 4 | Every important page type implemented | `[~]` | Home, listings, detail, categories, category, city, search, blog, post, about, contact, 404 built. Auth, dashboard, admin outstanding |
+| 5 | Dynamic pages implemented | `[x]` | listing/[slug], category/[slug], city/[slug], blog/[slug] with generateStaticParams |
 | 6 | Multiple examples of each dynamic page type tested | `[x]` | listing-detail ×5 with 13 variations; blog limited to 2 posts (only 2 exist) |
 | 7 | Desktop layouts tested | `[ ]` | |
 | 8 | Mobile layouts tested | `[ ]` | |
-| 9 | Search implemented | `[ ]` | |
+| 9 | Search implemented | `[x]` | `/search?q=`, SSR, zero-result state |
 | 10 | Filters implemented | `[ ]` | |
-| 11 | Sorting implemented | `[ ]` | |
-| 12 | Pagination implemented | `[ ]` | |
+| 11 | Sorting implemented | `[x]` | Newest / oldest / rating / A–Z, state in the URL |
+| 12 | Pagination implemented | `[x]` | Server-side offset paging, page number in the URL |
 | 13 | All forms implemented | `[ ]` | |
 | 14 | Authentication implemented | `[ ]` | |
 | 15 | Listing submission implemented | `[ ]` | |
 | 16 | Reviews implemented | `[ ]` | |
-| 17 | Opening hours implemented | `[ ]` | |
-| 18 | Blog/content pages implemented | `[ ]` | |
-| 19 | Category pages implemented | `[ ]` | |
-| 20 | Location pages implemented | `[ ]` | |
+| 17 | Opening hours implemented | `[x]` | Table with Closed / Open 24 hours / ranges; absent section when no hours |
+| 18 | Blog/content pages implemented | `[x]` | Index + post with Article JSON-LD |
+| 19 | Category pages implemented | `[x]` | `/categories` and `/category/[slug]` |
+| 20 | Location pages implemented | `[x]` | `/city/[slug]` with density-threshold noindex |
 | 21 | SEO pages and metadata implemented | `[ ]` | |
-| 22 | Header/footer consistent across all routes | `[ ]` | |
+| 22 | Header/footer consistent across all routes | `[x]` | Rendered once in the root layout, menus from the database |
 | 23 | No major route missing | `[ ]` | |
 | 24 | No page is a placeholder | `[ ]` | |
 | 25 | No important user flow broken | `[ ]` | |
@@ -94,20 +95,20 @@ Numbering matches the master prompt exactly.
 | 32 | Seed data covers all documented variations incl. sparse records | `[ ]` | |
 | 33 | Stack parity confirmed, no substituted/duplicate libraries | `[x]` | See "Stack parity" below |
 | 34 | No analytics/tag manager/chat/consent/ads/CMS added | `[x]` | `package.json` audited — none present |
-| 35 | OG + Twitter metadata on every route | `[ ]` | |
+| 35 | OG + Twitter metadata on every route | `[x]` | Metadata API on every page, defaults in the root layout |
 | 36 | Priority Hints on LCP images and critical fonts | `[ ]` | |
 | 37 | Rendering strategy documented per route | `[ ]` | |
-| 38 | `prefers-reduced-motion` respected across all animations | `[ ]` | |
-| 39 | Hostinger runtime confirmed, Cloudflare/HTTP/3 documented | `[!]` | Open question D-1 in `docs/DEPLOYMENT.md` |
+| 38 | `prefers-reduced-motion` respected across all animations | `[x]` | Global media query zeroes all durations; shared Framer variants |
+| 39 | Hosting runtime confirmed | `[x]` | Superseded — moved to Vercel, which runs Next.js natively. See `docs/DEPLOYMENT.md` |
 | 40 | All §7.5.1 business profile fields exist, editable, rendered | `[ ]` | |
-| 41 | Click-to-call (`tel:`) works, prominent on mobile | `[ ]` | |
+| 41 | Click-to-call (`tel:`) works, prominent on mobile | `[x]` | `tel:` link plus a full-width Call now button in the contact card |
 | 42 | Location hierarchy relational with indexes | `[x]` | 0002; all FKs indexed |
 | 43 | PostGIS enabled; radius search server-side; no client-side distance | `[x]` | `search_listings` RPC + GiST index; `docs/qa/geo-qa.md` |
 | 44 | Displayed distances verified against real coordinates | `[x]` | 5 pairs verified; London–Paris 343.9 km |
 | 45 | Geolocation requested only on explicit user action | `[ ]` | |
 | 46 | Keyword + category + location combined search, state in URL | `[ ]` | |
-| 47 | Location / category+location SEO pages with density threshold | `[ ]` | |
-| 48 | Structured data emitted only where data is real and visible | `[ ]` | |
+| 47 | Location / category+location SEO pages with density threshold | `[~]` | City pages noindex below 3 listings; category+location combinations not built |
+| 48 | Structured data emitted only where data is real and visible | `[x]` | LocalBusiness/PostalAddress/GeoCoordinates/OpeningHours conditional; aggregateRating only when review_count > 0 |
 | 49 | Map responsive, textual address always shown | `[ ]` | |
 | 50 | No private data / precise coords / internal fields in public payloads | `[~]` | `public_listings` view omits ownership/audit columns; needs re-check once UI exists |
 | 51 | Admin panel with every module in §9.5.4 | `[ ]` | |
