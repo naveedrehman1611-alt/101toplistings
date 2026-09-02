@@ -1,26 +1,105 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/* Tailwind v4 is CSS-first: this @theme block IS the Tailwind config that §8 of
+   PROMPT.md refers to. Brand identity per decision D-3 in docs/OPEN-QUESTIONS.md. */
+@theme {
+  --color-ink-50: #f6f8f9;
+  --color-ink-100: #eceff1;
+  --color-ink-200: #d6dde1;
+  --color-ink-300: #b0bcc4;
+  --color-ink-400: #7d8e99;
+  --color-ink-500: #5b6d78;
+  --color-ink-600: #45555f;
+  --color-ink-700: #35434b;
+  --color-ink-800: #22303a;
+  --color-ink-900: #12212b;
+
+  --color-brand-50: #eefbfa;
+  --color-brand-100: #d3f4f2;
+  --color-brand-200: #ace8e6;
+  --color-brand-300: #74d5d3;
+  --color-brand-400: #3bb9b9;
+  --color-brand-500: #1e9b9d;
+  --color-brand-600: #147c80;
+  --color-brand-700: #0d5c63;
+  --color-brand-800: #0e4a50;
+  --color-brand-900: #103d43;
+
+  --color-accent-400: #f7bb3c;
+  --color-accent-500: #f0a202;
+  --color-accent-600: #c98202;
+
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Structural proportions. Marked PENDING-REFERENCE where the reference site's
+     measured value should replace the placeholder once Phase 8 can run. */
+  --container-page: 1280px; /* reference: max-w-7xl, measured */
+  --radius-card: 0.875rem;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --surface: #ffffff;
+  --surface-2: var(--color-ink-50);
+  --border: var(--color-ink-200);
+  --text: var(--color-ink-900);
+  --text-muted: var(--color-ink-500);
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root:not([data-theme='light']) {
+  @media (prefers-color-scheme: dark) {
+    --surface: #0e181e;
+    --surface-2: #14232b;
+    --border: #24363f;
+    --text: var(--color-ink-100);
+    --text-muted: var(--color-ink-400);
+    color-scheme: dark;
   }
 }
 
+:root[data-theme='dark'] {
+  --surface: #0e181e;
+  --surface-2: #14232b;
+  --border: #24363f;
+  --text: var(--color-ink-100);
+  --text-muted: var(--color-ink-400);
+  color-scheme: dark;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* §8 / criterion 38 — honour reduced motion everywhere, including Framer Motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@utility container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-page);
+  padding-inline: 1rem;
+  @media (width >= 40rem) { padding-inline: 1.5rem; }
+  @media (width >= 64rem) { padding-inline: 2rem; }
+}
+
+@utility surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
 }
