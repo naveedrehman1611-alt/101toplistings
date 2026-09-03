@@ -6,17 +6,30 @@ Vercel runs Next.js natively, which resolves open question D-1 below outright �
 static-only Hostinger plan would make SSR, auth, forms and the admin panel impossible simply
 disappears. Cloudflare's role (edge caching, HTTP/3) is covered by Vercel's own edge network.
 
-**Status:** a Vercel project exists (`vicinia-directory`, team `muhammad-rehmans-projects`), but
-**no successful deployment yet.** The first attempt failed with `missing_pages_app` because the
-file-upload deploy path carried only configuration files, not the application source.
+**Status: LIVE.** https://vicinia-directory.vercel.app
 
-**The fix needs one action from the repository owner:** install the Vercel GitHub App at
-https://github.com/apps/vercel and grant it access to `naveedrehman1611-alt/101toplistings`.
-Vercel then builds directly from the commit, which is both correct and safer than re-uploading a
-hand-copied file tree — what deploys is exactly what was committed and type-checked.
+Verified serving real data from Supabase: menus, page sections, categories, listings and cities
+all render from the database, `x-vercel-cache: PRERENDER` confirms ISR at the 300s revalidate,
+and both fonts are preloaded.
 
-Once installed, linking the project produces a preview deployment per push and a production
-deployment from the default branch.
+Three failed attempts preceded it, recorded so the causes are not rediscovered:
+
+1. `missing_pages_app` — the file-upload payload carried only configuration files.
+2. `missing_pages_app` again — the payload still omitted `src/app` and `src/components`.
+3. `lint_or_type_error` — `next.config.ts` carried an `eslint` key, which **does not exist in
+   Next.js 16's `NextConfig`**. That is precisely the hazard `AGENTS.md` warns about and that
+   assumption A-3 in `docs/OPEN-QUESTIONS.md` records: this Next.js version differs from model
+   training data, and its bundled docs are the authority. The repository's own `next.config.ts`
+   never had the key — it was introduced only in the deploy payload.
+
+### Continuous deployment is not set up yet
+
+The live deployment is a **file upload**, not a git-linked build, so pushing to the repository
+does **not** redeploy. To get automatic deploys, install the Vercel GitHub App at
+https://github.com/apps/vercel for `naveedrehman1611-alt/101toplistings`, then link the project.
+Vercel's App is already installed for `mohammedrehman33` (the `mr-medico` projects are linked),
+just not for the `naveedrehman1611-alt` account. Until then, each deploy must be re-uploaded by
+hand, which risks drift between what is deployed and what is committed.
 
 ---
 

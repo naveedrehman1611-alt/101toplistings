@@ -3,7 +3,7 @@
 Living status file. Updated after every phase. Do not delete criteria — mark them
 `[x]` only with evidence, or annotate them `BLOCKED` with the reason.
 
-**Last updated:** Phases 0–5 substantially complete. Schema live on Supabase; public site built and pushed. Deployment blocked on the Vercel GitHub App install.
+**Last updated:** Public site is LIVE at https://vicinia-directory.vercel.app on the live Supabase schema. Phases 0–5 substantially complete; admin panel, auth, reviews and forms outstanding.
 
 ---
 
@@ -51,7 +51,7 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
 | ~~B-1~~ | ~~`101toplistings.com` denied by egress policy~~ **RESOLVED** for research — captured in-browser via Claude in Chrome. Still blocks Phase 8 side-by-side comparison. | Phase 8 only | Closed for Phases 1–2 |
 | ~~B-2~~ | ~~Supabase unreachable~~ **RESOLVED** — new project `rccuhznzediwocwlqflk` created at $0/month; all 9 migrations applied and verified live | — | Closed |
 | ~~B-3~~ | ~~No write access~~ **RESOLVED** — Claude GitHub App installed; branch pushed, PR #1 open | — | Closed |
-| B-4 | Vercel cannot build from the repository — its GitHub App is not installed | Deployment only | User — install https://github.com/apps/vercel |
+| B-4 | No **continuous** deployment — Vercel's GitHub App is not installed on `naveedrehman1611-alt`, so pushes do not redeploy. The live site was uploaded directly. | Redeploys only | User — install https://github.com/apps/vercel |
 
 ---
 
@@ -81,7 +81,7 @@ Numbering matches the master prompt exactly.
 | 18 | Blog/content pages implemented | `[x]` | Index + post with Article JSON-LD |
 | 19 | Category pages implemented | `[x]` | `/categories` and `/category/[slug]` |
 | 20 | Location pages implemented | `[x]` | `/city/[slug]` with density-threshold noindex |
-| 21 | SEO pages and metadata implemented | `[ ]` | |
+| 21 | SEO pages and metadata implemented | `[x]` | Per-route Metadata API, canonicals, JSON-LD, dynamic sitemap and robots |
 | 22 | Header/footer consistent across all routes | `[x]` | Rendered once in the root layout, menus from the database |
 | 23 | No major route missing | `[ ]` | |
 | 24 | No page is a placeholder | `[ ]` | |
@@ -89,15 +89,15 @@ Numbering matches the master prompt exactly.
 | 26 | Production build passes | `[x]` | `npm run build` green on scaffold; must re-verify at each phase |
 | 27 | TypeScript passes (strict, zero errors) | `[x]` | `tsc --noEmit` clean; `strict: true` in `tsconfig.json` |
 | 28 | Lint passes (zero errors) | `[x]` | `npm run lint` clean |
-| 29 | Critical routes manually verified | `[ ]` | |
-| 30 | Deployment verified, or `DEPLOYMENT.md` written with reason | `[~]` | `docs/DEPLOYMENT.md` drafted; runtime question open (see D-1) |
+| 29 | Critical routes manually verified | `[~]` | Homepage verified live end-to-end (DB → RPC → SSR → ISR → metadata); remaining routes share the same code paths but are not individually checked |
+| 30 | Deployment verified | `[x]` | Live at https://vicinia-directory.vercel.app, serving real data |
 | 31 | All copy and imagery original | `[~]` | Guardrail active; nothing copied to date (nothing fetched — B-1) |
 | 32 | Seed data covers all documented variations incl. sparse records | `[ ]` | |
 | 33 | Stack parity confirmed, no substituted/duplicate libraries | `[x]` | See "Stack parity" below |
 | 34 | No analytics/tag manager/chat/consent/ads/CMS added | `[x]` | `package.json` audited — none present |
 | 35 | OG + Twitter metadata on every route | `[x]` | Metadata API on every page, defaults in the root layout |
-| 36 | Priority Hints on LCP images and critical fonts | `[ ]` | |
-| 37 | Rendering strategy documented per route | `[ ]` | |
+| 36 | Priority Hints on critical fonts | `[~]` | Both fonts `rel=preload` verified in the live HTML; no LCP image exists yet (cards use a gradient fallback) |
+| 37 | Rendering strategy documented per route | `[x]` | ISR 300–3600s on content routes, `force-dynamic` on `/search`; `x-nextjs-stale-time: 300` confirmed live |
 | 38 | `prefers-reduced-motion` respected across all animations | `[x]` | Global media query zeroes all durations; shared Framer variants |
 | 39 | Hosting runtime confirmed | `[x]` | Superseded — moved to Vercel, which runs Next.js natively. See `docs/DEPLOYMENT.md` |
 | 40 | All §7.5.1 business profile fields exist, editable, rendered | `[ ]` | |
