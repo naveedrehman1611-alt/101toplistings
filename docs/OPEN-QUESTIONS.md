@@ -144,8 +144,8 @@ durable until a push succeeds.
 
 ### D-2 — Brand name and domain
 
-- **NEW_BRAND_NAME:** `101 Top Listings`
-- **NEW_DOMAIN:** `101toplistings.com`
+- **NEW_BRAND_NAME:** `RankYouSite`
+- **NEW_DOMAIN:** `rankyousite.com`
 
 History, because it is the point of the architecture: a working name was chosen first
 under the user's delegation, then rejected. Changing it touched **seven database rows and
@@ -157,7 +157,7 @@ Note this supersedes §1 of `PROMPT.md`, which required the new brand to differ 
 reference site's. The user directed otherwise, which is their call to make: it is their
 domain and their repository.
 
-**Live URL:** `101toplistings-sigma.vercel.app`. Vercel appended `-sigma` because the plain
+**Live URL:** `rankyousite.vercel.app`. Vercel appended `-sigma` because the plain
 `101toplistings.vercel.app` hostname is already claimed by another account — which is also
 why visiting it returned a 404 earlier. A custom domain removes the suffix.
 
