@@ -1,70 +1,55 @@
 @import 'tailwindcss';
 
 /* Tailwind v4 is CSS-first: this @theme block IS the Tailwind config that §8 of
-   PROMPT.md refers to. Brand identity per decision D-3 in docs/OPEN-QUESTIONS.md. */
-@theme {
-  --color-ink-50: #f6f8f9;
-  --color-ink-100: #eceff1;
-  --color-ink-200: #d6dde1;
-  --color-ink-300: #b0bcc4;
-  --color-ink-400: #7d8e99;
-  --color-ink-500: #5b6d78;
-  --color-ink-600: #45555f;
-  --color-ink-700: #35434b;
-  --color-ink-800: #22303a;
-  --color-ink-900: #12212b;
+   PROMPT.md refers to.
 
-  --color-brand-50: #eefbfa;
-  --color-brand-100: #d3f4f2;
-  --color-brand-200: #ace8e6;
-  --color-brand-300: #74d5d3;
-  --color-brand-400: #3bb9b9;
-  --color-brand-500: #1e9b9d;
-  --color-brand-600: #147c80;
-  --color-brand-700: #0d5c63;
-  --color-brand-800: #0e4a50;
-  --color-brand-900: #103d43;
+   Brand ramp is built around the CTA colour #004d71, which is brand-700 — every
+   button, link and active state resolves to it. */
+@theme {
+  --color-ink-50: #f7fafb;
+  --color-ink-100: #eef2f5;
+  --color-ink-200: #dde5ea;
+  --color-ink-300: #b8c6d0;
+  --color-ink-400: #8497a5;
+  --color-ink-500: #5a6b78;
+  --color-ink-600: #44535e;
+  --color-ink-700: #334049;
+  --color-ink-800: #1f2d38;
+  --color-ink-900: #10222e;
+
+  --color-brand-50: #eef5fa;
+  --color-brand-100: #d4e6f0;
+  --color-brand-200: #a8cce0;
+  --color-brand-300: #71add0;
+  --color-brand-400: #3789b5;
+  --color-brand-500: #146d99;
+  --color-brand-600: #065c85;
+  --color-brand-700: #004d71; /* CTA */
+  --color-brand-800: #003f5d;
+  --color-brand-900: #00344d;
 
   --color-accent-400: #f7bb3c;
-  --color-accent-500: #f0a202;
-  --color-accent-600: #c98202;
+  --color-accent-500: #e09000;
+  --color-accent-600: #b87400;
 
   --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  /* Structural proportions. Marked PENDING-REFERENCE where the reference site's
-     measured value should replace the placeholder once Phase 8 can run. */
-  --container-page: 1280px; /* reference: max-w-7xl, measured */
+  --container-page: 1280px;
   --radius-card: 0.875rem;
 }
 
+/* Light only, deliberately. There is no dark palette and no
+   prefers-color-scheme block: the site must render on a white background
+   regardless of the visitor's system setting. color-scheme is pinned to light so
+   form controls and scrollbars stay light too. */
 :root {
   --surface: #ffffff;
-  --surface-2: var(--color-ink-50);
-  --border: var(--color-ink-200);
-  --text: var(--color-ink-900);
-  --text-muted: var(--color-ink-500);
+  --surface-2: #f7fafb;
+  --border: #dde5ea;
+  --text: #10222e;
+  --text-muted: #5a6b78;
   color-scheme: light;
-}
-
-:root:not([data-theme='light']) {
-  @media (prefers-color-scheme: dark) {
-    --surface: #0e181e;
-    --surface-2: #14232b;
-    --border: #24363f;
-    --text: var(--color-ink-100);
-    --text-muted: var(--color-ink-400);
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme='dark'] {
-  --surface: #0e181e;
-  --surface-2: #14232b;
-  --border: #24363f;
-  --text: var(--color-ink-100);
-  --text-muted: var(--color-ink-400);
-  color-scheme: dark;
 }
 
 body {
@@ -79,7 +64,7 @@ h1, h2, h3, h4 {
   letter-spacing: -0.02em;
 }
 
-/* §8 / criterion 38 — honour reduced motion everywhere, including Framer Motion. */
+/* §8 / criterion 38 — honour reduced motion everywhere, Framer Motion included. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

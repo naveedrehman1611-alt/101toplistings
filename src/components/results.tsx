@@ -58,7 +58,7 @@ export function Results({
               href={buildHref(basePath, { q: query, sort: s.key })}
               className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
                 sort === s.key
-                  ? 'border-brand-500 bg-brand-50 text-brand-800 dark:bg-brand-900/40 dark:text-brand-100'
+                  ? 'border-brand-500 bg-brand-50 text-brand-800'
                   : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
               }`}
             >

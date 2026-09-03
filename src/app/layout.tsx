@@ -17,7 +17,7 @@ const jakarta = Plus_Jakarta_Sans({
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
-  const brand = settingText(s, 'brand.name', 'Vicinia');
+  const brand = settingText(s, 'brand.name', '101 Top Listings');
   const title = settingText(s, 'seo.default_title', brand);
   const description = settingText(s, 'seo.default_description', '');
   return {
@@ -38,7 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     getMenu('footer', 'Company'),
   ]);
 
-  const brand = settingText(settings, 'brand.name', 'Vicinia');
+  const brand = settingText(settings, 'brand.name', '101 Top Listings');
 
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>

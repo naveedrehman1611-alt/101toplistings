@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default async function AboutPage() {
   const [sections, settings] = await Promise.all([getPageSections('about'), getSettings()]);
   const header = findSection(sections, 'header');
-  const brand = settingText(settings, 'brand.name', 'Vicinia');
+  const brand = settingText(settings, 'brand.name', '101 Top Listings');
   return (
     <div className="container-page py-12">
       <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: header?.heading ?? 'About' }]} />
