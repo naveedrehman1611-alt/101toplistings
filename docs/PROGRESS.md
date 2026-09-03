@@ -3,7 +3,7 @@
 Living status file. Updated after every phase. Do not delete criteria — mark them
 `[x]` only with evidence, or annotate them `BLOCKED` with the reason.
 
-**Last updated:** Public site is LIVE at https://vicinia-directory.vercel.app on the live Supabase schema. Phases 0–5 substantially complete; admin panel, auth, reviews and forms outstanding.
+**Last updated:** Public site is LIVE at https://101toplistings-sigma.vercel.app on the live Supabase schema. Phases 0–5 substantially complete; admin panel, auth, reviews and forms outstanding.
 
 ---
 
@@ -93,7 +93,7 @@ Numbering matches the master prompt exactly.
 | 27 | TypeScript passes (strict, zero errors) | `[x]` | `tsc --noEmit` clean; `strict: true` in `tsconfig.json` |
 | 28 | Lint passes (zero errors) | `[x]` | `npm run lint` clean |
 | 29 | Critical routes manually verified | `[~]` | Homepage verified live end-to-end (DB → RPC → SSR → ISR → metadata); remaining routes share the same code paths but are not individually checked |
-| 30 | Deployment verified | `[x]` | Live at https://vicinia-directory.vercel.app, serving real data |
+| 30 | Deployment verified | `[x]` | Live at https://101toplistings-sigma.vercel.app, serving real data |
 | 31 | All copy and imagery original | `[x]` | Every string written fresh; the in-browser capture recorded structure and functional labels only, never marketing copy, descriptions, article bodies or review text |
 | 32 | Seed data covers all documented variations incl. sparse records | `[x]` | 20 listings live: 2 without coordinates, 4 without email, 3 without tagline, 2 without description, 7 without hours, one genuine 24h, one with 7 social links |
 | 33 | Stack parity confirmed, no substituted/duplicate libraries | `[x]` | See "Stack parity" below |

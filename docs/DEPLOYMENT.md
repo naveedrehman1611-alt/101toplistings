@@ -6,7 +6,7 @@ Vercel runs Next.js natively, which resolves open question D-1 below outright â€
 static-only Hostinger plan would make SSR, auth, forms and the admin panel impossible simply
 disappears. Cloudflare's role (edge caching, HTTP/3) is covered by Vercel's own edge network.
 
-**Status: LIVE.** https://vicinia-directory.vercel.app
+**Status: LIVE.** https://101toplistings-sigma.vercel.app
 
 Verified serving real data from Supabase: menus, page sections, categories, listings and cities
 all render from the database, `x-vercel-cache: PRERENDER` confirms ISR at the 300s revalidate,

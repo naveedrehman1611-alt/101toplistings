@@ -8,8 +8,8 @@
 
 ```
 REFERENCE_SITE      = https://101toplistings.com/
-NEW_BRAND_NAME      = Vicinia
-NEW_DOMAIN          = vicinia.co
+NEW_BRAND_NAME      = 101 Top Listings
+NEW_DOMAIN          = 101toplistings.com
 BRAND_COLORS        = primary #0D5C63 (deep teal) / ink #12212B / accent #F0A202 (amber)
 TECH_STACK          = Next.js (App Router) + React + TypeScript (strict) + Tailwind CSS + Framer Motion
                       — LOCKED. See Section 1.5. Do not substitute.
