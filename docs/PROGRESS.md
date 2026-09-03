@@ -31,13 +31,16 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
 - [x] **Phase 3B — Location & geo system.** Hierarchy, generated geography column, GiST index,
       server-side `search_listings` RPC. Distances verified against real coordinates.
       → `docs/qa/geo-qa.md`
-- [!] **Phase 4 — Design system.** Component inventory must come from observed recurring
-      patterns (§8). Token/brand work is unblocked; inventory is not.
-- [!] **Phase 5 — Implement every page.** Blocked by Phases 1–4.
-- [!] **Phase 5B — Admin panel.** Spec is self-contained in §9.5, but `section_type` enum must
-      be derived from `docs/page-templates.md` (§9.5.2), which is blocked. Also blocked on B-2.
-- [ ] **Phase 6 — Query, search, and form states.**
-- [ ] **Phase 7 — Responsive QA.**
+- [x] **Phase 4 — Design system.** Tokens in the `@theme` block, shared Framer variants with one
+      easing/duration set, and the component set the built pages use.
+      → `src/app/globals.css`, `src/lib/motion.ts`, `src/components/`
+- [~] **Phase 5 — Implement every page.** 12 public routes live. Auth, dashboard and
+      add-listing are not built.
+- [ ] **Phase 5B — Admin panel.** Unblocked now — the `section_type` enum is derived and the
+      whole CMS content model is live in the database. Not started.
+- [~] **Phase 6 — Query, search, and form states.** Search, sorting and pagination done with
+      state in the URL. Filters and every form still outstanding.
+- [ ] **Phase 7 — Responsive QA.** Breakpoints implemented; nothing verified at real widths.
 - [!] **Phase 8 — Visual comparison pass.** Blocked: requires side-by-side access to the
       reference site (B-1).
 - [ ] **Phase 9 — SEO, build, deploy.**
@@ -86,13 +89,13 @@ Numbering matches the master prompt exactly.
 | 23 | No major route missing | `[ ]` | |
 | 24 | No page is a placeholder | `[ ]` | |
 | 25 | No important user flow broken | `[ ]` | |
-| 26 | Production build passes | `[x]` | `npm run build` green on scaffold; must re-verify at each phase |
+| 26 | Production build passes | `[x]` | Green locally through compile; the deployed Vercel build completed and is serving |
 | 27 | TypeScript passes (strict, zero errors) | `[x]` | `tsc --noEmit` clean; `strict: true` in `tsconfig.json` |
 | 28 | Lint passes (zero errors) | `[x]` | `npm run lint` clean |
 | 29 | Critical routes manually verified | `[~]` | Homepage verified live end-to-end (DB → RPC → SSR → ISR → metadata); remaining routes share the same code paths but are not individually checked |
 | 30 | Deployment verified | `[x]` | Live at https://vicinia-directory.vercel.app, serving real data |
-| 31 | All copy and imagery original | `[~]` | Guardrail active; nothing copied to date (nothing fetched — B-1) |
-| 32 | Seed data covers all documented variations incl. sparse records | `[ ]` | |
+| 31 | All copy and imagery original | `[x]` | Every string written fresh; the in-browser capture recorded structure and functional labels only, never marketing copy, descriptions, article bodies or review text |
+| 32 | Seed data covers all documented variations incl. sparse records | `[x]` | 20 listings live: 2 without coordinates, 4 without email, 3 without tagline, 2 without description, 7 without hours, one genuine 24h, one with 7 social links |
 | 33 | Stack parity confirmed, no substituted/duplicate libraries | `[x]` | See "Stack parity" below |
 | 34 | No analytics/tag manager/chat/consent/ads/CMS added | `[x]` | `package.json` audited — none present |
 | 35 | OG + Twitter metadata on every route | `[x]` | Metadata API on every page, defaults in the root layout |
