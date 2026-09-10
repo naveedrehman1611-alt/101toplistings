@@ -95,26 +95,71 @@ indexes), Phase 5B (admin panel persistence), and all of criteria 40–57.
 belongs to a different product (`mr-medico`) and may be in use; adding a directory schema would
 mean sharing a database, an auth user pool and a storage bucket across two products.
 
+### B-3 — No write access to the GitHub repository
+
+**Status:** OPEN. Phase 0 is committed locally but **cannot be pushed.**
+
+Every available push path returns 403:
+
+```
+git push -u origin claude/website-recreation-reference-wjlht1
+  → fatal: ... The requested URL returned error: 403
+
+git -c http.extraheader="AUTHORIZATION: bearer $GITHUB_TOKEN" push ...
+  → 403
+
+GitHub MCP create_or_update_file
+  → 403 Resource not accessible by integration
+```
+
+The failure is from GitHub, not the egress proxy — the proxy's `recentRelayFailures` contains
+no `github.com` entries, only the blocked reference domain.
+
+**Cause.** The GitHub identity connected to this session is **`mohammedrehman33`**
+(Muhammad-Rehman, marham.pk). The repository is **`naveedrehman1611-alt/101toplistings`** — a
+different account. That identity has read access but not write, and the GitHub App installation
+is likewise read-only for this repo. `add_repo` with `access: "push"` reports the repo already
+attached and does not change the result.
+
+The repository is also completely empty: `list_branches` returns `[]` and there are no commits,
+so the designated branch `claude/website-recreation-reference-wjlht1` does not exist on the
+remote yet.
+
+**Resolution options.**
+
+1. Grant `mohammedrehman33` write access to `naveedrehman1611-alt/101toplistings` (invite as a
+   collaborator with Write, or add via a team).
+2. Install/authorise the Claude GitHub App on `naveedrehman1611-alt` with read **and write**
+   for this repo. An admin can do this at https://claude.ai/admin-settings/claude-in-slack.
+3. Re-run this work in a session connected to the `naveedrehman1611-alt` account.
+4. Point the work at a repository owned by `mohammedrehman33` instead.
+
+**Local state is safe meanwhile:** commit `5051ec9` holds all of Phase 0. Nothing is lost as
+long as the container is not reclaimed — but this container *is* ephemeral, so the work is not
+durable until a push succeeds.
+
 ---
 
 ## DECISIONS TAKEN (user delegated these)
 
 ### D-2 — Brand name and domain
 
-The user delegated the choice ("I'll choose — you decide").
+- **NEW_BRAND_NAME:** `RankYouSite`
+- **NEW_DOMAIN:** `rankyousite.com`
 
-- **NEW_BRAND_NAME:** `Vicinia`
-- **NEW_DOMAIN:** `vicinia.co`
+History, because it is the point of the architecture: a working name was chosen first
+under the user's delegation, then rejected. Changing it touched **seven database rows and
+three code fallbacks** — no component held the name, because §9.5.1 forbids hardcoded
+user-visible strings. That is the rule earning its keep; a rebrand was minutes, not a
+refactor.
 
-Rationale: derived from *vicinity*, which matches a proximity-first local business directory;
-short, pronounceable, and unconnected to the reference brand as §1 requires. Treat it as a
-working brand, not a trademark clearance — **a real launch needs a trademark and domain
-availability check, which I cannot perform from this environment.**
+Note this supersedes §1 of `PROMPT.md`, which required the new brand to differ from the
+reference site's. The user directed otherwise, which is their call to make: it is their
+domain and their repository.
 
-Per §9.5.1 the brand name is not hardcoded anywhere. It lives in a `settings` row
-(`group = 'brand'`) and is rendered from the database, so renaming the entire site is a single
-admin edit with no code change. The repository directory name (`101toplistings`) is just the
-git checkout path and does not appear in shipped output.
+**Live URL:** `rankyousite.vercel.app`. Vercel appended `-sigma` because the plain
+`101toplistings.vercel.app` hostname is already claimed by another account — which is also
+why visiting it returned a 404 earlier. A custom domain removes the suffix.
 
 ### D-3 — Brand colours and typography
 
@@ -123,9 +168,15 @@ The user delegated the choice. Full scales land in the `@theme` block in
 
 | Role | Value | Reasoning |
 |---|---|---|
-| Primary | deep teal `#0D5C63` | map/place association; avoids default SaaS blue |
-| Ink / secondary | `#12212B` | near-black with a cool cast, for type and surfaces |
-| Accent | warm amber `#F0A202` | high-contrast CTA and rating colour against the teal |
+| CTA / primary | `#004d71` | Specified by the user. Set as `brand-700`, so every button, link, active state and gradient resolves to it without touching a component. |
+| Ink / text | `#10222e` | Near-black with a cool cast, paired with `#5a6b78` for muted text. |
+| Surface | `#ffffff` | Page background, unconditionally. |
+| Surface 2 | `#f7fafb` | Section separation only. Near-white by design — a pure-white second surface would leave sections with no visual boundary at all. Say the word and it becomes `#ffffff`. |
+
+**Dark mode was removed, not merely overridden.** The site previously followed
+`prefers-color-scheme`, so a visitor whose system was set to dark saw dark backgrounds. There
+is now no dark palette in the stylesheet, and `color-scheme: light` is pinned so form controls
+and scrollbars stay light too. Verified in the deployed CSS.
 
 Typography via `next/font`: **Plus Jakarta Sans** for headings, **Inter** for body/UI. Both are
 preloaded to satisfy the Priority Hints requirement (§1.5, criterion 36).
