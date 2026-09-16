@@ -1,80 +1,119 @@
-import { redirect } from 'next/navigation';
-import { createClient } from './supabase-server';
-
-/**
- * Data Access Layer for authorisation.
- *
- * The Next.js 16 authentication guide is explicit that proxy.ts should only do
- * optimistic checks and "should not be your only line of defense" — the real
- * check belongs as close to the data as possible. So every admin page and every
- * admin action calls into here, and RLS enforces the same rules again at the
- * database. That is the two-layer requirement in §9.5.6.
- */
-
-// Declaration order in the user_role enum is the authority ordering; mirror it.
-const ROLE_ORDER = [
-  'user',
-  'business_owner',
-  'moderator',
-  'editor',
-  'admin',
-  'super_admin',
-] as const;
-
-export type Role = (typeof ROLE_ORDER)[number];
-
-export function roleAtLeast(role: Role | null, required: Role): boolean {
-  if (!role) return false;
-  return ROLE_ORDER.indexOf(role) >= ROLE_ORDER.indexOf(required);
-}
+import { cache } from 'react';
+import { notFound, redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import { hasMinRole, isUserRole, STAFF_MIN_ROLE, type UserRole } from '@/lib/roles';
 
 export type CurrentUser = {
   id: string;
   email: string | null;
-  role: Role;
+  role: UserRole;
   displayName: string | null;
+  avatarUrl: string | null;
 };
 
 /**
- * Resolves the signed-in user and their role.
+ * The Data Access Layer. Proxy only does optimistic cookie checks, so this is
+ * the real boundary: every Server Component, Server Action and Route Handler
+ * that needs identity asks here, and never trusts a role passed in as a prop or
+ * form field.
  *
- * Uses getUser(), not getSession(): getSession reads the cookie without
- * revalidating it, so a tampered cookie would be trusted. getUser round-trips
- * to Supabase Auth and is the only trustworthy check on the server.
- *
- * The role is read from the profiles table, never from a client-supplied claim.
+ * `cache()` dedupes the two round trips (auth.getUser + profiles) across a
+ * single render pass; it deliberately does not survive into the next request.
  */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const supabase = await createClient();
 
+  // getUser() revalidates the JWT with Supabase Auth. getSession() would only
+  // decode a cookie the client can forge.
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
-  if (error || !user) return null;
+
+  if (!user) return null;
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, display_name, is_suspended')
+    .select('id, role, display_name, avatar_url, is_suspended')
     .eq('id', user.id)
     .maybeSingle();
 
-  // A suspended account is treated as signed out rather than downgraded, so a
-  // suspension takes effect immediately without waiting for the token to expire.
+  // No profile row means the signup trigger (0010) has not run or the row was
+  // removed — treat it as unauthenticated rather than guessing a role. A
+  // suspended account keeps a valid JWT, so it has to be rejected here too;
+  // has_min_role() makes the same call on the database side.
   if (!profile || profile.is_suspended) return null;
+  if (!isUserRole(profile.role)) return null;
 
   return {
-    id: user.id,
+    id: profile.id,
     email: user.email ?? null,
-    role: profile.role as Role,
-    displayName: profile.display_name as string | null,
+    role: profile.role,
+    displayName: profile.display_name,
+    avatarUrl: profile.avatar_url,
   };
+});
+
+/**
+ * Gate a route or an action on a minimum role.
+ *
+ * `nextPath` is where to send the visitor back after signing in; Server
+ * Components cannot read their own pathname, so callers pass it (it is
+ * validated again on the way out of /login).
+ *
+ * Under-privileged but signed in renders a 404 rather than a 403: `forbidden()`
+ * needs experimental `authInterrupts` in next.config.ts, which this layer does
+ * not own. Hiding the existence of the route is the safer failure anyway.
+ */
+export async function requireRole(min: UserRole, nextPath = '/admin'): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect(`/login?next=${encodeURIComponent(safeNextPath(nextPath))}`);
+  }
+
+  if (!hasMinRole(user.role, min)) {
+    notFound();
+  }
+
+  return user;
 }
 
-/** Guards a page or action. Redirects rather than rendering a partial admin UI. */
-export async function requireRole(required: Role): Promise<CurrentUser> {
+/** Moderator and up — the back-office audience. */
+export async function isStaff(): Promise<boolean> {
   const user = await getCurrentUser();
-  if (!user) redirect(`/login?next=/admin`);
-  if (!roleAtLeast(user.role, required)) redirect('/admin/no-access');
-  return user;
+  return user ? hasMinRole(user.role, STAFF_MIN_ROLE) : false;
+}
+
+export async function isAdmin(): Promise<boolean> {
+  const user = await getCurrentUser();
+  return user ? hasMinRole(user.role, 'admin') : false;
+}
+
+/**
+ * Whitelist for post-login redirects. An unvalidated `next` is an open redirect
+ * (`//evil.com` and `https://evil.com` are both accepted by Response.redirect),
+ * so only same-origin paths below /admin — the one place sign-in leads — are
+ * honoured; anything else falls back to /admin.
+ */
+export function safeNextPath(next: string | null | undefined): string {
+  if (!next) return '/admin';
+  // `//host` and `/\host` are protocol-relative: same first character, different origin.
+  if (!next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) return '/admin';
+  if (next !== '/admin' && !next.startsWith('/admin/') && !next.startsWith('/admin?')) {
+    return '/admin';
+  }
+  return next;
+}
+
+/**
+ * Back-compat surface for the admin pages and actions that landed on the base
+ * branch while this work was in flight. They import `Role` and call
+ * `roleAtLeast()`; both are the same enum mirror that `@/lib/roles` now owns,
+ * so these are aliases rather than a second implementation.
+ */
+export type Role = UserRole;
+
+export function roleAtLeast(role: Role | null, required: Role): boolean {
+  if (!role) return false;
+  return hasMinRole(role, required);
 }

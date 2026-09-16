@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase-server';
+import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/auth';
 import { setSectionEnabled, updateSection } from '@/lib/admin-actions';
 

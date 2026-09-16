@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { findSection, getCategories, getPageSections } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
+import { ServiceNotice } from '@/components/service-notice';
 
 export const revalidate = 600;
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default async function CategoriesPage() {
   const header = findSection(sections, 'header');
   return (
     <div className="container-page py-12">
+      <ServiceNotice />
       <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: header?.heading ?? 'Categories' }]} />
       <h1 className="text-3xl font-bold sm:text-4xl">{header?.heading}</h1>
       {header?.subheading ? <p className="mt-3 text-[var(--text-muted)]">{header.subheading}</p> : null}

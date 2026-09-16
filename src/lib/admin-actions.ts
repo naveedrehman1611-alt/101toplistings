@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from './supabase-server';
+import { createClient } from './supabase/server';
 import { requireRole, type Role } from './auth';
 
 export type ActionResult = { ok: true; message: string } | { ok: false; error: string };

@@ -1,3 +1,8 @@
+-- 0010 — create a profiles row for every new auth user
+-- Recovered into the repo from supabase_migrations.schema_migrations (applied
+-- 2026-09-10 via MCP and never committed). The trigger is already live; this file
+-- exists so a fresh project reproduces it. Re-running it is a no-op.
+
 -- Every auth user needs a matching profiles row: the role lives there, and
 -- getCurrentUser() treats a missing profile as signed out. Without this trigger
 -- a freshly registered user could authenticate but never be recognised.
@@ -24,6 +29,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function handle_new_user();
 
+-- Backfill anyone who registered before this trigger existed.
 insert into public.profiles (id, role, display_name)
 select u.id, 'user', split_part(u.email, '@', 1)
   from auth.users u

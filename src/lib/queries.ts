@@ -1,3 +1,4 @@
+import { degrade } from './degrade';
 import { supabase } from './supabase';
 
 export type Setting = Record<string, unknown>;
@@ -54,7 +55,8 @@ export type MenuItem = { label: string; url: string; sort_order: number };
 
 /** Every user-visible string comes from the database (§9.5.1). */
 export async function getSettings(): Promise<Record<string, unknown>> {
-  const { data } = await supabase.from('settings').select('key, value');
+  const { data, error } = await supabase.from('settings').select('key, value');
+  degrade('settings', error, null);
   const out: Record<string, unknown> = {};
   for (const row of data ?? []) out[row.key as string] = row.value;
   return out;
@@ -70,29 +72,31 @@ export function settingText(
 }
 
 export async function getMenu(location: string, name?: string): Promise<MenuItem[]> {
-  const { data: menus } = await supabase
+  const { data: menus, error: menusError } = await supabase
     .from('menus')
     .select('id, name')
     .eq('location', location);
+  degrade('menus', menusError, null);
   const menu = name ? menus?.find((m) => m.name === name) : menus?.[0];
   if (!menu) return [];
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('menu_items')
     .select('label, url, sort_order')
     .eq('menu_id', menu.id)
     .eq('is_visible', true)
     .order('sort_order');
-  return (data ?? []) as MenuItem[];
+  return degrade('menu_items', error, (data ?? []) as MenuItem[]);
 }
 
 export async function getPageSections(slug: string): Promise<PageSection[]> {
-  const { data: page } = await supabase
+  const { data: page, error: pageError } = await supabase
     .from('pages')
     .select('id')
     .eq('slug', slug)
     .maybeSingle();
+  degrade('pages', pageError, null);
   if (!page) return [];
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('page_sections')
     .select(
       'section_key, section_type, sort_order, heading, subheading, body, cta_label, cta_url, item_limit',
@@ -100,7 +104,7 @@ export async function getPageSections(slug: string): Promise<PageSection[]> {
     .eq('page_id', page.id)
     .eq('is_enabled', true)
     .order('sort_order');
-  return (data ?? []) as PageSection[];
+  return degrade('page_sections', error, (data ?? []) as PageSection[]);
 }
 
 export function findSection(sections: PageSection[], key: string): PageSection | undefined {
@@ -136,8 +140,24 @@ export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
     p_limit: args.limit ?? 12,
     p_offset: args.offset ?? 0,
   });
-  if (error) throw new Error(`search_listings failed: ${error.message}`);
-  return (data ?? []) as ListingCard[];
+  // Used to throw. One restricted project then meant a 500 on the homepage and
+  // a build that could not export at all, so it degrades now and the page says so.
+  return degrade('search_listings', error, (data ?? []) as ListingCard[]);
+}
+
+/**
+ * Single-entity reads must not turn an outage into a 404.
+ *
+ * These pages answer notFound() when the row is missing, which is right for a
+ * slug that never existed and wrong for one the database simply would not
+ * return: a real, indexed URL would 404 itself out of search results while the
+ * quota is exhausted. So a transport or service error throws, the route renders
+ * an error instead of a 404, and any previously built ISR page keeps serving.
+ */
+function throwIfUnavailable(context: string, error: { message: string } | null): void {
+  if (!error) return;
+  console.error(`[read:${context}] ${error.message}`);
+  throw new Error(`${context} is temporarily unavailable`);
 }
 
 export async function getCategories(featuredOnly = false): Promise<Category[]> {
@@ -146,16 +166,17 @@ export async function getCategories(featuredOnly = false): Promise<Category[]> {
     .select('id, slug, name, description, icon, is_featured')
     .order('sort_order');
   if (featuredOnly) q = q.eq('is_featured', true);
-  const { data } = await q;
-  return (data ?? []) as Category[];
+  const { data, error } = await q;
+  return degrade('categories', error, (data ?? []) as Category[]);
 }
 
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('categories')
     .select('id, slug, name, description, icon, is_featured')
     .eq('slug', slug)
     .maybeSingle();
+  throwIfUnavailable('category', error);
   return (data as Category) ?? null;
 }
 
@@ -165,16 +186,17 @@ export async function getCities(featuredOnly = false): Promise<City[]> {
     .select('id, slug, name, latitude, longitude, intro_copy, is_featured')
     .order('name');
   if (featuredOnly) q = q.eq('is_featured', true);
-  const { data } = await q;
-  return (data ?? []) as City[];
+  const { data, error } = await q;
+  return degrade('cities', error, (data ?? []) as City[]);
 }
 
 export async function getCityBySlug(slug: string): Promise<City | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('cities')
     .select('id, slug, name, latitude, longitude, intro_copy, is_featured')
     .eq('slug', slug)
     .maybeSingle();
+  throwIfUnavailable('city', error);
   return (data as City) ?? null;
 }
 
@@ -195,6 +217,7 @@ export type ListingDetail = {
   latitude: number | null;
   longitude: number | null;
   social_links: { label: string; url: string }[];
+  video_url: string | null;
   rating_average: number | null;
   review_count: number;
   verification: string;
@@ -213,28 +236,31 @@ export type OpeningHour = {
 
 /** Reads the public projection, which omits every ownership/audit column (criterion 50). */
 export async function getListing(slug: string): Promise<ListingDetail | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('public_listings')
     .select(
-      'id, slug, name, tagline, description, category_id, city_id, phone_primary, phone_secondary, email, website, address, postal_code, latitude, longitude, social_links, rating_average, review_count, verification, published_at, seo_title, seo_description',
+      'id, slug, name, tagline, description, category_id, city_id, phone_primary, phone_secondary, email, website, address, postal_code, latitude, longitude, social_links, video_url, rating_average, review_count, verification, published_at, seo_title, seo_description',
     )
     .eq('slug', slug)
     .maybeSingle();
+  throwIfUnavailable('listing', error);
   return (data as ListingDetail) ?? null;
 }
 
 export async function getOpeningHours(listingId: string): Promise<OpeningHour[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('opening_hours')
     .select('day_of_week, opens_at, closes_at, is_closed, is_24h')
     .eq('listing_id', listingId)
     .order('day_of_week');
-  return (data ?? []) as OpeningHour[];
+  return degrade('opening_hours', error, (data ?? []) as OpeningHour[]);
 }
 
 export async function getAllListingSlugs(): Promise<string[]> {
-  const { data } = await supabase.from('public_listings').select('slug');
-  return (data ?? []).map((r) => r.slug as string);
+  const { data, error } = await supabase.from('public_listings').select('slug');
+  // An empty list here means no listing pages are prerendered; they render on
+  // demand instead. A throw would fail the whole build.
+  return degrade('listing_slugs', error, (data ?? []).map((r) => r.slug as string));
 }
 
 export type BlogPost = {
@@ -250,20 +276,21 @@ export type BlogPost = {
 };
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('blog_posts')
     .select('id, slug, title, standfirst, body, read_minutes, is_featured, published_at, category_id')
     .eq('is_published', true)
     .order('published_at', { ascending: false });
-  return (data ?? []) as BlogPost[];
+  return degrade('blog_posts', error, (data ?? []) as BlogPost[]);
 }
 
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('blog_posts')
     .select('id, slug, title, standfirst, body, read_minutes, is_featured, published_at, category_id')
     .eq('slug', slug)
     .eq('is_published', true)
     .maybeSingle();
+  throwIfUnavailable('blog_post', error);
   return (data as BlogPost) ?? null;
 }
