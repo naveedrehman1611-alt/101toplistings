@@ -1,26 +1,90 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
+/* Tailwind v4 is CSS-first: this @theme block IS the Tailwind config that §8 of
+   PROMPT.md refers to.
+
+   Brand ramp is built around the CTA colour #004d71, which is brand-700 — every
+   button, link and active state resolves to it. */
+@theme {
+  --color-ink-50: #f7fafb;
+  --color-ink-100: #eef2f5;
+  --color-ink-200: #dde5ea;
+  --color-ink-300: #b8c6d0;
+  --color-ink-400: #8497a5;
+  --color-ink-500: #5a6b78;
+  --color-ink-600: #44535e;
+  --color-ink-700: #334049;
+  --color-ink-800: #1f2d38;
+  --color-ink-900: #10222e;
+
+  --color-brand-50: #eef5fa;
+  --color-brand-100: #d4e6f0;
+  --color-brand-200: #a8cce0;
+  --color-brand-300: #71add0;
+  --color-brand-400: #3789b5;
+  --color-brand-500: #146d99;
+  --color-brand-600: #065c85;
+  --color-brand-700: #004d71; /* CTA */
+  --color-brand-800: #003f5d;
+  --color-brand-900: #00344d;
+
+  --color-accent-400: #f7bb3c;
+  --color-accent-500: #e09000;
+  --color-accent-600: #b87400;
+
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --container-page: 1280px;
+  --radius-card: 0.875rem;
+}
+
+/* Light only, deliberately. There is no dark palette and no
+   prefers-color-scheme block: the site must render on a white background
+   regardless of the visitor's system setting. color-scheme is pinned to light so
+   form controls and scrollbars stay light too. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --surface: #ffffff;
+  --surface-2: #f7fafb;
+  --border: #dde5ea;
+  --text: #10222e;
+  --text-muted: #5a6b78;
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* §8 / criterion 38 — honour reduced motion everywhere, Framer Motion included. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@utility container-page {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-page);
+  padding-inline: 1rem;
+  @media (width >= 40rem) { padding-inline: 1.5rem; }
+  @media (width >= 64rem) { padding-inline: 2rem; }
+}
+
+@utility surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
 }
