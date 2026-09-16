@@ -10,6 +10,7 @@ import {
 } from '@/lib/queries';
 import { ListingCard } from '@/components/listing-card';
 import { SectionHeading } from '@/components/ui';
+import { ServiceNotice } from '@/components/service-notice';
 
 export const revalidate = 300; // ISR — §1.5 rendering table
 
@@ -59,6 +60,10 @@ export default async function HomePage() {
           </div>
         </section>
       ) : null}
+
+      <div className="container-page pt-10">
+        <ServiceNotice />
+      </div>
 
       {catSection ? (
         <section className="container-page py-16">

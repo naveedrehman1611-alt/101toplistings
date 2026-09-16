@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { findSection, getCities, getPageSections, searchListings } from '@/lib/queries';
 import { Results, parsePage, parseSort } from '@/components/results';
 import { Breadcrumbs } from '@/components/ui';
+import { ServiceNotice } from '@/components/service-notice';
 
 export const revalidate = 300;
 const PER_PAGE = 12;
@@ -33,6 +34,7 @@ export default async function ListingsPage({
 
   return (
     <div className="container-page py-12">
+      <ServiceNotice />
       <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: header?.heading ?? 'Listings' }]} />
       <h1 className="text-3xl font-bold sm:text-4xl">{header?.heading}</h1>
       {header?.subheading ? (
