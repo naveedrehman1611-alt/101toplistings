@@ -11,6 +11,8 @@ import {
 } from '@/lib/queries';
 import { Badge, Breadcrumbs, Stars } from '@/components/ui';
 import { ListingCard } from '@/components/listing-card';
+import { ReviewForm } from '@/components/review-form';
+import { ReviewList } from '@/components/review-list';
 import { SITE_URL } from '@/lib/supabase';
 
 export const revalidate = 600;
@@ -225,11 +227,20 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
           <section className="mt-10">
             <h2 className="text-xl font-semibold">Reviews</h2>
-            {listing.review_count === 0 ? (
-              <p className="mt-3 text-[var(--text-muted)]">
-                No reviews yet. Sign in to be the first to review this business.
-              </p>
-            ) : null}
+            {/* Anyone may review without an account (0015), so this section is
+                two halves: what moderators have already approved, and the form
+                that queues a new one. ReviewList fetches its own rows rather
+                than reading listing.review_count, which counts approved reviews
+                but says nothing about their content. */}
+            <div className="mt-4">
+              <ReviewList listingId={listing.id} />
+            </div>
+            <div className="mt-10">
+              <h3 className="font-display text-lg font-semibold">Write a review</h3>
+              <div className="mt-4">
+                <ReviewForm listingId={listing.id} listingName={listing.name} />
+              </div>
+            </div>
           </section>
         </div>
 
