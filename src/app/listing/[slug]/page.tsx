@@ -15,8 +15,13 @@ import { SITE_URL } from '@/lib/supabase';
 
 export const revalidate = 600;
 
+// Prerender the newest listings only. Anything outside this window is rendered
+// on first request and then cached by ISR for `revalidate` seconds, so build
+// time and build-time egress stay flat as the directory grows.
+const PRERENDER_LIMIT = 200;
+
 export async function generateStaticParams() {
-  const slugs = await getAllListingSlugs();
+  const slugs = await getAllListingSlugs(PRERENDER_LIMIT);
   return slugs.map((slug) => ({ slug }));
 }
 

@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from './supabase-server';
 
@@ -43,8 +44,12 @@ export type CurrentUser = {
  * to Supabase Auth and is the only trustworthy check on the server.
  *
  * The role is read from the profiles table, never from a client-supplied claim.
+ *
+ * Wrapped in React's cache() so the admin layout and the page it renders share
+ * one getUser() round trip and one profiles read per request instead of two
+ * each — the guard still runs for both, it just stops re-asking.
  */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createClient();
 
   const {
@@ -69,7 +74,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     role: profile.role as Role,
     displayName: profile.display_name as string | null,
   };
-}
+});
 
 /** Guards a page or action. Redirects rather than rendering a partial admin UI. */
 export async function requireRole(required: Role): Promise<CurrentUser> {
