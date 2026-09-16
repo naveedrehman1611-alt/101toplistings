@@ -38,10 +38,10 @@ export function Header({
 
         <div className="hidden md:block">
           <Link
-            href="/dashboard/listings/new"
+            href="/contact"
             className="inline-flex h-10 items-center rounded-lg bg-brand-700 px-4 text-sm font-medium text-white hover:bg-brand-800"
           >
-            Add your business
+            Suggest a business
           </Link>
         </div>
 
@@ -100,11 +100,11 @@ export function Header({
                 </Link>
               ))}
               <Link
-                href="/dashboard/listings/new"
+                href="/contact"
                 onClick={() => setOpen(false)}
                 className="mt-4 inline-flex h-11 items-center justify-center rounded-lg bg-brand-700 px-4 font-medium text-white"
               >
-                Add your business
+                Suggest a business
               </Link>
             </motion.nav>
           </motion.div>

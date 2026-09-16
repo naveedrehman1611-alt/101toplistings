@@ -195,6 +195,7 @@ export type ListingDetail = {
   latitude: number | null;
   longitude: number | null;
   social_links: { label: string; url: string }[];
+  video_url: string | null;
   rating_average: number | null;
   review_count: number;
   verification: string;
@@ -216,7 +217,7 @@ export async function getListing(slug: string): Promise<ListingDetail | null> {
   const { data } = await supabase
     .from('public_listings')
     .select(
-      'id, slug, name, tagline, description, category_id, city_id, phone_primary, phone_secondary, email, website, address, postal_code, latitude, longitude, social_links, rating_average, review_count, verification, published_at, seo_title, seo_description',
+      'id, slug, name, tagline, description, category_id, city_id, phone_primary, phone_secondary, email, website, address, postal_code, latitude, longitude, social_links, video_url, rating_average, review_count, verification, published_at, seo_title, seo_description',
     )
     .eq('slug', slug)
     .maybeSingle();

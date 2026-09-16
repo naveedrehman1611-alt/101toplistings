@@ -31,6 +31,34 @@ function fmt(t: string | null) {
   return `${h12}:${m} ${suffix}`;
 }
 
+/**
+ * The DB constraint only permits YouTube/Vimeo watch URLs, but parse rather than
+ * trust it: anything unrecognised yields null so the section renders nothing at
+ * all instead of an iframe with a broken src.
+ */
+function embedUrl(raw: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return null;
+  }
+  const host = url.hostname.replace(/^www\./, '');
+  const segments = url.pathname.split('/').filter(Boolean);
+
+  if (host === 'youtube.com' || host === 'm.youtube.com') {
+    const id = url.searchParams.get('v');
+    return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}` : null;
+  }
+  if (host === 'youtu.be') {
+    return segments[0] ? `https://www.youtube.com/embed/${encodeURIComponent(segments[0])}` : null;
+  }
+  if (host === 'vimeo.com') {
+    return segments[0] ? `https://player.vimeo.com/video/${encodeURIComponent(segments[0])}` : null;
+  }
+  return null;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -67,6 +95,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
   const city = cities.find((c) => c.id === listing.city_id);
   const related = await searchListings({ categoryId: listing.category_id ?? undefined, limit: 4 });
   const cityNames = new Map(cities.map((c) => [c.id, c.name]));
+  const video = listing.video_url ? embedUrl(listing.video_url) : null;
 
   // §7.5.8 / criterion 48: emit only what is real and visible on the page.
   const jsonLd: Record<string, unknown> = {
@@ -153,6 +182,20 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
               <p className="mt-3 whitespace-pre-line leading-relaxed text-[var(--text-muted)]">
                 {listing.description}
               </p>
+            </section>
+          ) : null}
+
+          {video ? (
+            <section className="mt-10">
+              <h2 className="text-xl font-semibold">Video</h2>
+              <iframe
+                src={video}
+                title={`${listing.name} video`}
+                loading="lazy"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="mt-4 aspect-video w-full max-w-full rounded-xl border border-[var(--border)]"
+              />
             </section>
           ) : null}
 
