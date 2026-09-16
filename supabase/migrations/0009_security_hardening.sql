@@ -22,6 +22,21 @@ alter function assert_location_slug_unique() set search_path = public, pg_temp;
 -- has_min_role and current_role_is_staff exist to be called inside RLS policies;
 -- exposing them as RPC lets anyone probe role state. recalc_listing_rating is a
 -- trigger body and must never be invoked directly.
+--
+-- NOTE: these three revokes DO NOT take effect, and are kept only so the intent
+-- is visible. PostgreSQL grants EXECUTE on every function to PUBLIC by default,
+-- and revoking from `authenticated` does not remove the PUBLIC grant — verified
+-- afterwards with has_function_privilege(), which still reports true.
+--
+-- Revoking from PUBLIC is not the fix either: RLS policy expressions are
+-- evaluated as the querying role, so every policy calling has_min_role() would
+-- start failing with "permission denied for function".
+--
+-- The real fix is to move these helpers into a schema PostgREST does not expose
+-- and have the policies call them there. Deferred rather than done here because
+-- it means recreating ~30 policies. Residual risk is low: each function reports
+-- only on auth.uid(), so a caller learns nothing about anyone else, and
+-- recalc_listing_rating is a trigger body that errors if invoked directly.
 revoke execute on function has_min_role(user_role) from anon, authenticated;
 revoke execute on function current_role_is_staff() from anon, authenticated;
 revoke execute on function recalc_listing_rating() from anon, authenticated;

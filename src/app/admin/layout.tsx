@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { requireRole } from '@/lib/auth';
@@ -17,6 +18,12 @@ import { hasMinRole } from '@/lib/roles';
  * cached moderation queue is a wrong moderation queue.
  */
 
+export const metadata: Metadata = {
+  title: { default: 'Admin', template: '%s · Admin' },
+  // The back office is not content: keep the whole subtree out of the index.
+  robots: { index: false, follow: false },
+};
+
 const NAV = [
   { href: '/admin', label: 'Overview', exact: true, min: 'moderator' as const },
   { href: '/admin/listings', label: 'Listings', min: 'moderator' as const },
@@ -26,6 +33,8 @@ const NAV = [
   { href: '/admin/categories', label: 'Categories', min: 'editor' as const },
   { href: '/admin/locations', label: 'Locations', min: 'editor' as const },
   { href: '/admin/media', label: 'Media', min: 'editor' as const },
+  { href: '/admin/pages', label: 'Pages', min: 'editor' as const },
+  { href: '/admin/settings', label: 'Settings', min: 'admin' as const },
   { href: '/admin/audit', label: 'Audit log', min: 'admin' as const },
 ];
 
@@ -41,13 +50,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
             <Link href="/admin" className="font-display text-base font-bold tracking-tight">
               RankYouSite
             </Link>
-            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+            <span className="bg-brand-50 text-brand-700 rounded-full px-2 py-0.5 text-xs font-medium">
               Admin
             </span>
           </div>
 
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="text-[var(--text-muted)] hover:text-brand-700">
+            <Link href="/" className="hover:text-brand-700 text-[var(--text-muted)]">
               View site
             </Link>
             <span className="hidden text-[var(--text-muted)] sm:inline">
@@ -72,7 +81,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               <Link
                 key={item.href}
                 href={item.href}
-                className="whitespace-nowrap rounded-t-lg px-3 py-2 text-sm font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+                className="rounded-t-lg px-3 py-2 text-sm font-medium whitespace-nowrap text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
               >
                 {item.label}
               </Link>

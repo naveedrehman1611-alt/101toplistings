@@ -104,3 +104,16 @@ export function safeNextPath(next: string | null | undefined): string {
   }
   return next;
 }
+
+/**
+ * Back-compat surface for the admin pages and actions that landed on the base
+ * branch while this work was in flight. They import `Role` and call
+ * `roleAtLeast()`; both are the same enum mirror that `@/lib/roles` now owns,
+ * so these are aliases rather than a second implementation.
+ */
+export type Role = UserRole;
+
+export function roleAtLeast(role: Role | null, required: Role): boolean {
+  if (!role) return false;
+  return hasMinRole(role, required);
+}
