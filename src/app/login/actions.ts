@@ -3,10 +3,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { safeNextPath } from '@/lib/auth';
+import type { LoginState } from './action-state';
 
-export type LoginState = { error: string | null };
-
-export const initialLoginState: LoginState = { error: null };
 
 // One message for every failure mode. Distinguishing "no such account" from
 // "wrong password" turns the form into an account-enumeration oracle.

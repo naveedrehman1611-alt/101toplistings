@@ -4,12 +4,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import {
-  listingPayloadSchema,
-  rawListingPayload,
-  shapeListingErrors,
-  type ListingFieldErrors,
-} from '@/lib/listing-schema';
+import { listingPayloadSchema, rawListingPayload, shapeListingErrors } from '@/lib/listing-schema';
+import type { ModerationState, SaveListingState } from './action-state';
 
 /**
  * Listing mutations.
@@ -23,16 +19,6 @@ import {
  * See node_modules/next/dist/docs/01-app/02-guides/server-actions.md ("Security").
  */
 
-export type SaveListingState = {
-  ok: boolean;
-  /** Keyed by form field name; '_form' holds whole-form problems. */
-  errors: ListingFieldErrors;
-  message: string | null;
-};
-
-export const emptySaveListingState: SaveListingState = { ok: false, errors: {}, message: null };
-
-export type ModerationState = { ok: boolean; message: string | null };
 
 /* -------------------------------------------------------------------------- */
 /* cache fan-out                                                               */
