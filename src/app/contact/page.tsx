@@ -2,13 +2,16 @@ import type { Metadata } from 'next';
 import { findSection, getPageSections, getSettings, settingText } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
 import { submitContact } from '@/lib/public-actions';
+import { seoMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Contact',
-  description: 'Questions, corrections and listing requests.',
-  openGraph: { title: 'Contact', description: 'Questions, corrections and listing requests.' },
-  twitter: { card: 'summary_large_image', title: 'Contact' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return seoMetadata('/contact', {
+    title: 'Contact',
+    description: 'Questions, corrections and listing requests.',
+    openGraph: { title: 'Contact', description: 'Questions, corrections and listing requests.' },
+    twitter: { card: 'summary_large_image', title: 'Contact' },
+  });
+}
 
 const input =
   'mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none focus:border-brand-500';

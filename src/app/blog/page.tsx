@@ -4,12 +4,15 @@ import { findSection, getBlogPosts, getPageSections } from '@/lib/queries';
 import { Breadcrumbs, EmptyState } from '@/components/ui';
 
 export const revalidate = 600;
-export const metadata: Metadata = {
-  title: 'Blog',
-  description: 'Notes on getting found locally.',
-  openGraph: { title: 'Blog', description: 'Notes on getting found locally.' },
-  twitter: { card: 'summary_large_image', title: 'Blog' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { seoMetadata } = await import('@/lib/seo');
+  return seoMetadata('/blog', {
+    title: 'Blog',
+    description: 'Notes on getting found locally.',
+    openGraph: { title: 'Blog', description: 'Notes on getting found locally.' },
+    twitter: { card: 'summary_large_image', title: 'Blog' },
+  });
+}
 
 export default async function BlogIndex() {
   const [sections, posts] = await Promise.all([getPageSections('blog'), getBlogPosts()]);
