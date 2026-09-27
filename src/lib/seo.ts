@@ -15,6 +15,8 @@ export const SEO_ROUTES = [
   { route: '/blog', label: 'Blog' },
   { route: '/about', label: 'About' },
   { route: '/contact', label: 'Contact' },
+  { route: '/privacy', label: 'Privacy Policy' },
+  { route: '/terms', label: 'Terms of Service' },
   // Always noindex and disallowed in robots.ts: result pages are thin and
   // endless. Its title and description can still be changed.
   { route: '/search', label: 'Search' },
