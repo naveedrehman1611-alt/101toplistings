@@ -87,8 +87,9 @@ export default async function ContactPage({
   const [sp, settings] = await Promise.all([searchParams, getSettings()]);
   const email = settingText(settings, 'contact.email', '101toplistings@gmail.com');
 
+  // -mb-20 pb-20 paints the dark background over <main>'s bottom padding so it meets the footer.
   return (
-    <div className="bg-[#0b111b] text-slate-100">
+    <div className="-mb-20 bg-[#0b111b] pb-20 text-slate-100">
       <div className="container-page grid items-start gap-5 py-14 lg:grid-cols-[300px_minmax(0,740px)] lg:gap-6">
         {/* Left column */}
         <aside className="order-2 space-y-6 lg:order-1">

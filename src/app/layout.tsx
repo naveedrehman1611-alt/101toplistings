@@ -44,7 +44,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body className="flex min-h-screen flex-col">
         <Header brand={brand} nav={nav} mobileNav={mobileNav} />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pb-20">{children}</main>
         <Footer
           brand={brand}
           tagline={settingText(settings, 'brand.tagline')}
