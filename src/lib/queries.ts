@@ -257,10 +257,31 @@ export const getCategories = cache(async function getCategories(
   let q = supabase
     .from('categories')
     .select('id, parent_id, slug, name, description, icon, is_featured')
-    .order('sort_order');
+    .order('sort_order')
+    .order('name');
   if (featuredOnly) q = q.eq('is_featured', true);
-  return (await readList('categories.select', q)) as Category[];
+  return treeOrder((await readList('categories.select', q)) as Category[]);
 });
+
+/**
+ * Parents in their sort order, each followed by its own children, so every
+ * dropdown and index reads as a tree. Children whose parent is missing from
+ * the list are kept, after the tree.
+ */
+function treeOrder(rows: Category[]): Category[] {
+  const ids = new Set(rows.map((c) => c.id));
+  const kids = new Map<string, Category[]>();
+  for (const c of rows) {
+    if (c.parent_id && ids.has(c.parent_id))
+      kids.set(c.parent_id, [...(kids.get(c.parent_id) ?? []), c]);
+  }
+  const out: Category[] = [];
+  for (const c of rows) {
+    if (c.parent_id && ids.has(c.parent_id)) continue;
+    out.push(c, ...(kids.get(c.id) ?? []));
+  }
+  return out;
+}
 
 export const getCategoryBySlug = cache(async function getCategoryBySlug(
   slug: string,
