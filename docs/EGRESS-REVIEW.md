@@ -176,3 +176,24 @@ supabase.from(…)` in a page is the silent-failure bug being reinvented.
    for every visitor.
 6. **Budget check:** 5 GB ÷ 30 days ≈ 170 MB/day. The Supabase dashboard's daily
    egress chart is the only thing that actually confirms any of this.
+
+## Homepage rebuild (0018) — what it adds to the read path
+
+Re-checked when the homepage became a section builder (`docs/HOMEPAGE.md`).
+
+- **Fixed cost per regeneration.** All sections, items and their images arrive in one embedded
+  `page_sections` read; categories, cities, settings and menus are the layout's cached reads, shared
+  through `cache()`. The business carousel adds one `search_listings` RPC and three bounded GETs (covers
+  and logos, phone + excerpt from the new `public_listing_cards` view, opening hours); the blog carousel
+  one GET. Adding sections in the admin does not add requests, except another carousel of the same kind.
+- **No full descriptions on cards.** `public_listing_cards` cuts the description to 200 characters in
+  the database, so a card never transfers a whole description.
+- **`READ_REVALIDATE_SECONDS` 600 → 3600.** Every in-app write already expires the tags it touches
+  (and `runAndReturn` revalidates the tree), so the lifetime only bounds how long a change made directly
+  in the database takes to appear. The route table shows the effective interval: `/` is `○` with `1h`.
+- **Scoped revalidation.** `runAndReturn` takes an optional scope; section edits expire only
+  `pg:page_sections` / `pg:section_items` and re-render `/`, instead of the whole site.
+- **Images.** `images.minimumCacheTTL` is 31 days. Uploaded objects are immutable (unique names,
+  one-year `cacheControl`), so an optimised variant never goes stale, and each one is fetched from
+  Storage about once a month at most.
+- **Still no browser → Supabase traffic.** Search, newsletter and favourites are server-side.
