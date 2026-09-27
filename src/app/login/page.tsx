@@ -42,7 +42,7 @@ async function signIn(formData: FormData) {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; reset?: string }>;
 }) {
   const sp = await searchParams;
 
@@ -58,10 +58,16 @@ export default async function LoginPage({
       <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: 'Sign in' }]} />
       <div className="mx-auto max-w-sm">
         <h1 className="text-3xl font-bold">Sign in</h1>
-        <p className="mt-3 text-[var(--text-muted)]">
-          Manage listings, content and settings.
-        </p>
+        <p className="mt-3 text-[var(--text-muted)]">Manage listings, content and settings.</p>
 
+        {sp.reset ? (
+          <p
+            role="status"
+            className="border-brand-500/40 bg-brand-50 text-brand-800 mt-6 rounded-lg border px-4 py-3 text-sm"
+          >
+            Your password has been changed. Sign in with your new password.
+          </p>
+        ) : null}
         {sp.error ? (
           <p
             role="alert"
@@ -83,7 +89,7 @@ export default async function LoginPage({
               type="email"
               autoComplete="email"
               required
-              className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none focus:border-brand-500"
+              className="focus:border-brand-500 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"
             />
           </div>
           <div>
@@ -96,16 +102,21 @@ export default async function LoginPage({
               type="password"
               autoComplete="current-password"
               required
-              className="mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none focus:border-brand-500"
+              className="focus:border-brand-500 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"
             />
           </div>
           <button
             type="submit"
-            className="h-11 w-full rounded-lg bg-brand-700 font-medium text-white hover:bg-brand-800"
+            className="bg-brand-700 hover:bg-brand-800 h-11 w-full rounded-lg font-medium text-white"
           >
             Sign in
           </button>
         </form>
+        <p className="mt-4 text-sm">
+          <Link href="/forgot-password" className="text-brand-700 hover:underline">
+            Forgot your password?
+          </Link>
+        </p>
         <p className="mt-6 text-sm text-[var(--text-muted)]">
           New here?{' '}
           <Link
