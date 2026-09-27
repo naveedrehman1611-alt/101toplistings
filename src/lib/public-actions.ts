@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from './supabase-server';
 import { requireUser } from './auth';
 import { FormError, errorMessage, text, uuid } from './form-data';
+import { REPORT_REASONS } from './report-reasons';
 
 /**
  * Contact form. Anyone may submit (RLS: form_submissions_insert). The hidden
@@ -78,5 +79,97 @@ export async function submitReview(fd: FormData) {
     dest = `${page}?error=${encodeURIComponent(errorMessage(e))}`;
   }
   revalidatePath('/admin/reviews');
+  redirect(dest);
+}
+
+/**
+ * A signed-in user claims a listing as theirs. RLS (claims_own_insert) only
+ * accepts status 'new' for the caller's own id; the unique (listing, claimant)
+ * key stops duplicate claims. Staff approve it in /admin/claims, which is what
+ * actually hands over ownership.
+ */
+export async function submitClaim(fd: FormData) {
+  const slug = (text(fd, 'slug', 120) ?? '').replace(/[^a-z0-9-]/g, '');
+  const page = `/listing/${slug}/claim`;
+  const user = await requireUser(page);
+
+  let dest = `${page}?sent=1`;
+  try {
+    const listingId = uuid(fd, 'listing_id');
+    if (!listingId) throw new FormError('Listing not found.');
+    const role = text(fd, 'role', 80);
+    const phone = text(fd, 'phone', 40);
+    const details = text(fd, 'message', 2000);
+    if (!role) throw new FormError('Tell us your role at the business.');
+    if (!phone) throw new FormError('Add a phone number we can reach you on.');
+    const evidence = text(fd, 'evidence_url', 500);
+    if (evidence && !/^https?:\/\//i.test(evidence)) {
+      throw new FormError('The proof link must start with http:// or https://.');
+    }
+
+    const supabase = await createClient();
+    const { error } = await supabase.from('claims').insert({
+      listing_id: listingId,
+      claimant_id: user.id,
+      // No dedicated columns for these; staff read them together in admin.
+      message: [`Role: ${role}`, `Phone: ${phone}`, details].filter(Boolean).join('\n'),
+      evidence_url: evidence,
+      status: 'new',
+    });
+    if (error) {
+      if ((error as { code?: string }).code === '23505') {
+        throw new FormError('You have already claimed this business. We will be in touch.');
+      }
+      throw error;
+    }
+  } catch (e) {
+    dest = `${page}?error=${encodeURIComponent(errorMessage(e))}`;
+  }
+  revalidatePath('/admin/claims');
+  redirect(dest);
+}
+
+/**
+ * Anyone (signed in or not) reports a problem with a listing. Stored in the
+ * shared form_submissions inbox as form_type 'report', with the same honeypot
+ * as the contact form.
+ */
+export async function submitReport(fd: FormData) {
+  const slug = (text(fd, 'slug', 120) ?? '').replace(/[^a-z0-9-]/g, '');
+  const page = `/listing/${slug}/report`;
+
+  let dest = `${page}?sent=1`;
+  try {
+    const listingId = uuid(fd, 'listing_id');
+    if (!listingId) throw new FormError('Listing not found.');
+    const reason = text(fd, 'reason', 40);
+    if (!reason || !Object.hasOwn(REPORT_REASONS, reason))
+      throw new FormError('Choose what is wrong.');
+    const details = text(fd, 'details', 3000);
+    if (reason === 'other' && !details) throw new FormError('Please describe the problem.');
+    const email = text(fd, 'email', 200);
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new FormError('That email address does not look right.');
+    }
+    const isSpam = Boolean(text(fd, 'website', 200));
+
+    const supabase = await createClient();
+    const { error } = await supabase.from('form_submissions').insert({
+      form_type: 'report',
+      payload: {
+        listing_id: listingId,
+        listing_slug: slug,
+        listing_name: text(fd, 'listing_name', 200),
+        reason,
+        message: details,
+        email,
+      },
+      is_spam: isSpam,
+      status: isSpam ? 'spam' : 'new',
+    });
+    if (error) throw error;
+  } catch (e) {
+    dest = `${page}?error=${encodeURIComponent(errorMessage(e))}`;
+  }
   redirect(dest);
 }

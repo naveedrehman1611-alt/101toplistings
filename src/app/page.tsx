@@ -12,6 +12,7 @@ import {
 import { ListingCard } from '@/components/listing-card';
 import { SectionHeading } from '@/components/ui';
 import { seoMetadata } from '@/lib/seo';
+import { NearMeButton } from '@/components/near-me-button';
 
 export const revalidate = 300; // ISR — §1.5 rendering table
 
@@ -66,6 +67,7 @@ export default async function HomePage() {
               >
                 Search
               </button>
+              <NearMeButton className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-5 font-medium whitespace-nowrap hover:bg-[var(--surface-2)] disabled:opacity-60" />
             </form>
           </div>
         </section>

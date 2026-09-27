@@ -372,6 +372,26 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
               </ul>
             ) : null}
           </div>
+
+          <div className="mt-4 space-y-2 px-1 text-sm">
+            <p>
+              <span className="text-[var(--text-muted)]">Own this business? </span>
+              <Link
+                href={`/listing/${listing.slug}/claim`}
+                className="text-brand-700 font-medium hover:underline"
+              >
+                Claim it for free
+              </Link>
+            </p>
+            <p>
+              <Link
+                href={`/listing/${listing.slug}/report`}
+                className="text-[var(--text-muted)] hover:underline"
+              >
+                Report a problem with this listing
+              </Link>
+            </p>
+          </div>
         </aside>
       </div>
 
