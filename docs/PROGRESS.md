@@ -52,7 +52,7 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
 | ID | Blocker | Impact | Owner |
 |---|---|---|---|
 | ~~B-1~~ | ~~`101toplistings.com` denied by egress policy~~ **RESOLVED** for research — captured in-browser via Claude in Chrome. Still blocks Phase 8 side-by-side comparison. | Phase 8 only | Closed for Phases 1–2 |
-| ~~B-2~~ | ~~Supabase unreachable~~ **RESOLVED** — new project `rccuhznzediwocwlqflk` created at $0/month; all 9 migrations applied and verified live | — | Closed |
+| ~~B-2~~ | ~~Supabase unreachable~~ **RESOLVED** — originally `rccuhznzediwocwlqflk`; after the free tier paused it, the site moved to `cwnqvngpjxvodbvdhpzf` (2026-09-27), built from `supabase/full_setup.sql`. Content starts empty. | — | Closed |
 | ~~B-3~~ | ~~No write access~~ **RESOLVED** — Claude GitHub App installed; branch pushed, PR #1 open | — | Closed |
 | B-4 | No **continuous** deployment — Vercel's GitHub App is not installed on `naveedrehman1611-alt`, so pushes do not redeploy. The live site was uploaded directly. | Redeploys only | User — install https://github.com/apps/vercel |
 
