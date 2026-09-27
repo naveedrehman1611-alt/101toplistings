@@ -20,10 +20,11 @@ const invalid = (): NewsletterState => ({
 });
 
 /**
- * The footer newsletter form. Anyone may subscribe (RLS: newsletter_public_insert)
- * and only staff can read the list back, so an address that is already on it
- * gets the same answer as a new one: the form never tells a visitor who has
- * subscribed. Nothing public changes, so nothing is revalidated.
+ * The footer newsletter form. Subscribing goes through the subscribe_newsletter
+ * RPC (migration 0018), which answers the same for a new address and one
+ * already on the list, and only staff can read the list back — so neither this
+ * form nor the public API tells anyone who has subscribed. Nothing public
+ * changes, so nothing is revalidated.
  */
 export async function subscribeNewsletter(
   _prev: NewsletterState,
@@ -38,16 +39,13 @@ export async function subscribeNewsletter(
 
   try {
     const supabase = await createClient();
-    // A plain insert rather than upsert(ignoreDuplicates): PostgREST names the
-    // conflict column, Postgres then needs SELECT on it, and RLS gives visitors
-    // no SELECT, so the upsert is refused.
-    const { error } = await supabase
-      .from('newsletter_subscribers')
-      .insert({ email, source: 'footer' });
-    // 23505: the address is already on the list, which is a success.
-    // 23514: the table's own format check, stricter for some non-ASCII input.
-    if (error?.code === '23514') return invalid();
-    if (error && error.code !== '23505') throw error;
+    const { error } = await supabase.rpc('subscribe_newsletter', {
+      p_email: email,
+      p_source: 'footer',
+    });
+    // 22023: the function's own format check, stricter for some non-ASCII input.
+    if (error?.code === '22023') return invalid();
+    if (error) throw error;
   } catch (e) {
     const err = e as { message?: string; code?: string } | null;
     console.error(

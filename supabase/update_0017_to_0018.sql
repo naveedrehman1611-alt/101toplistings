@@ -82,11 +82,11 @@ create index if not exists newsletter_subscribers_recent_idx
 
 alter table newsletter_subscribers enable row level security;
 
--- Anyone may subscribe, but only as an active subscriber; nobody but staff can
--- read the list back, so the insert endpoint cannot be used to test addresses.
+-- Visitors never write the table directly: a plain insert answers 201 for a
+-- new address and 409 for a known one, so anyone holding the public key could
+-- test whether an address is on the list. They subscribe through
+-- subscribe_newsletter() below, which answers identically either way.
 drop policy if exists newsletter_public_insert on newsletter_subscribers;
-create policy newsletter_public_insert on newsletter_subscribers
-  for insert with check (status = 'active');
 
 drop policy if exists newsletter_staff_read on newsletter_subscribers;
 create policy newsletter_staff_read on newsletter_subscribers
@@ -99,6 +99,29 @@ create policy newsletter_staff_update on newsletter_subscribers
 drop policy if exists newsletter_admin_delete on newsletter_subscribers;
 create policy newsletter_admin_delete on newsletter_subscribers
   for delete using (has_min_role('admin'));
+
+create or replace function subscribe_newsletter(p_email text, p_source text default null)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_email text := lower(btrim(coalesce(p_email, '')));
+begin
+  if length(v_email) > 254 or v_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' then
+    raise exception 'invalid email address' using errcode = '22023';
+  end if;
+  -- An address already on the list, subscribed or not, is left as it is:
+  -- typing it in again must not undo somebody's unsubscribe.
+  insert into newsletter_subscribers (email, source)
+  values (v_email, left(nullif(btrim(p_source), ''), 40))
+  on conflict (email) do nothing;
+end;
+$$;
+
+revoke execute on function subscribe_newsletter(text, text) from public;
+grant execute on function subscribe_newsletter(text, text) to anon, authenticated;
 
 -- ===========================================================================
 -- 2. Taxonomy — SmartBizDir's 18 parent categories and their children
