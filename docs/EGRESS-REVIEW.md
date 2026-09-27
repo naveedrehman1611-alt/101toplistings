@@ -45,10 +45,12 @@ to Supabase now prints, per read,
 
 where the previous code printed nothing and produced a page of empty states.
 
-`searchListings()` deliberately keeps throwing instead. On an ISR route a thrown
-error means the last good page keeps being served and the failure reaches the
-runtime error tracker — both better than replacing real results with an empty
-grid.
+`searchListings()` used to throw instead, on the theory that ISR would keep
+serving the last good page. In practice most listing routes read `searchParams`
+and render per request, so there was no cached page: when Supabase became
+unreachable (`TypeError: fetch failed`, September 2026) home, listings, search,
+category, city and listing detail all showed "This page couldn't load". It now
+retries once on a network failure, then logs via `reportError` and returns `[]`.
 
 ### 2. The read path had no cache at all
 
@@ -143,8 +145,9 @@ redirected off-site. Now rejected.
 - **`revalidatePath('/', 'layout')` on any settings change** invalidates the
   entire site. Correct (brand and contact render in the layout) but it means one
   settings edit re-renders everything on next visit.
-- **No `error.tsx` anywhere.** A thrown read currently produces the framework's
-  default error page.
+- **Error boundaries.** `src/app/error.tsx` (inside the site chrome, with a
+  retry button) and `src/app/global-error.tsx` replace the framework's default
+  error page for anything that still throws.
 
 ## Rules to keep this from coming back
 

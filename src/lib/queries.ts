@@ -160,23 +160,32 @@ export type SearchArgs = {
  * no distance is ever computed in the browser (§7.5.4).
  */
 export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
-  const { data, error } = await supabase.rpc('search_listings', {
-    p_query: args.query ?? null,
-    p_category_id: args.categoryId ?? null,
-    p_city_id: args.cityId ?? null,
-    p_lat: args.lat ?? null,
-    p_lng: args.lng ?? null,
-    p_radius_km: args.radiusKm ?? null,
-    p_sort: args.sort ?? 'newest',
-    p_limit: args.limit ?? 12,
-    p_offset: args.offset ?? 0,
-  });
-  // Deliberately throws rather than returning []. A failed search that renders
-  // "No listings yet" is indistinguishable from an empty directory; throwing
-  // surfaces the failure in the runtime error tracker, and on an ISR route it
-  // keeps the last good page being served instead of replacing it with an
-  // empty one.
-  if (error) throw new Error(`search_listings failed: ${error.message}`);
+  const call = () =>
+    supabase.rpc('search_listings', {
+      p_query: args.query ?? null,
+      p_category_id: args.categoryId ?? null,
+      p_city_id: args.cityId ?? null,
+      p_lat: args.lat ?? null,
+      p_lng: args.lng ?? null,
+      p_radius_km: args.radiusKm ?? null,
+      p_sort: args.sort ?? 'newest',
+      p_limit: args.limit ?? 12,
+      p_offset: args.offset ?? 0,
+    });
+  let { data, error } = await call();
+  // "fetch failed" is a network-level failure (DNS, TLS, cold connection), not
+  // a query error, and is often transient on serverless. One retry is cheap.
+  if (error && /fetch failed/i.test(error.message)) ({ data, error } = await call());
+  // Logs and degrades instead of throwing. Throwing took down every page that
+  // lists businesses (home, listings, search, category, city and even listing
+  // detail via "related") with Next's bare "This page couldn't load" whenever
+  // Supabase was unreachable, and most of those routes render per request, so
+  // there was no cached page to fall back to. The failure stays visible in the
+  // runtime logs via reportError.
+  if (error) {
+    reportError('search_listings', error);
+    return [];
+  }
   return attachCovers((data ?? []) as ListingCard[]);
 }
 
