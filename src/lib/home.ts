@@ -424,7 +424,7 @@ export const getHomePage = cache(async function getHomePage(): Promise<HomePage>
     getCategories(),
     getCities(),
   ]);
-  const brand = settingText(settings, 'brand.name', 'SmartBizDir');
+  const brand = settingText(settings, 'brand.name', 'RankYouSite');
   const lookups: Lookups = {
     brand,
     categoriesById: new Map(categories.map((c) => [c.id, c])),

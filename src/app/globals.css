@@ -2,9 +2,9 @@
 
 /* Tailwind v4 is CSS-first: this @theme block IS the Tailwind config.
 
-   Tokens follow the SmartBizDir reference: primary #234DD4 (brand-700, every
+   Tokens follow the reference layout: primary #234DD4 (brand-700, every
    button, link and active state), headings #222, body text #717171, light
-   surface #F4F4F4, 1px #EAEAEA card borders with 8px radii, Jost throughout. */
+   surface #F4F4F4, 1px #EAEAEA card borders with 8px radii. Inter for text, Plus Jakarta Sans for headings. */
 @theme {
   --color-ink-50: #f7f7f8;
   --color-ink-100: #f4f4f4;
@@ -42,8 +42,8 @@
   --color-accent-500: #e09000;
   --color-accent-600: #b87400;
 
-  --font-display: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   --container-page: 1200px;
   --container-wide: 1320px;

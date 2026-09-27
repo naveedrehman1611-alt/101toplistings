@@ -26,7 +26,7 @@ const HELP: Record<string, string> = {
   'brand.name':
     'Shown in the header, the footer and every page title. Homepage and footer copy say {brand} where the name goes, so a rebrand is this one edit.',
   'brand.name_accent':
-    'The end of the brand name drawn in orange in the logo wordmark, such as Dir in SmartBizDir. It must be how the name ends; leave it blank for one colour.',
+    'The end of the brand name drawn in orange in the logo wordmark, such as Site in RankYouSite. It must be how the name ends; leave it blank for one colour.',
   'brand.logo_light_media_id':
     'Logo shown on white backgrounds (inner-page header). Upload it in Media first. Until one is chosen, the brand name is drawn as a wordmark.',
   'brand.logo_dark_media_id':

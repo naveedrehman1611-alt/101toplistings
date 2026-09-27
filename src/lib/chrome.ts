@@ -44,7 +44,7 @@ export const getChrome = cache(async function getChrome(): Promise<ChromeVM> {
     getMenu('footer', 'Useful Links'),
   ]);
   const s = (key: string, fallback = '') => settingText(settings, key, fallback).trim();
-  const brand = s('brand.name', 'SmartBizDir') || 'SmartBizDir';
+  const brand = s('brand.name', 'RankYouSite') || 'RankYouSite';
 
   const lightId = s('brand.logo_light_media_id');
   const darkId = s('brand.logo_dark_media_id');

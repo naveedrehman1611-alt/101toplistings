@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
 import type { ChromeVM, SocialNetwork } from '@/lib/home-types';
 import { Icon } from '@/components/icons';
-import { Logo, LogoMark } from '@/components/logo';
+import { Logo } from '@/components/logo';
 import { NewsletterForm } from '@/components/newsletter-form';
 
 const NETWORK_NAMES: Record<SocialNetwork, string> = {
@@ -48,8 +48,6 @@ export function Footer({ chrome }: { chrome: ChromeVM }) {
     // The global focus ring is brand blue, faint on navy. That rule is unlayered
     // CSS, which beats any Tailwind utility, hence the important modifier.
     <footer className="bg-navy-900 relative overflow-hidden text-white/70 [&_:focus-visible]:outline-white!">
-      <LogoMark className="pointer-events-none absolute -right-24 -bottom-28 size-[300px] text-white opacity-[0.04] sm:size-[420px]" />
-
       <div className="container-page relative grid grid-cols-1 gap-10 py-16 md:grid-cols-2 lg:grid-cols-12">
         <div className="lg:col-span-4">
           <Link href="/" className="inline-flex rounded-md">

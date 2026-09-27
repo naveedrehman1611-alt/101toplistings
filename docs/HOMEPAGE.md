@@ -1,4 +1,4 @@
-# Homepage — SmartBizDir rebuild
+# Homepage — rebuilt on the SmartBizDir layout
 
 The homepage recreates https://smartbizdir.com section by section, but every word, image, link and
 section on it is data: editors change it in **Admin → Pages & sections**, **Admin → Settings**,
@@ -19,7 +19,8 @@ that still hold an earlier migration's default values, so nothing an admin edite
 - makes `search_listings` match a parent category's subcategories, so searching "Health & Medical" finds
   listings filed under "Doctors";
 - seeds the 14 homepage sections and their items, the header / mobile / footer menus, and the header,
-  footer, social and contact settings; renames the untouched "RankYouSite" defaults to SmartBizDir.
+  footer, social and contact settings. The brand stays RankYouSite (`brand.name`); if the earlier
+  draft of this migration renamed it to SmartBizDir, 0021 puts the untouched values back.
 
 The old reference URLs (`/listing-category/*`, `/listing-location/*`, `/submission`, `/about-us`,
 `/contact-us`, `/listing-top-filter`) redirect permanently to this app's routes (`next.config.ts`).
@@ -77,10 +78,8 @@ Uploads are stored under unique names with a one-year cache header and optimised
 - **Favourites.** The ♡ on a business card saves the business for a signed-in visitor (listed under
   "Saved businesses" in the dashboard); signed-out visitors are asked to sign in. The reference site
   let guests save without an account.
-- **Testimonials.** The five people shown on the live site (Mudassir, Asad Saleem, Aqsa Asghar, Zunaira,
-  Mateen Awan) are seeded with their names and roles only. Their quotes and photos are not copied, and a
-  testimonial is never displayed without its quote, so the section stays hidden until the real quotes are
-  pasted in.
+- **Testimonials.** No testimonials are seeded. Add real customer quotes in the `testimonials`
+  section; it stays hidden until at least one testimonial has a quote.
 - **Copy written for this rebuild** (the reference's text was not available): FAQ answers, the guidance
   paragraphs, the CTA sublines, descriptions for the last three service cards, and the section subtexts
   for Guidance, FAQ and Guides. All of it describes how this site actually works and is editable.

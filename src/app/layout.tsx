@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Jost } from 'next/font/google';
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
@@ -8,9 +8,20 @@ import { getSettings, settingText } from '@/lib/queries';
 import { getChrome } from '@/lib/chrome';
 import { SITE_URL } from '@/lib/supabase';
 
-// One variable font for the whole site, as on the reference. Self-hosted by
-// next/font and preloaded, so there is no request to Google at runtime.
-const jost = Jost({ subsets: ['latin'], variable: '--font-jost', display: 'swap', preload: true });
+// Criterion 36: critical fonts preloaded. Self-hosted by next/font, so there
+// is no request to Google at runtime.
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+  preload: true,
+});
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-jakarta',
+  display: 'swap',
+  preload: true,
+});
 
 /** A SITE_URL without a scheme (e.g. "example.com") would make new URL throw on every page. */
 function safeUrl(value: string): URL | undefined {
@@ -23,7 +34,7 @@ function safeUrl(value: string): URL | undefined {
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
-  const brand = settingText(s, 'brand.name', 'SmartBizDir');
+  const brand = settingText(s, 'brand.name', 'RankYouSite');
   const title = settingText(s, 'seo.default_title', brand);
   const description = settingText(s, 'seo.default_description', '');
   return {
@@ -41,7 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const chrome = await getChrome();
 
   return (
-    <html lang="en" className={jost.variable}>
+    <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body className="flex min-h-screen flex-col">
         <a
           href="#main"

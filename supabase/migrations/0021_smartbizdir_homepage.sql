@@ -1,4 +1,4 @@
--- 0021 — SmartBizDir homepage: page builder fields, taxonomy, content, newsletter
+-- 0021 — homepage rebuild (SmartBizDir layout): page builder fields, taxonomy, content, newsletter
 --
 -- The homepage is now rendered section by section from page_sections in
 -- sort_order, by section_type (src/lib/home.ts), so editors can reorder,
@@ -493,7 +493,7 @@ $$;
 -- ===========================================================================
 
 insert into settings (key, value, "group") values
-  ('brand.name_accent',          to_jsonb('Dir'::text), 'brand'),
+  ('brand.name_accent',          to_jsonb(''::text), 'brand'),
   ('brand.logo_light_media_id',  to_jsonb(''::text), 'brand'),
   ('brand.logo_dark_media_id',   to_jsonb(''::text), 'brand'),
   ('header.login_label',         to_jsonb('Login'::text), 'header'),
@@ -511,28 +511,51 @@ insert into settings (key, value, "group") values
   ('footer.newsletter_button',   to_jsonb('Subscribe'::text), 'footer'),
   ('contact.phone',              to_jsonb(''::text), 'contact'),
   ('contact.address',            to_jsonb(''::text), 'contact'),
-  ('social.facebook',            to_jsonb('https://www.facebook.com/smartbizdir/'::text), 'social'),
-  ('social.instagram',           to_jsonb('https://www.instagram.com/smartbizdir/'::text), 'social'),
-  ('social.x',                   to_jsonb('https://x.com/smartbizdir'::text), 'social'),
+  ('social.facebook',            to_jsonb(''::text), 'social'),
+  ('social.instagram',           to_jsonb(''::text), 'social'),
+  ('social.x',                   to_jsonb(''::text), 'social'),
   ('social.linkedin',            to_jsonb(''::text), 'social'),
   ('social.youtube',             to_jsonb(''::text), 'social')
 on conflict (key) do nothing;
 
--- Rebrand the 0013 defaults, and only those: a value an admin has already
--- changed is not touched.
-update settings set value = to_jsonb('SmartBizDir'::text)
- where key = 'brand.name' and value = to_jsonb('RankYouSite'::text);
-update settings set value = to_jsonb('smartbizdir.com'::text)
- where key = 'brand.domain' and value = to_jsonb('rankyousite.com'::text);
-update settings set value = to_jsonb('Discover, compare, and contact local businesses across Pakistan.'::text)
- where key = 'brand.tagline' and value = to_jsonb('Find trusted local businesses near you.'::text);
-update settings set value = to_jsonb('Smart Biz Dir – All rights reserved'::text)
- where key = 'footer.copyright' and value = to_jsonb('RankYouSite'::text);
-update settings set value = to_jsonb('Business Directory Pakistan | Find Local Services'::text)
- where key = 'seo.default_title' and value = to_jsonb('RankYouSite — local business directory'::text);
-update settings set value = to_jsonb('Explore Business Directory Pakistan to find restaurants, doctors, shops, professionals, and local services by category, city, or area.'::text)
+-- The site keeps the RankYouSite brand. An earlier draft of this migration
+-- (shipped as update_0017_to_0018.sql) renamed the 0013 defaults to SmartBizDir
+-- and pointed the social links at SmartBizDir's accounts; if that draft was
+-- run, put back exactly what it changed. Rows an admin has edited since are
+-- left alone.
+update settings set value = to_jsonb('RankYouSite'::text)
+ where key = 'brand.name' and value = to_jsonb('SmartBizDir'::text);
+update settings set value = to_jsonb('rankyousite.com'::text)
+ where key = 'brand.domain' and value = to_jsonb('smartbizdir.com'::text);
+update settings set value = to_jsonb('Find trusted local businesses near you.'::text)
+ where key = 'brand.tagline'
+   and value = to_jsonb('Discover, compare, and contact local businesses across Pakistan.'::text);
+update settings set value = to_jsonb('RankYouSite'::text)
+ where key = 'footer.copyright' and value = to_jsonb('Smart Biz Dir – All rights reserved'::text);
+update settings set value = to_jsonb('RankYouSite — local business directory'::text)
+ where key = 'seo.default_title'
+   and value = to_jsonb('Business Directory Pakistan | Find Local Services'::text);
+update settings set value = to_jsonb('Search local businesses by name, category and city, with real addresses, opening hours and reviews.'::text)
  where key = 'seo.default_description'
-   and value = to_jsonb('Search local businesses by name, category and city, with real addresses, opening hours and reviews.'::text);
+   and value = to_jsonb('Explore Business Directory Pakistan to find restaurants, doctors, shops, professionals, and local services by category, city, or area.'::text);
+update settings set value = to_jsonb(''::text)
+ where key = 'brand.name_accent' and value = to_jsonb('Dir'::text);
+update settings set value = to_jsonb(''::text)
+ where (key, value) in (
+   ('social.facebook',  to_jsonb('https://www.facebook.com/smartbizdir/'::text)),
+   ('social.instagram', to_jsonb('https://www.instagram.com/smartbizdir/'::text)),
+   ('social.x',         to_jsonb('https://x.com/smartbizdir'::text)));
+
+-- The draft also seeded SmartBizDir's customers as testimonial names (no
+-- quotes). Remove them while they still have no quote.
+delete from section_items i
+ using page_sections s, pages p
+ where i.section_id = s.id and s.page_id = p.id and p.slug = 'home'
+   and s.section_key = 'testimonials' and i.body is null and i.image_id is null
+   and (i.title, i.subtitle) in (
+     ('Mudassir', 'Business Owner'), ('Asad Saleem', 'Business Owner'),
+     ('Aqsa Asghar', 'Developer'), ('Zunaira', 'Business Owner'),
+     ('Mateen Awan', 'Business Owner'));
 
 -- ===========================================================================
 -- 5. Menus
@@ -794,14 +817,6 @@ select s.id, i.sort_order, i.ref_type,
     ('grow', 20, null, null, 'What Should a Complete Business Profile Include?', null,
        E'Accurate business name and category\nOriginal service description\nCurrent phone number and address\nOpening and closing hours\nClear business or service images\nWebsite and social media details\nService areas and available facilities',
        'check', null),
-    -- Testimonials: names and roles as published on the reference site. The
-    -- quotes and photos are not copied here; a testimonial only renders once an
-    -- editor adds its quote in Admin, so nothing is shown that was not said.
-    ('testimonials', 10, null, null, 'Mudassir',    'Business Owner', null, null, null),
-    ('testimonials', 20, null, null, 'Asad Saleem', 'Business Owner', null, null, null),
-    ('testimonials', 30, null, null, 'Aqsa Asghar', 'Developer',      null, null, null),
-    ('testimonials', 40, null, null, 'Zunaira',     'Business Owner', null, null, null),
-    ('testimonials', 50, null, null, 'Mateen Awan', 'Business Owner', null, null, null),
     -- FAQ
     ('faq', 10, null, null, 'What is {brand}?', null,
        '{brand} is an online business directory for Pakistan. It helps people find local businesses and service providers by category and city, and gives business owners a free way to be found online.',
