@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { findSection, getBlogPosts, getPageSections } from '@/lib/queries';
 import { Breadcrumbs, EmptyState } from '@/components/ui';
+import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 600;
 export async function generateMetadata(): Promise<Metadata> {
-  const { seoMetadata } = await import('@/lib/seo');
   return seoMetadata('/blog', {
     title: 'Blog',
     description: 'Notes on getting found locally.',

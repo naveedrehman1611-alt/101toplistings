@@ -35,10 +35,11 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
       easing/duration set, and the component set the built pages use.
       → `src/app/globals.css`, `src/lib/motion.ts`, `src/components/`
 - [~] **Phase 5 — Implement every page.** Public routes plus `/register`, `/dashboard`,
-      `/dashboard/listings/new|[id]` and `/listing/[slug]/review`. Password reset not built.
-- [~] **Phase 5B — Admin panel.** Dashboard, listings (moderate, create, edit, delete),
-      categories, locations, reviews, inbox, pages & sections, settings. Media library, menu
-      builder, blog editor, SEO manager and redirects not built.
+      `/dashboard/listings/new|[id]`, `/listing/[slug]/review`, `/forgot-password`,
+      `/reset-password` and `/auth/callback`.
+- [~] **Phase 5B — Admin panel.** Dashboard, listings (moderate, create, edit, delete, images),
+      categories, locations, reviews, inbox, blog, media library, menus, pages & sections, SEO,
+      redirects, settings. Not built: announcements, amenities, claims, user management.
 - [~] **Phase 6 — Query, search, and form states.** Search, sorting and pagination done with
       state in the URL. Filters and every form still outstanding.
 - [ ] **Phase 7 — Responsive QA.** Breakpoints implemented; nothing verified at real widths.
@@ -121,7 +122,7 @@ Numbering matches the master prompt exactly.
 | 54 | Role permission matrix documented and enforced by RLS + route guards | `[~]` | Matrix in `docs/data-model.md`; RLS done, route guards pending |
 | 55 | Privilege-escalation attempts fail, results recorded | `[x]` | 6 attempts, all denied — `docs/qa/admin-qa.md` |
 | 56 | Audit log records every admin write with before/after | `[ ]` | |
-| 57 | Media library, SEO manager, menu builder, redirects, forms inbox functional | `[~]` | Forms inbox done (`/admin/inbox`); the rest not built |
+| 57 | Media library, SEO manager, menu builder, redirects, forms inbox functional | `[x]` | `/admin/media`, `/admin/seo`, `/admin/menus`, `/admin/redirects` (resolved only for unmatched or retired URLs, 0016), `/admin/inbox`. Not verified against live Storage yet |
 
 ---
 

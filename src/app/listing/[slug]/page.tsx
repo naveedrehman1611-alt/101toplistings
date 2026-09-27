@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -15,6 +14,7 @@ import {
 import { Badge, Breadcrumbs, Stars } from '@/components/ui';
 import { ListingCard } from '@/components/listing-card';
 import { SITE_URL } from '@/lib/supabase';
+import { redirectOrNotFound } from '@/lib/redirects';
 
 export const revalidate = 600;
 
@@ -58,7 +58,8 @@ export async function generateMetadata({
 export default async function ListingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const listing = await getListing(slug);
-  if (!listing) notFound();
+  // A retired slug may have a stored redirect; otherwise this renders the 404.
+  if (!listing) return redirectOrNotFound(`/listing/${encodeURIComponent(slug)}`);
 
   const [hours, categories, cities, reviews, images] = await Promise.all([
     getOpeningHours(listing.id),

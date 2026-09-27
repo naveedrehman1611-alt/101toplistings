@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getBlogPost, getBlogPosts } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
 import { SITE_URL } from '@/lib/supabase';
 import { Markdown } from '@/components/markdown';
+import { redirectOrNotFound } from '@/lib/redirects';
 
 export const revalidate = 600;
 
@@ -37,7 +37,8 @@ export async function generateMetadata({
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getBlogPost(slug);
-  if (!post) notFound();
+  // A retired slug may have a stored redirect; otherwise this renders the 404.
+  if (!post) return redirectOrNotFound(`/blog/${encodeURIComponent(slug)}`);
 
   const all = await getBlogPosts();
   const related = all.filter((p) => p.slug !== post.slug).slice(0, 3);

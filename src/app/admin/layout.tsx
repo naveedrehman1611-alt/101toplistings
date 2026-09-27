@@ -18,7 +18,12 @@ const NAV = [
   { href: '/admin/inbox', label: 'Inbox' },
   { href: '/admin/categories', label: 'Categories' },
   { href: '/admin/locations', label: 'Locations' },
+  { href: '/admin/blog', label: 'Blog' },
+  { href: '/admin/media', label: 'Media' },
+  { href: '/admin/menus', label: 'Menus' },
   { href: '/admin/pages', label: 'Pages & sections' },
+  { href: '/admin/seo', label: 'SEO' },
+  { href: '/admin/redirects', label: 'Redirects' },
   { href: '/admin/settings', label: 'Settings' },
 ];
 
