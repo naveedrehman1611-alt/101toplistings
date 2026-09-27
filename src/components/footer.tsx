@@ -134,9 +134,19 @@ export function Footer({ chrome }: { chrome: ChromeVM }) {
       </div>
 
       <div className="relative border-t border-white/10">
-        <p className="container-page py-6 text-sm text-white/60">
-          Copyright © {new Date().getFullYear()} {footer.copyright}
-        </p>
+        <div className="container-page flex flex-wrap items-center justify-between gap-3 py-6 text-sm text-white/60">
+          <p>
+            Copyright © {new Date().getFullYear()} {footer.copyright}
+          </p>
+          <p className="flex gap-4">
+            <Link href="/privacy" className="transition-colors hover:text-white">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-white">
+              Terms of Service
+            </Link>
+          </p>
+        </div>
       </div>
     </footer>
   );
