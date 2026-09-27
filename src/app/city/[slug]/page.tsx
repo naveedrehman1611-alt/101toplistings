@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { getCities, getCityBySlug, searchListings } from '@/lib/queries';
 import { Results, parsePage, parseSort } from '@/components/results';
 import { Breadcrumbs } from '@/components/ui';
 import { SITE_URL } from '@/lib/supabase';
+import { redirectOrNotFound } from '@/lib/redirects';
 
 export const revalidate = 600;
 const PER_PAGE = 12;
@@ -42,7 +42,8 @@ export default async function CityPage({
 }) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const city = await getCityBySlug(slug);
-  if (!city) notFound();
+  // A retired slug may have a stored redirect; otherwise this renders the 404.
+  if (!city) return redirectOrNotFound(`/city/${encodeURIComponent(slug)}`);
 
   const page = parsePage(sp.page);
   const sort = parseSort(sp.sort);

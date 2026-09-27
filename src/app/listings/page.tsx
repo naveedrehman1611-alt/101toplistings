@@ -2,16 +2,19 @@ import type { Metadata } from 'next';
 import { findSection, getCities, getPageSections, searchListings } from '@/lib/queries';
 import { Results, parsePage, parseSort } from '@/components/results';
 import { Breadcrumbs } from '@/components/ui';
+import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 300;
 const PER_PAGE = 12;
 
-export const metadata: Metadata = {
-  title: 'All listings',
-  description: 'Every approved business, newest first.',
-  openGraph: { title: 'All listings', description: 'Every approved business, newest first.' },
-  twitter: { card: 'summary_large_image', title: 'All listings' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return seoMetadata('/listings', {
+    title: 'All listings',
+    description: 'Every approved business, newest first.',
+    openGraph: { title: 'All listings', description: 'Every approved business, newest first.' },
+    twitter: { card: 'summary_large_image', title: 'All listings' },
+  });
+}
 
 export default async function ListingsPage({
   searchParams,

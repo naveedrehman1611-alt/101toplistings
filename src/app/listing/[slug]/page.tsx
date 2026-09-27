@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   getAllListingSlugs,
   getCategories,
   getCities,
   getListing,
+  getListingImages,
   getApprovedReviews,
   getOpeningHours,
   searchListings,
@@ -13,6 +14,7 @@ import {
 import { Badge, Breadcrumbs, Stars } from '@/components/ui';
 import { ListingCard } from '@/components/listing-card';
 import { SITE_URL } from '@/lib/supabase';
+import { redirectOrNotFound } from '@/lib/redirects';
 
 export const revalidate = 600;
 
@@ -56,13 +58,15 @@ export async function generateMetadata({
 export default async function ListingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const listing = await getListing(slug);
-  if (!listing) notFound();
+  // A retired slug may have a stored redirect; otherwise this renders the 404.
+  if (!listing) return redirectOrNotFound(`/listing/${encodeURIComponent(slug)}`);
 
-  const [hours, categories, cities, reviews] = await Promise.all([
+  const [hours, categories, cities, reviews, images] = await Promise.all([
     getOpeningHours(listing.id),
     getCategories(),
     getCities(),
     getApprovedReviews(listing.id),
+    getListingImages(listing.id),
   ]);
 
   const category = categories.find((c) => c.id === listing.category_id);
@@ -113,6 +117,10 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
       reviewCount: listing.review_count,
     };
   }
+  if (images.cover || images.gallery.length > 0) {
+    jsonLd.image = [images.cover, ...images.gallery].flatMap((m) => (m ? [m.url] : []));
+  }
+  if (images.logo) jsonLd.logo = images.logo.url;
   if (listing.social_links.length > 0) {
     jsonLd.sameAs = listing.social_links.map((s) => s.url);
   }
@@ -121,7 +129,9 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
     <div className="container-page py-12">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // Names and descriptions come from business owners; escaping < stops a
+        // "</script>" in them from closing the tag and injecting markup.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <Breadcrumbs
         trail={[
@@ -132,7 +142,20 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
         ]}
       />
 
-      <div className="aspect-[4/1] rounded-xl bg-gradient-to-br from-brand-600 to-brand-800" />
+      {/* The gradient stays as the fallback for a listing with no cover. */}
+      <div className="from-brand-600 to-brand-800 relative aspect-[4/1] overflow-hidden rounded-xl bg-gradient-to-br">
+        {images.cover ? (
+          <Image
+            src={images.cover.url}
+            alt={images.cover.alt ?? ''}
+            fill
+            // The cover is the LCP element on this page, so fetch it first.
+            preload
+            sizes="(min-width: 1280px) 1200px, 100vw"
+            className="object-cover"
+          />
+        ) : null}
+      </div>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_20rem]">
         <div>
@@ -140,7 +163,18 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
             {category ? <Badge>{category.name}</Badge> : null}
             {listing.verification === 'verified' ? <Badge>Verified</Badge> : null}
           </div>
-          <h1 className="mt-3 text-3xl font-bold sm:text-4xl">{listing.name}</h1>
+          <div className="mt-3 flex items-center gap-4">
+            {images.logo ? (
+              <Image
+                src={images.logo.url}
+                alt={images.logo.alt ?? `${listing.name} logo`}
+                width={64}
+                height={64}
+                className="size-16 shrink-0 rounded-lg border border-[var(--border)] bg-[var(--surface)] object-contain"
+              />
+            ) : null}
+            <h1 className="text-3xl font-bold sm:text-4xl">{listing.name}</h1>
+          </div>
           {listing.tagline ? (
             <p className="mt-2 text-lg text-[var(--text-muted)]">{listing.tagline}</p>
           ) : null}
@@ -152,9 +186,35 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
           {listing.description ? (
             <section className="mt-10">
               <h2 className="text-xl font-semibold">About</h2>
-              <p className="mt-3 whitespace-pre-line leading-relaxed text-[var(--text-muted)]">
+              <p className="mt-3 leading-relaxed whitespace-pre-line text-[var(--text-muted)]">
                 {listing.description}
               </p>
+            </section>
+          ) : null}
+
+          {images.gallery.length > 0 ? (
+            <section className="mt-10">
+              <h2 className="text-xl font-semibold">Photos</h2>
+              <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {images.gallery.map((g) => (
+                  <li key={g.id}>
+                    <a
+                      href={g.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative block aspect-[4/3] overflow-hidden rounded-lg bg-[var(--surface-2)]"
+                    >
+                      <Image
+                        src={g.url}
+                        alt={g.alt ?? ''}
+                        fill
+                        sizes="(min-width: 1024px) 16rem, (min-width: 640px) 33vw, 50vw"
+                        className="object-cover transition-transform hover:scale-105"
+                      />
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </section>
           ) : null}
 
@@ -164,7 +224,10 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
               <table className="mt-4 w-full max-w-md text-sm">
                 <tbody>
                   {hours.map((h) => (
-                    <tr key={h.day_of_week} className="border-b border-[var(--border)] last:border-0">
+                    <tr
+                      key={h.day_of_week}
+                      className="border-b border-[var(--border)] last:border-0"
+                    >
                       <th scope="row" className="py-2.5 text-left font-medium">
                         {DAYS[h.day_of_week]}
                       </th>
@@ -208,7 +271,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
                       {r.title ? <span className="font-medium">{r.title}</span> : null}
                     </div>
                     {r.body ? (
-                      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed">{r.body}</p>
+                      <p className="mt-2 text-sm leading-relaxed whitespace-pre-line">{r.body}</p>
                     ) : null}
                     <p className="mt-2 text-xs text-[var(--text-muted)]">
                       {r.author_name ?? 'Visitor'} ·{' '}
@@ -219,9 +282,11 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
                       })}
                     </p>
                     {r.reply_body ? (
-                      <div className="mt-3 border-l-2 border-brand-500 pl-3 text-sm">
+                      <div className="border-brand-500 mt-3 border-l-2 pl-3 text-sm">
                         <p className="font-medium">Reply from the business</p>
-                        <p className="mt-1 whitespace-pre-line text-[var(--text-muted)]">{r.reply_body}</p>
+                        <p className="mt-1 whitespace-pre-line text-[var(--text-muted)]">
+                          {r.reply_body}
+                        </p>
                       </div>
                     ) : null}
                   </li>
@@ -245,7 +310,10 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
                 <div>
                   <dt className="text-[var(--text-muted)]">Phone</dt>
                   <dd>
-                    <a href={`tel:${listing.phone_primary.replace(/\s+/g, '')}`} className="text-brand-700 hover:underline">
+                    <a
+                      href={`tel:${listing.phone_primary.replace(/\s+/g, '')}`}
+                      className="text-brand-700 hover:underline"
+                    >
                       {listing.phone_primary}
                     </a>
                   </dd>
@@ -266,7 +334,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
             {listing.phone_primary ? (
               <a
                 href={`tel:${listing.phone_primary.replace(/\s+/g, '')}`}
-                className="mt-5 flex h-11 items-center justify-center rounded-lg bg-brand-700 font-medium text-white hover:bg-brand-800"
+                className="bg-brand-700 hover:bg-brand-800 mt-5 flex h-11 items-center justify-center rounded-lg font-medium text-white"
               >
                 Call now
               </a>

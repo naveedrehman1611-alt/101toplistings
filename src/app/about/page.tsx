@@ -1,14 +1,17 @@
 import type { Metadata } from 'next';
 import { findSection, getPageSections, getSettings, settingText } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
+import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 3600;
-export const metadata: Metadata = {
-  title: 'About',
-  description: 'Why this directory exists.',
-  openGraph: { title: 'About', description: 'Why this directory exists.' },
-  twitter: { card: 'summary_large_image', title: 'About' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return seoMetadata('/about', {
+    title: 'About',
+    description: 'Why this directory exists.',
+    openGraph: { title: 'About', description: 'Why this directory exists.' },
+    twitter: { card: 'summary_large_image', title: 'About' },
+  });
+}
 
 export default async function AboutPage() {
   const [sections, settings] = await Promise.all([getPageSections('about'), getSettings()]);

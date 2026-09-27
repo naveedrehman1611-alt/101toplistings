@@ -99,10 +99,22 @@ the free tier paused for inactivity. That project's data was never exported and 
 backup; it is recoverable only by restoring that project. Never write this schema into
 `utfpmyolqdtpnbiknlvm` — it is the separate Mr Medico application.
 
-**Migrations 0013 and 0014 are not in the live database yet** — it was built from the earlier
-`full_setup.sql` (0001–0012). Run `supabase/migrations/0013_base_content.sql` and then
-`0014_review_author_name.sql` in the SQL Editor. Both are safe to re-run. Until 0013 runs, the
-header, footer and home page have no content; until 0014 runs, submitting a review fails.
+**Pending database update.** The live database was built from the 0001–0012 `full_setup.sql`.
+Run `supabase/update_0013_to_0016.sql` once in the SQL Editor. It holds 0013 (base content), 0014
+(review author name), 0015 (the `media` storage bucket and its policies) and 0016 (redirect lookup),
+and every part is safe to re-run. Until it runs, the header, footer and home page are empty, reviews
+fail to submit, image uploads fail and redirects do nothing.
+
+**Supabase Auth URLs** (Authentication → URL Configuration), needed for password reset and signup
+confirmation links:
+- Site URL: `https://rankyousite.vercel.app` (or the custom domain once it exists)
+- Redirect URLs: `https://rankyousite.vercel.app/auth/callback**`, plus
+  `http://localhost:3000/auth/callback**` for local development
+
+Reset links use PKCE by default and only work in the browser that requested them. To make them work
+on any device, change the Reset Password email template's link to
+`{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password`;
+`/auth/callback` accepts both shapes.
 
 **Free tier pauses a project after 7 days without activity.** That is what took the site down
 here. Keep the project active or move to a paid plan once real content is in it.
