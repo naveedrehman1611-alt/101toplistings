@@ -5,6 +5,12 @@ import { requireRole } from './auth';
 import { writeAudit } from './audit';
 import { check, runAndReturn } from './action-flow';
 import { FormError, bool, num, required, slugFrom, text, uuid } from './form-data';
+import {
+  STARTER_CATEGORIES,
+  STARTER_CITIES,
+  STARTER_COUNTRY,
+  STARTER_REGIONS,
+} from './starter-data';
 
 // Each action re-checks the role itself: a Server Action is a public endpoint,
 // so the admin layout's check does not protect it. RLS enforces it a third time.
@@ -183,5 +189,93 @@ export async function deleteLocation(fd: FormData) {
     check(await supabase.from(table).delete().eq('id', id));
     await writeAudit(user.id, 'delete', ENTITY[table], id, before, null);
     return `Deleted ${before.name}.`;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Starter data
+// ---------------------------------------------------------------------------
+
+/**
+ * Fills an empty database with Pakistan's provinces, its larger cities and a set
+ * of common categories — the same rows as migration 0017. Without at least one
+ * city nobody can add a business. Only inserts what is missing, so pressing it
+ * twice (or after running 0017) changes nothing, and admin edits are never
+ * overwritten.
+ */
+export async function loadStarterData(fd: FormData) {
+  const user = await requireRole('editor');
+  // Fixed list, not a free path: an arbitrary "back" would be an open redirect.
+  const back =
+    text(fd, 'back', 100) === 'new-listing' ? '/dashboard/listings/new' : '/admin/locations';
+  await runAndReturn(back, async () => {
+    const supabase = await createClient();
+
+    // Location slugs are unique across all three levels (a trigger enforces
+    // it), so collect every slug already in use before inserting.
+    const [{ data: c }, { data: r }, { data: ci }, { data: cat }] = await Promise.all([
+      supabase.from('countries').select('id, slug'),
+      supabase.from('regions').select('id, slug'),
+      supabase.from('cities').select('slug'),
+      supabase.from('categories').select('slug'),
+    ]);
+    const taken = new Set([...(c ?? []), ...(r ?? []), ...(ci ?? [])].map((x) => x.slug));
+    let added = 0;
+
+    let countryId = (c ?? []).find((x) => x.slug === STARTER_COUNTRY.slug)?.id as
+      string | undefined;
+    if (!countryId) {
+      if (taken.has(STARTER_COUNTRY.slug))
+        throw new FormError(`The slug "${STARTER_COUNTRY.slug}" is already used elsewhere.`);
+      const row = check(
+        await supabase.from('countries').insert(STARTER_COUNTRY).select('*').single(),
+      );
+      await writeAudit(user.id, 'create', 'country', row.id, null, row);
+      countryId = row.id as string;
+      added++;
+    }
+
+    const regionIds = new Map((r ?? []).map((x) => [x.slug as string, x.id as string] as const));
+    const newRegions = STARTER_REGIONS.filter((x) => !taken.has(x.slug)).map((x) => ({
+      country_id: countryId,
+      slug: x.slug,
+      name: x.name,
+      latitude: x.lat,
+      longitude: x.lng,
+    }));
+    if (newRegions.length) {
+      const rows = check(await supabase.from('regions').insert(newRegions).select('id, slug'));
+      for (const row of rows ?? []) regionIds.set(row.slug, row.id);
+      await writeAudit(user.id, 'create', 'region', null, null, { starter: newRegions.length });
+      added += newRegions.length;
+    }
+
+    const newCities = STARTER_CITIES.filter(
+      (x) => !taken.has(x.slug) && regionIds.has(x.region),
+    ).map((x) => ({
+      region_id: regionIds.get(x.region)!,
+      slug: x.slug,
+      name: x.name,
+      latitude: x.lat,
+      longitude: x.lng,
+      is_featured: x.featured,
+    }));
+    if (newCities.length) {
+      check(await supabase.from('cities').insert(newCities));
+      await writeAudit(user.id, 'create', 'city', null, null, { starter: newCities.length });
+      added += newCities.length;
+    }
+
+    const haveCats = new Set((cat ?? []).map((x) => x.slug));
+    const newCats = STARTER_CATEGORIES.filter((x) => !haveCats.has(x.slug));
+    if (newCats.length) {
+      check(await supabase.from('categories').insert(newCats));
+      await writeAudit(user.id, 'create', 'category', null, null, { starter: newCats.length });
+      added += newCats.length;
+    }
+
+    return added
+      ? `Loaded ${newCities.length} cities and ${newCats.length} categories.`
+      : 'Starter data is already loaded.';
   });
 }

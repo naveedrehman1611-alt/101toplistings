@@ -1,7 +1,8 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { createClient } from './supabase-server';
+import { tableTag } from './supabase';
 import { requireRole, type Role } from './auth';
 import { writeAudit } from './audit';
 
@@ -43,10 +44,19 @@ export async function setListingStatus(
 
   if (error) return { ok: false, error: error.message };
 
-  await writeAudit(user.id, status === 'approved' ? 'approve' : 'update', 'listing', listingId, before, after);
+  await writeAudit(
+    user.id,
+    status === 'approved' ? 'approve' : 'update',
+    'listing',
+    listingId,
+    before,
+    after,
+  );
 
-  // The public pages are ISR-cached, so a moderation decision would otherwise
-  // not surface until the revalidate window elapsed.
+  // The public pages are ISR-cached and the reads behind them sit in the Data
+  // Cache, so a moderation decision needs both cleared or it would not surface
+  // until the revalidate window elapsed.
+  updateTag(tableTag('public_listings'));
   revalidatePath('/');
   revalidatePath('/listings');
   revalidatePath('/listing/[slug]', 'page');
@@ -86,6 +96,7 @@ export async function updateSetting(key: string, value: string): Promise<ActionR
 
   // Brand name and contact details render in the root layout, so every route
   // is stale after this.
+  updateTag(tableTag('settings'));
   revalidatePath('/', 'layout');
 
   return { ok: true, message: `Saved ${key}.` };
@@ -118,6 +129,7 @@ export async function setSectionEnabled(
   if (error) return { ok: false, error: error.message };
 
   await writeAudit(user.id, 'update', 'page_section', sectionId, before, after);
+  updateTag(tableTag('page_sections'));
   revalidatePath(pagePath);
   revalidatePath('/admin/pages');
 
@@ -161,6 +173,7 @@ export async function updateSection(
   if (error) return { ok: false, error: error.message };
 
   await writeAudit(user.id, 'update', 'page_section', sectionId, before, after);
+  updateTag(tableTag('page_sections'));
   revalidatePath(pagePath);
   revalidatePath('/admin/pages');
 

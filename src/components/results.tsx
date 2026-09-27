@@ -28,6 +28,7 @@ export function Results({
   perPage,
   sort,
   query,
+  params,
   cityNames,
   emptyTitle,
   emptyBody,
@@ -38,12 +39,25 @@ export function Results({
   perPage: number;
   sort: SortKey;
   query?: string;
+  /** Active filters, carried through the sort and page links. */
+  params?: Record<string, string | undefined>;
   cityNames: Map<string, string>;
   emptyTitle: string;
   emptyBody: string;
 }) {
   const total = listings[0]?.total_count ?? 0;
-  const pages = Math.max(1, Math.ceil(Number(total) / perPage));
+  const pages = Math.min(MAX_PAGE, Math.max(1, Math.ceil(Number(total) / perPage)));
+  // A link per page is fine at 3 pages and is kilobytes of markup on every
+  // request at 800. Render a window around the current page instead.
+  const WINDOW = 2;
+  const numbers: (number | 'gap')[] = [];
+  for (let p = 1; p <= pages; p++) {
+    if (p === 1 || p === pages || Math.abs(p - page) <= WINDOW) {
+      numbers.push(p);
+    } else if (numbers[numbers.length - 1] !== 'gap') {
+      numbers.push('gap');
+    }
+  }
 
   return (
     <>
@@ -55,7 +69,7 @@ export function Results({
           {SORTS.map((s) => (
             <Link
               key={s.key}
-              href={buildHref(basePath, { q: query, sort: s.key })}
+              href={buildHref(basePath, { ...params, q: query, sort: s.key })}
               className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
                 sort === s.key
                   ? 'border-brand-500 bg-brand-50 text-brand-800'
@@ -79,21 +93,35 @@ export function Results({
       )}
 
       {pages > 1 ? (
-        <nav aria-label="Pagination" className="mt-10 flex flex-wrap items-center justify-center gap-2">
-          {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-            <Link
-              key={p}
-              href={buildHref(basePath, { q: query, sort, page: p === 1 ? undefined : p })}
-              aria-current={p === page ? 'page' : undefined}
-              className={`grid h-10 min-w-10 place-items-center rounded-lg border px-3 text-sm ${
-                p === page
-                  ? 'border-brand-500 bg-brand-700 text-white'
-                  : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-              }`}
-            >
-              {p}
-            </Link>
-          ))}
+        <nav
+          aria-label="Pagination"
+          className="mt-10 flex flex-wrap items-center justify-center gap-2"
+        >
+          {numbers.map((p, i) =>
+            p === 'gap' ? (
+              <span key={`gap-${i}`} aria-hidden className="px-1 text-sm text-[var(--text-muted)]">
+                …
+              </span>
+            ) : (
+              <Link
+                key={p}
+                href={buildHref(basePath, {
+                  ...params,
+                  q: query,
+                  sort,
+                  page: p === 1 ? undefined : p,
+                })}
+                aria-current={p === page ? 'page' : undefined}
+                className={`grid h-10 min-w-10 place-items-center rounded-lg border px-3 text-sm ${
+                  p === page
+                    ? 'border-brand-500 bg-brand-700 text-white'
+                    : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
+                }`}
+              >
+                {p}
+              </Link>
+            ),
+          )}
         </nav>
       ) : null}
     </>
@@ -104,7 +132,15 @@ export function parseSort(v: string | undefined): SortKey {
   return v === 'oldest' || v === 'rating' || v === 'alphabetical' || v === 'nearest' ? v : 'newest';
 }
 
+/**
+ * Paging is bounded on the way in. An unbounded `?page=` is a free way for a
+ * crawler or a script to make the database run a very deep OFFSET scan and
+ * return a page of results for each one.
+ */
+export const MAX_PAGE = 500;
+
 export function parsePage(v: string | undefined): number {
   const n = Number(v ?? 1);
-  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 1;
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.min(Math.floor(n), MAX_PAGE);
 }
