@@ -6,6 +6,7 @@ import {
   getCategories,
   getCities,
   getListing,
+  getApprovedReviews,
   getOpeningHours,
   searchListings,
 } from '@/lib/queries';
@@ -57,10 +58,11 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
   const listing = await getListing(slug);
   if (!listing) notFound();
 
-  const [hours, categories, cities] = await Promise.all([
+  const [hours, categories, cities, reviews] = await Promise.all([
     getOpeningHours(listing.id),
     getCategories(),
     getCities(),
+    getApprovedReviews(listing.id),
   ]);
 
   const category = categories.find((c) => c.id === listing.category_id);
@@ -181,12 +183,51 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
           ) : null}
 
           <section className="mt-10">
-            <h2 className="text-xl font-semibold">Reviews</h2>
-            {listing.review_count === 0 ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl font-semibold">Reviews</h2>
+              <Link
+                href={`/listing/${listing.slug}/review`}
+                className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]"
+              >
+                Write a review
+              </Link>
+            </div>
+            {reviews.length === 0 ? (
               <p className="mt-3 text-[var(--text-muted)]">
-                No reviews yet. Sign in to be the first to review this business.
+                No reviews yet. Be the first to review this business.
               </p>
-            ) : null}
+            ) : (
+              <ul className="mt-4 space-y-4">
+                {reviews.map((r) => (
+                  <li key={r.id} className="surface-card p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span aria-label={`${r.rating} out of 5 stars`} className="text-accent-500">
+                        {'★'.repeat(r.rating)}
+                        <span className="text-[var(--border)]">{'★'.repeat(5 - r.rating)}</span>
+                      </span>
+                      {r.title ? <span className="font-medium">{r.title}</span> : null}
+                    </div>
+                    {r.body ? (
+                      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed">{r.body}</p>
+                    ) : null}
+                    <p className="mt-2 text-xs text-[var(--text-muted)]">
+                      {r.author_name ?? 'Visitor'} ·{' '}
+                      {new Date(r.created_at).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </p>
+                    {r.reply_body ? (
+                      <div className="mt-3 border-l-2 border-brand-500 pl-3 text-sm">
+                        <p className="font-medium">Reply from the business</p>
+                        <p className="mt-1 whitespace-pre-line text-[var(--text-muted)]">{r.reply_body}</p>
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </div>
 

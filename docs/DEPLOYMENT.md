@@ -99,6 +99,11 @@ the free tier paused for inactivity. That project's data was never exported and 
 backup; it is recoverable only by restoring that project. Never write this schema into
 `utfpmyolqdtpnbiknlvm` — it is the separate Mr Medico application.
 
+**Migrations 0013 and 0014 are not in the live database yet** — it was built from the earlier
+`full_setup.sql` (0001–0012). Run `supabase/migrations/0013_base_content.sql` and then
+`0014_review_author_name.sql` in the SQL Editor. Both are safe to re-run. Until 0013 runs, the
+header, footer and home page have no content; until 0014 runs, submitting a review fails.
+
 **Free tier pauses a project after 7 days without activity.** That is what took the site down
 here. Keep the project active or move to a paid plan once real content is in it.
 

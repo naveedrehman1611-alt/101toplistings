@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase-server';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, roleAtLeast } from '@/lib/auth';
 import { Breadcrumbs } from '@/components/ui';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,7 @@ async function signIn(formData: FormData) {
 
   const email = String(formData.get('email') ?? '').trim();
   const password = String(formData.get('password') ?? '');
-  const next = String(formData.get('next') ?? '/admin');
+  const next = String(formData.get('next') ?? '');
 
   if (!email || !password) {
     redirect(`/login?error=${encodeURIComponent('Enter an email and password.')}`);
@@ -32,7 +33,10 @@ async function signIn(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent('Those details did not match an account.')}`);
   }
 
-  redirect(next.startsWith('/') ? next : '/admin');
+  // Only same-site paths: "//evil.example" would be an open redirect.
+  if (next.startsWith('/') && !next.startsWith('//')) redirect(next);
+  const user = await getCurrentUser();
+  redirect(user && roleAtLeast(user.role, 'moderator') ? '/admin' : '/dashboard');
 }
 
 export default async function LoginPage({
@@ -44,7 +48,10 @@ export default async function LoginPage({
 
   // Already signed in — no reason to show the form again.
   const user = await getCurrentUser();
-  if (user) redirect(sp.next?.startsWith('/') ? sp.next : '/admin');
+  if (user) {
+    if (sp.next?.startsWith('/') && !sp.next.startsWith('//')) redirect(sp.next);
+    redirect(roleAtLeast(user.role, 'moderator') ? '/admin' : '/dashboard');
+  }
 
   return (
     <div className="container-page py-12">
@@ -65,7 +72,7 @@ export default async function LoginPage({
         ) : null}
 
         <form action={signIn} className="mt-6 space-y-4">
-          <input type="hidden" name="next" value={sp.next ?? '/admin'} />
+          <input type="hidden" name="next" value={sp.next ?? ''} />
           <div>
             <label htmlFor="email" className="block text-sm font-medium">
               Email
@@ -99,6 +106,16 @@ export default async function LoginPage({
             Sign in
           </button>
         </form>
+        <p className="mt-6 text-sm text-[var(--text-muted)]">
+          New here?{' '}
+          <Link
+            href={sp.next ? `/register?next=${encodeURIComponent(sp.next)}` : '/register'}
+            className="text-brand-700 hover:underline"
+          >
+            Create an account
+          </Link>{' '}
+          to add your business or write a review.
+        </p>
       </div>
     </div>
   );

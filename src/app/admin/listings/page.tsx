@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { setListingStatus } from '@/lib/admin-actions';
+import { Notice } from '@/components/admin-ui';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Listings' };
@@ -11,7 +12,7 @@ const STATUSES = ['all', 'pending', 'approved', 'rejected', 'suspended', 'draft'
 export default async function AdminListings({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; ok?: string; error?: string }>;
 }) {
   await requireRole('moderator');
   const sp = await searchParams;
@@ -38,7 +39,16 @@ export default async function AdminListings({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Listings</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold">Listings</h1>
+        <Link
+          href="/admin/listings/new"
+          className="inline-flex h-10 items-center rounded-lg bg-brand-700 px-4 text-sm font-medium text-white hover:bg-brand-800"
+        >
+          Add listing
+        </Link>
+      </div>
+      <Notice ok={sp.ok} error={sp.error} />
 
       <form className="mt-4 flex flex-wrap gap-2">
         <input
@@ -94,7 +104,7 @@ export default async function AdminListings({
             {(listings ?? []).map((l) => (
               <tr key={l.id} className="border-b border-[var(--border)] last:border-0">
                 <td className="py-3">
-                  <Link href={`/listing/${l.slug}`} className="font-medium hover:text-brand-700">
+                  <Link href={`/admin/listings/${l.id}`} className="font-medium hover:text-brand-700">
                     {l.name}
                   </Link>
                   {l.verification === 'verified' ? (

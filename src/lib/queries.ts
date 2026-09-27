@@ -267,3 +267,25 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
     .maybeSingle();
   return (data as BlogPost) ?? null;
 }
+
+export type PublicReview = {
+  id: string;
+  rating: number;
+  title: string | null;
+  body: string | null;
+  author_name: string | null;
+  reply_body: string | null;
+  created_at: string;
+};
+
+/** Approved reviews only — RLS hides pending ones from the public client anyway. */
+export async function getApprovedReviews(listingId: string): Promise<PublicReview[]> {
+  const { data } = await supabase
+    .from('reviews')
+    .select('id, rating, title, body, author_name, reply_body, created_at')
+    .eq('listing_id', listingId)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+    .limit(50);
+  return (data ?? []) as PublicReview[];
+}
