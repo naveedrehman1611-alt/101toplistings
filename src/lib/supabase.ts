@@ -14,7 +14,7 @@ if (!url || !anonKey) {
  * refetches it. Writes do not wait for this: every admin action calls
  * revalidateTag() for the tables it touched (see lib/admin-actions.ts).
  */
-export const READ_REVALIDATE_SECONDS = 600;
+export const READ_REVALIDATE_SECONDS = 3600;
 
 /** Cache tag for one table/view. Admin writes revalidate by this name. */
 export function tableTag(table: string): string {

@@ -51,6 +51,7 @@ export type ListingCard = {
 
 export type Category = {
   id: string;
+  parent_id: string | null;
   slug: string;
   name: string;
   description: string | null;
@@ -160,6 +161,16 @@ export type SearchArgs = {
  * no distance is ever computed in the browser (§7.5.4).
  */
 export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
+  return (await searchListingsResult(args)).listings;
+}
+
+/**
+ * searchListings, but also saying whether the read failed, for callers that
+ * render a distinct error state (the homepage carousel) instead of "no results".
+ */
+export async function searchListingsResult(
+  args: SearchArgs,
+): Promise<{ listings: ListingCard[]; failed: boolean }> {
   const call = () =>
     supabase.rpc('search_listings', {
       p_query: args.query ?? null,
@@ -184,9 +195,9 @@ export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
   // runtime logs via reportError.
   if (error) {
     reportError('search_listings', error);
-    return [];
+    return { listings: [], failed: true };
   }
-  return attachCovers((data ?? []) as ListingCard[]);
+  return { listings: await attachCovers((data ?? []) as ListingCard[]), failed: false };
 }
 
 /**
@@ -245,7 +256,7 @@ export const getCategories = cache(async function getCategories(
 ): Promise<Category[]> {
   let q = supabase
     .from('categories')
-    .select('id, slug, name, description, icon, is_featured')
+    .select('id, parent_id, slug, name, description, icon, is_featured')
     .order('sort_order');
   if (featuredOnly) q = q.eq('is_featured', true);
   return (await readList('categories.select', q)) as Category[];
@@ -258,7 +269,7 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
     'categories.bySlug',
     supabase
       .from('categories')
-      .select('id, slug, name, description, icon, is_featured')
+      .select('id, parent_id, slug, name, description, icon, is_featured')
       .eq('slug', slug)
       .maybeSingle(),
   );
@@ -451,4 +462,212 @@ export async function getApprovedReviews(listingId: string): Promise<PublicRevie
       .order('created_at', { ascending: false })
       .limit(50),
   );
+}
+
+// ---------------------------------------------------------------------------
+// Homepage and site chrome
+// ---------------------------------------------------------------------------
+// Each read below is one bounded GET on the tag-cached anon client, so the
+// homepage costs a fixed handful of PostgREST requests per regeneration no
+// matter how many sections an editor adds. src/lib/home.ts and
+// src/lib/chrome.ts turn these rows into view models.
+
+export type MediaRow = {
+  path: string;
+  alt: string | null;
+  width: number | null;
+  height: number | null;
+};
+
+export type SectionItemRow = {
+  id: string;
+  sort_order: number;
+  ref_type: string | null;
+  ref_id: string | null;
+  title: string | null;
+  subtitle: string | null;
+  body: string | null;
+  icon: string | null;
+  url: string | null;
+  is_enabled: boolean;
+  image: MediaRow | null;
+};
+
+export type SectionRow = {
+  id: string;
+  section_key: string;
+  section_type: string;
+  sort_order: number;
+  heading: string | null;
+  subheading: string | null;
+  body: string | null;
+  cta_label: string | null;
+  cta_url: string | null;
+  background_variant: string | null;
+  item_limit: number | null;
+  settings: Record<string, unknown> | null;
+  image: MediaRow | null;
+  items: SectionItemRow[];
+};
+
+// The FK names disambiguate media: section_items also joins page_sections to
+// media, which PostgREST could otherwise read as a second relationship.
+const SECTION_ROW_COLUMNS =
+  'id, section_key, section_type, sort_order, heading, subheading, body, cta_label, cta_url, ' +
+  'background_variant, item_limit, settings, ' +
+  'image:media!page_sections_image_id_fkey(path, alt, width, height), ' +
+  'items:section_items(id, sort_order, ref_type, ref_id, title, subtitle, body, icon, url, is_enabled, ' +
+  'image:media!section_items_image_id_fkey(path, alt, width, height)), ' +
+  'pages!inner(slug)';
+
+/**
+ * Every enabled section of a page with its image and items, in one request.
+ * Cached under pg:page_sections, so section and item edits must update that tag.
+ */
+export const getSectionRows = cache(async function getSectionRows(
+  slug: string,
+): Promise<SectionRow[]> {
+  const rows = await readList(
+    'page_sections.withItems',
+    supabase
+      .from('page_sections')
+      .select(SECTION_ROW_COLUMNS)
+      .eq('pages.slug', slug)
+      .eq('is_enabled', true)
+      .order('sort_order')
+      .order('sort_order', { referencedTable: 'section_items' })
+      .limit(40),
+  );
+  return rows.map((row) => {
+    const { pages, items, ...rest } = row as unknown as SectionRow & { pages: unknown };
+    void pages;
+    return {
+      ...rest,
+      items: (items ?? []).filter((i) => i.is_enabled).sort((a, b) => a.sort_order - b.sort_order),
+    };
+  });
+});
+
+/** Media rows by id — the header and footer logos. */
+export const getMediaByIds = cache(async function getMediaByIds(
+  ids: string[],
+): Promise<(MediaRow & { id: string })[]> {
+  if (ids.length === 0) return [];
+  return readList(
+    'media.byIds',
+    supabase
+      .from('media')
+      .select('id, path, alt, width, height')
+      .in('id', ids)
+      .limit(ids.length),
+  );
+});
+
+/** Approved listings by id, in the same shape search_listings returns (for pinned cards). */
+export async function getListingCardsByIds(ids: string[]): Promise<ListingCard[]> {
+  if (ids.length === 0) return [];
+  const rows = await readList<Omit<ListingCard, 'distance_km' | 'total_count'>>(
+    'public_listings.byIds',
+    supabase
+      .from('public_listings')
+      .select(
+        'id, slug, name, tagline, category_id, city_id, latitude, longitude, rating_average, review_count, is_featured, published_at',
+      )
+      .in('id', ids)
+      .limit(ids.length),
+  );
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const ordered = ids.flatMap((id) => {
+    const r = byId.get(id);
+    return r ? [{ ...r, distance_km: null, total_count: rows.length }] : [];
+  });
+  return attachCovers(ordered);
+}
+
+export type CardExtras = { id: string; phone_primary: string | null; excerpt: string | null };
+
+/** Phone and a 200-character excerpt per card, from the public_listing_cards view (0018). */
+export async function getCardExtras(ids: string[]): Promise<CardExtras[]> {
+  if (ids.length === 0) return [];
+  return readList(
+    'public_listing_cards.select',
+    supabase
+      .from('public_listing_cards')
+      .select('id, phone_primary, excerpt')
+      .in('id', ids)
+      .limit(ids.length),
+  );
+}
+
+/** Logo per listing, for the round badge on a card. Covers come from attachCovers. */
+export async function getCardLogos(ids: string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  // PostgREST's inferred type calls the embedded media an array; it is a single
+  // row (listing_images.media_id is a many-to-one foreign key).
+  const rows = (await readList(
+    'listing_images.logos',
+    supabase
+      .from('listing_images')
+      .select('listing_id, media(path)')
+      .eq('kind', 'logo')
+      .in('listing_id', ids)
+      .limit(ids.length),
+  )) as unknown as { listing_id: string; media: { path: string } | null }[];
+  return new Map(rows.flatMap((r) => (r.media ? [[r.listing_id, mediaUrl(r.media.path)]] : [])));
+}
+
+/** Opening hours for several listings at once (7 rows each at most). */
+export async function getHoursFor(
+  ids: string[],
+): Promise<(OpeningHour & { listing_id: string })[]> {
+  if (ids.length === 0) return [];
+  return readList(
+    'opening_hours.forCards',
+    supabase
+      .from('opening_hours')
+      .select('listing_id, day_of_week, opens_at, closes_at, is_closed, is_24h')
+      .in('listing_id', ids)
+      .order('day_of_week')
+      .limit(ids.length * 7),
+  );
+}
+
+export type PostCardRow = {
+  id: string;
+  slug: string;
+  title: string;
+  standfirst: string | null;
+  read_minutes: number | null;
+  published_at: string | null;
+  category: { name: string } | null;
+  cover: MediaRow | null;
+};
+
+/** Latest published posts, or the given posts in the given order, with cover and category. */
+export async function getPostCards({
+  limit,
+  ids,
+}: {
+  limit: number;
+  ids?: string[];
+}): Promise<PostCardRow[]> {
+  let q = supabase
+    .from('blog_posts')
+    .select(
+      'id, slug, title, standfirst, read_minutes, published_at, ' +
+        'category:blog_categories!blog_posts_category_id_fkey(name), ' +
+        'cover:media!blog_posts_cover_fk(path, alt, width, height)',
+    )
+    .eq('is_published', true);
+  q = ids?.length ? q.in('id', ids) : q.order('published_at', { ascending: false });
+  const rows = await readList<PostCardRow>(
+    'blog_posts.cards',
+    q.limit(ids?.length ? ids.length : limit) as unknown as PromiseLike<Result<PostCardRow[]>>,
+  );
+  if (!ids?.length) return rows;
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return ids.flatMap((id) => {
+    const r = byId.get(id);
+    return r ? [r] : [];
+  });
 }

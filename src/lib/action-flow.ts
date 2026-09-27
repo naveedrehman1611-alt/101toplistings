@@ -1,6 +1,6 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { errorMessage } from './form-data';
 
 /**
@@ -11,16 +11,38 @@ import { errorMessage } from './form-data';
  * Role checks must happen BEFORE calling this: requireRole() signals with a
  * redirect, which is itself a thrown error and would be caught here.
  */
-export async function runAndReturn(path: string, write: () => Promise<string>): Promise<never> {
+/**
+ * What a write makes stale. Without one, the whole site is revalidated, which
+ * is right for taxonomy, menus and listings (read almost everywhere) but
+ * wasteful for content that one page renders: every cached page would refetch
+ * its data on its next visit.
+ */
+export type RevalidateScope = {
+  /** Data Cache tags to expire now (tableTag(...) values). */
+  tags?: string[];
+  /** Routes to re-render; a "layout" entry covers every route below it. */
+  paths?: { path: string; type?: 'page' | 'layout' }[];
+};
+
+export async function runAndReturn(
+  path: string,
+  write: () => Promise<string>,
+  scope?: RevalidateScope,
+): Promise<never> {
   let message: string;
   try {
     message = await write();
   } catch (e) {
     redirect(withParam(path, 'error', errorMessage(e)));
   }
-  // Public pages are ISR-cached and read taxonomy, menus and listings from
-  // almost everywhere, so any content write refreshes the whole tree.
-  revalidatePath('/', 'layout');
+  if (scope) {
+    for (const tag of scope.tags ?? []) updateTag(tag);
+    for (const p of scope.paths ?? []) revalidatePath(p.path, p.type);
+  } else {
+    // Public pages are ISR-cached and read taxonomy, menus and listings from
+    // almost everywhere, so any content write refreshes the whole tree.
+    revalidatePath('/', 'layout');
+  }
   redirect(withParam(path, 'ok', message));
 }
 

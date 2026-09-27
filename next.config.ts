@@ -10,6 +10,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 const nextConfig: NextConfig = {
   images: {
+    // Uploads get a fresh, unguessable object name and are never overwritten
+    // (media-upload.ts), so an optimised variant can be cached for a month
+    // without ever going stale. Every re-optimisation is a fetch from Supabase
+    // Storage, so the longer TTL directly cuts Storage egress.
+    minimumCacheTTL: 2678400,
     remotePatterns: supabaseUrl
       ? [
           {
@@ -20,6 +25,18 @@ const nextConfig: NextConfig = {
           },
         ]
       : [],
+  },
+  // The reference site ran on WordPress; its public URLs map onto this app's
+  // routes so existing links and search results keep working after a move.
+  async redirects() {
+    return [
+      { source: '/listing-category/:slug', destination: '/category/:slug', permanent: true },
+      { source: '/listing-location/:slug', destination: '/city/:slug', permanent: true },
+      { source: '/listing-top-filter', destination: '/listings', permanent: true },
+      { source: '/submission', destination: '/dashboard/listings/new', permanent: true },
+      { source: '/about-us', destination: '/about', permanent: true },
+      { source: '/contact-us', destination: '/contact', permanent: true },
+    ];
   },
   experimental: {
     serverActions: {
