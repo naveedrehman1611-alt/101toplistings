@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { NearMeButton } from './near-me-button';
 
 type Option = { slug: string; name: string };
 
@@ -16,6 +17,8 @@ export function ListingFilters({
   sort,
   categories,
   cities,
+  nearMe,
+  near,
 }: {
   action: string;
   q?: string;
@@ -24,8 +27,12 @@ export function ListingFilters({
   sort?: string;
   categories?: Option[];
   cities?: Option[];
+  /** Show the "Near me" button (it searches from /search). */
+  nearMe?: boolean;
+  /** An active location search, kept when the other filters change. */
+  near?: { lat: number; lng: number; radius: number };
 }) {
-  const active = Boolean(q || category || city);
+  const active = Boolean(q || category || city || near);
   const selectCls =
     'focus:border-brand-500 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none';
 
@@ -72,6 +79,13 @@ export function ListingFilters({
         </label>
       ) : null}
       {sort && sort !== 'newest' ? <input type="hidden" name="sort" value={sort} /> : null}
+      {near ? (
+        <>
+          <input type="hidden" name="lat" value={near.lat} />
+          <input type="hidden" name="lng" value={near.lng} />
+          <input type="hidden" name="radius" value={near.radius} />
+        </>
+      ) : null}
       <div className="flex items-center gap-3">
         <button
           type="submit"
@@ -79,6 +93,7 @@ export function ListingFilters({
         >
           Filter
         </button>
+        {nearMe && !near ? <NearMeButton /> : null}
         {active ? (
           <Link href={action} className="text-brand-700 text-sm whitespace-nowrap hover:underline">
             Clear

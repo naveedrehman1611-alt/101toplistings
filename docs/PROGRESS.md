@@ -111,7 +111,7 @@ Numbering matches the master prompt exactly.
 | 42 | Location hierarchy relational with indexes | `[x]` | 0002; all FKs indexed |
 | 43 | PostGIS enabled; radius search server-side; no client-side distance | `[x]` | `search_listings` RPC + GiST index; `docs/qa/geo-qa.md` |
 | 44 | Displayed distances verified against real coordinates | `[x]` | 5 pairs verified; London–Paris 343.9 km |
-| 45 | Geolocation requested only on explicit user action | `[ ]` | |
+| 45 | Geolocation requested only on explicit user action | `[x]` | `NearMeButton` calls `getCurrentPosition` only on click; position rounded to 3 dp (~100 m) before it enters the URL; denied/unavailable states handled. Verified in Chromium with a mocked position and with permission denied |
 | 46 | Keyword + category + location combined search, state in URL | `[x]` | `ListingFilters` → one `search_listings` call; filtered `/listings` views are noindex |
 | 47 | Location / category+location SEO pages with density threshold | `[~]` | City pages noindex below 3 listings; category+location combinations not built |
 | 48 | Structured data emitted only where data is real and visible | `[x]` | LocalBusiness/PostalAddress/GeoCoordinates/OpeningHours conditional; aggregateRating only when review_count > 0 |

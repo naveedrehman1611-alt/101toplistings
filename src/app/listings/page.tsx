@@ -90,6 +90,7 @@ export default async function ListingsPage({
           sort={sort}
           categories={categories}
           cities={cities}
+          nearMe
         />
       </div>
       <div className="mt-8">
