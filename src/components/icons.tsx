@@ -20,7 +20,10 @@ export function isIconName(value: unknown): value is IconName {
 }
 
 /** Renders nothing for an empty or unknown name, so a bad value never breaks a page. */
-export function Icon({ name, ...props }: SvgIconProps & { name: string | null | undefined }) {
+export function Icon({
+  name,
+  ...props
+}: Omit<SvgIconProps, 'name'> & { name: string | null | undefined }) {
   if (!name) return null;
   if (name === 'x-logo') return <XLogo {...props} />;
   const node = (ICON_NODES as Record<string, IconNode>)[name];
