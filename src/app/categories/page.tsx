@@ -2,14 +2,17 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { findSection, getCategories, getPageSections } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
+import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 600;
-export const metadata: Metadata = {
-  title: 'Categories',
-  description: 'Browse businesses by what they do.',
-  openGraph: { title: 'Categories', description: 'Browse businesses by what they do.' },
-  twitter: { card: 'summary_large_image', title: 'Categories' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return seoMetadata('/categories', {
+    title: 'Categories',
+    description: 'Browse businesses by what they do.',
+    openGraph: { title: 'Categories', description: 'Browse businesses by what they do.' },
+    twitter: { card: 'summary_large_image', title: 'Categories' },
+  });
+}
 
 export default async function CategoriesPage() {
   const [sections, categories] = await Promise.all([getPageSections('categories'), getCategories()]);

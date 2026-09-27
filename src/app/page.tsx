@@ -1,3 +1,4 @@
+import type { Metadata, ResolvingMetadata } from 'next';
 import Link from 'next/link';
 import {
   findSection,
@@ -10,8 +11,18 @@ import {
 } from '@/lib/queries';
 import { ListingCard } from '@/components/listing-card';
 import { SectionHeading } from '@/components/ui';
+import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 300; // ISR — §1.5 rendering table
+
+// The layout's defaults (from settings) are the home page's own metadata, so
+// this only changes anything when the SEO manager holds an override for "/".
+export async function generateMetadata(
+  _props: unknown,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  return seoMetadata('/', {}, parent);
+}
 
 export default async function HomePage() {
   const [sections, settings, categories, cities] = await Promise.all([

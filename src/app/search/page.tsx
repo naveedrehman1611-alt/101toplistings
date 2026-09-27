@@ -2,18 +2,21 @@ import type { Metadata } from 'next';
 import { getCities, searchListings } from '@/lib/queries';
 import { Results, parsePage, parseSort } from '@/components/results';
 import { Breadcrumbs } from '@/components/ui';
+import { seoMetadata } from '@/lib/seo';
 
 // SSR — query-dependent, never cached (§1.5 rendering table).
 export const dynamic = 'force-dynamic';
 const PER_PAGE = 12;
 
-export const metadata: Metadata = {
-  title: 'Search',
-  description: 'Find a business by name, category or city.',
-  robots: { index: false, follow: true },
-  openGraph: { title: 'Search', description: 'Find a business by name, category or city.' },
-  twitter: { card: 'summary_large_image', title: 'Search' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return seoMetadata('/search', {
+    title: 'Search',
+    description: 'Find a business by name, category or city.',
+    robots: { index: false, follow: true },
+    openGraph: { title: 'Search', description: 'Find a business by name, category or city.' },
+    twitter: { card: 'summary_large_image', title: 'Search' },
+  });
+}
 
 export default async function SearchPage({
   searchParams,
