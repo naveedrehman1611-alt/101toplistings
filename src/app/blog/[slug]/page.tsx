@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { getBlogPost, getBlogPosts } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
 import { SITE_URL } from '@/lib/supabase';
+import { Markdown } from '@/components/markdown';
 
 export const revalidate = 600;
 
@@ -12,47 +13,25 @@ export async function generateStaticParams() {
   return posts.map((p) => ({ slug: p.slug }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
   const post = await getBlogPost(slug);
   if (!post) return { title: 'Not found' };
-  const description = post.standfirst ?? '';
+  const title = post.seo_title ?? post.title;
+  const description = post.seo_description ?? post.standfirst ?? '';
   const url = `${SITE_URL}/blog/${post.slug}`;
   return {
-    title: post.title,
+    title,
     description,
-    alternates: { canonical: url },
-    openGraph: { title: post.title, description, url, type: 'article' },
-    twitter: { card: 'summary_large_image', title: post.title, description },
+    // Self-canonical unless the editor set an override (validated as http(s) on save).
+    alternates: { canonical: post.canonical_url ?? url },
+    openGraph: { title, description, url, type: 'article' },
+    twitter: { card: 'summary_large_image', title, description },
   };
-}
-
-/** Minimal markdown: headings and paragraphs. Body copy is authored, not user input. */
-function renderBody(body: string) {
-  return body.split('\n\n').map((block, i) => {
-    const t = block.trim();
-    if (t.startsWith('## ')) {
-      return (
-        <h2 key={i} className="mt-10 text-2xl font-semibold">
-          {t.slice(3)}
-        </h2>
-      );
-    }
-    if (t.startsWith('- ')) {
-      return (
-        <ul key={i} className="mt-4 list-disc space-y-1 pl-5 text-[var(--text-muted)]">
-          {t.split('\n').map((li, j) => (
-            <li key={j}>{li.replace(/^-\s*/, '')}</li>
-          ))}
-        </ul>
-      );
-    }
-    return (
-      <p key={i} className="mt-4 leading-relaxed text-[var(--text-muted)]">
-        {t.replace(/\*\*(.+?)\*\*/g, '$1')}
-      </p>
-    );
-  });
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -74,17 +53,27 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="container-page py-12">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {/* The title is editor-written: escape "<" so a "</script>" in it cannot close the tag. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
       <Breadcrumbs
-        trail={[{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog' }, { label: post.title }]}
+        trail={[
+          { label: 'Home', href: '/' },
+          { label: 'Blog', href: '/blog' },
+          { label: post.title },
+        ]}
       />
       <article className="mx-auto max-w-2xl">
         <h1 className="text-3xl font-bold sm:text-4xl">{post.title}</h1>
-        {post.standfirst ? <p className="mt-4 text-lg text-[var(--text-muted)]">{post.standfirst}</p> : null}
+        {post.standfirst ? (
+          <p className="mt-4 text-lg text-[var(--text-muted)]">{post.standfirst}</p>
+        ) : null}
         {post.read_minutes ? (
           <p className="mt-3 text-sm text-[var(--text-muted)]">{post.read_minutes} min read</p>
         ) : null}
-        <div className="mt-8">{post.body ? renderBody(post.body) : null}</div>
+        <div className="mt-8">{post.body ? <Markdown source={post.body} /> : null}</div>
       </article>
 
       {related.length > 0 ? (

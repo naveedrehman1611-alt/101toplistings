@@ -60,20 +60,13 @@ export async function getSettings(): Promise<Record<string, unknown>> {
   return out;
 }
 
-export function settingText(
-  settings: Record<string, unknown>,
-  key: string,
-  fallback = '',
-): string {
+export function settingText(settings: Record<string, unknown>, key: string, fallback = ''): string {
   const v = settings[key];
   return typeof v === 'string' ? v : fallback;
 }
 
 export async function getMenu(location: string, name?: string): Promise<MenuItem[]> {
-  const { data: menus } = await supabase
-    .from('menus')
-    .select('id, name')
-    .eq('location', location);
+  const { data: menus } = await supabase.from('menus').select('id, name').eq('location', location);
   const menu = name ? menus?.find((m) => m.name === name) : menus?.[0];
   if (!menu) return [];
   const { data } = await supabase
@@ -86,11 +79,7 @@ export async function getMenu(location: string, name?: string): Promise<MenuItem
 }
 
 export async function getPageSections(slug: string): Promise<PageSection[]> {
-  const { data: page } = await supabase
-    .from('pages')
-    .select('id')
-    .eq('slug', slug)
-    .maybeSingle();
+  const { data: page } = await supabase.from('pages').select('id').eq('slug', slug).maybeSingle();
   if (!page) return [];
   const { data } = await supabase
     .from('page_sections')
@@ -252,20 +241,32 @@ export type BlogPost = {
 export async function getBlogPosts(): Promise<BlogPost[]> {
   const { data } = await supabase
     .from('blog_posts')
-    .select('id, slug, title, standfirst, body, read_minutes, is_featured, published_at, category_id')
+    .select(
+      'id, slug, title, standfirst, body, read_minutes, is_featured, published_at, category_id',
+    )
     .eq('is_published', true)
     .order('published_at', { ascending: false });
   return (data ?? []) as BlogPost[];
 }
 
-export async function getBlogPost(slug: string): Promise<BlogPost | null> {
+export type BlogPostDetail = BlogPost & {
+  seo_title: string | null;
+  seo_description: string | null;
+  canonical_url: string | null;
+};
+
+export async function getBlogPost(slug: string): Promise<BlogPostDetail | null> {
   const { data } = await supabase
     .from('blog_posts')
-    .select('id, slug, title, standfirst, body, read_minutes, is_featured, published_at, category_id')
+    .select(
+      'id, slug, title, standfirst, body, read_minutes, is_featured, published_at, category_id, seo_title, seo_description, canonical_url',
+    )
     .eq('slug', slug)
+    // RLS already hides drafts from this anon client; the filter states the
+    // intent so a draft stays unreachable without relying on the policy alone.
     .eq('is_published', true)
     .maybeSingle();
-  return (data as BlogPost) ?? null;
+  return (data as BlogPostDetail) ?? null;
 }
 
 export type PublicReview = {
