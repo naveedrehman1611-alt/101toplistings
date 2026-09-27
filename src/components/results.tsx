@@ -28,6 +28,7 @@ export function Results({
   perPage,
   sort,
   query,
+  params,
   cityNames,
   emptyTitle,
   emptyBody,
@@ -38,6 +39,8 @@ export function Results({
   perPage: number;
   sort: SortKey;
   query?: string;
+  /** Active filters, carried through the sort and page links. */
+  params?: Record<string, string | undefined>;
   cityNames: Map<string, string>;
   emptyTitle: string;
   emptyBody: string;
@@ -55,7 +58,7 @@ export function Results({
           {SORTS.map((s) => (
             <Link
               key={s.key}
-              href={buildHref(basePath, { q: query, sort: s.key })}
+              href={buildHref(basePath, { ...params, q: query, sort: s.key })}
               className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
                 sort === s.key
                   ? 'border-brand-500 bg-brand-50 text-brand-800'
@@ -79,11 +82,19 @@ export function Results({
       )}
 
       {pages > 1 ? (
-        <nav aria-label="Pagination" className="mt-10 flex flex-wrap items-center justify-center gap-2">
+        <nav
+          aria-label="Pagination"
+          className="mt-10 flex flex-wrap items-center justify-center gap-2"
+        >
           {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
             <Link
               key={p}
-              href={buildHref(basePath, { q: query, sort, page: p === 1 ? undefined : p })}
+              href={buildHref(basePath, {
+                ...params,
+                q: query,
+                sort,
+                page: p === 1 ? undefined : p,
+              })}
               aria-current={p === page ? 'page' : undefined}
               className={`grid h-10 min-w-10 place-items-center rounded-lg border px-3 text-sm ${
                 p === page

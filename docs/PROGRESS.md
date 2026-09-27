@@ -41,8 +41,8 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
       categories, locations, reviews, inbox, blog, media library, menus, pages & sections, SEO,
       redirects, settings, users (roles and suspension, admin-only). Not built: announcements,
       amenities, claims.
-- [~] **Phase 6 — Query, search, and form states.** Search, sorting and pagination done with
-      state in the URL. Filters and every form still outstanding.
+- [~] **Phase 6 — Query, search, and form states.** Search, filters, sorting and pagination done
+      with state in the URL.
 - [ ] **Phase 7 — Responsive QA.** Breakpoints implemented; nothing verified at real widths.
 - [!] **Phase 8 — Visual comparison pass.** Blocked: requires side-by-side access to the
       reference site (B-1).
@@ -76,7 +76,7 @@ Numbering matches the master prompt exactly.
 | 7 | Desktop layouts tested | `[ ]` | |
 | 8 | Mobile layouts tested | `[ ]` | |
 | 9 | Search implemented | `[x]` | `/search?q=`, SSR, zero-result state |
-| 10 | Filters implemented | `[ ]` | |
+| 10 | Filters implemented | `[x]` | Keyword, category and city on `/listings` and `/search`; city on category pages, category on city pages. GET form, state in the URL, carried through sort and paging |
 | 11 | Sorting implemented | `[x]` | Newest / oldest / rating / A–Z, state in the URL |
 | 12 | Pagination implemented | `[x]` | Server-side offset paging, page number in the URL |
 | 13 | All forms implemented | `[~]` | Contact (honeypot, stored in `form_submissions`), register, sign in, listing submit/edit, review. Claim and report forms not built |
@@ -112,7 +112,7 @@ Numbering matches the master prompt exactly.
 | 43 | PostGIS enabled; radius search server-side; no client-side distance | `[x]` | `search_listings` RPC + GiST index; `docs/qa/geo-qa.md` |
 | 44 | Displayed distances verified against real coordinates | `[x]` | 5 pairs verified; London–Paris 343.9 km |
 | 45 | Geolocation requested only on explicit user action | `[ ]` | |
-| 46 | Keyword + category + location combined search, state in URL | `[ ]` | |
+| 46 | Keyword + category + location combined search, state in URL | `[x]` | `ListingFilters` → one `search_listings` call; filtered `/listings` views are noindex |
 | 47 | Location / category+location SEO pages with density threshold | `[~]` | City pages noindex below 3 listings; category+location combinations not built |
 | 48 | Structured data emitted only where data is real and visible | `[x]` | LocalBusiness/PostalAddress/GeoCoordinates/OpeningHours conditional; aggregateRating only when review_count > 0 |
 | 49 | Map responsive, textual address always shown | `[ ]` | |
