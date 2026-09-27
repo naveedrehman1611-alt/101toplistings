@@ -45,10 +45,12 @@ to Supabase now prints, per read,
 
 where the previous code printed nothing and produced a page of empty states.
 
-`searchListings()` deliberately keeps throwing instead. On an ISR route a thrown
-error means the last good page keeps being served and the failure reaches the
-runtime error tracker — both better than replacing real results with an empty
-grid.
+`searchListings()` used to throw instead, on the theory that ISR would keep
+serving the last good page. In practice most listing routes read `searchParams`
+and render per request, so there was no cached page: when Supabase became
+unreachable (`TypeError: fetch failed`, September 2026) home, listings, search,
+category, city and listing detail all showed "This page couldn't load". It now
+retries once on a network failure, then logs via `reportError` and returns `[]`.
 
 ### 2. The read path had no cache at all
 
@@ -143,8 +145,9 @@ redirected off-site. Now rejected.
 - **`revalidatePath('/', 'layout')` on any settings change** invalidates the
   entire site. Correct (brand and contact render in the layout) but it means one
   settings edit re-renders everything on next visit.
-- **No `error.tsx` anywhere.** A thrown read currently produces the framework's
-  default error page.
+- **Error boundaries.** `src/app/error.tsx` (inside the site chrome, with a
+  retry button) and `src/app/global-error.tsx` replace the framework's default
+  error page for anything that still throws.
 
 ## Rules to keep this from coming back
 
@@ -173,3 +176,39 @@ supabase.from(…)` in a page is the silent-failure bug being reinvented.
    for every visitor.
 6. **Budget check:** 5 GB ÷ 30 days ≈ 170 MB/day. The Supabase dashboard's daily
    egress chart is the only thing that actually confirms any of this.
+
+## Homepage rebuild (0021) — what it adds to the read path
+
+Re-checked when the homepage became a section builder (`docs/HOMEPAGE.md`).
+
+- **Fixed cost per regeneration.** All sections, items and their images arrive in one embedded
+  `page_sections` read; categories, cities, settings and menus are the layout's cached reads, shared
+  through `cache()`. The business carousel adds one `search_listings` RPC and three bounded GETs (covers
+  and logos, phone + excerpt from the new `public_listing_cards` view, opening hours); the blog carousel
+  one GET. Adding sections in the admin does not add requests, except another carousel of the same kind.
+- **No full descriptions on cards.** `public_listing_cards` cuts the description to 200 characters in
+  the database, so a card never transfers a whole description.
+- **`READ_REVALIDATE_SECONDS` 600 → 3600.** Every in-app write already expires the tags it touches
+  (and `runAndReturn` revalidates the tree), so the lifetime only bounds how long a change made directly
+  in the database takes to appear. The route table shows the effective interval: `/` is `○` with `1h`.
+- **Scoped revalidation.** `runAndReturn` takes an optional scope; section edits expire only
+  `pg:page_sections` / `pg:section_items` and re-render `/`, instead of the whole site.
+- **Images.** `images.minimumCacheTTL` is 31 days. Uploaded objects are immutable (unique names,
+  one-year `cacheControl`), so an optimised variant never goes stale, and each one is fetched from
+  Storage about once a month at most.
+- **Still no browser → Supabase traffic.** Search, newsletter and favourites are server-side.
+- **Link prefetching was rendering dynamic pages for every visitor.** Next prefetches every
+  `<Link>` that scrolls into view, and for a route rendered per request (`ƒ`: listings, category,
+  city, sign-in, dashboard) with no `loading.js` it renders the whole page. Measured on the local
+  stack, one scrolled homepage visit fired **50 prefetches and 7 `search_listings` calls**. The
+  homepage, header, footer and `/categories` now use `HoverPrefetchLink`
+  (`src/components/hover-prefetch-link.tsx`), the hover/touch/focus pattern from Next's prefetching
+  guide: the same visit now makes **0 prefetches and 0 Supabase calls**, and a link the visitor
+  points at is still prefetched before the click.
+- **Browse searches are cached.** The "still open" item above — RPC results can never be cached by
+  the fetch layer — is closed for browse views: `searchListingsResult` keeps results for a category /
+  city / sort / page with no keyword and no location in `unstable_cache` (1 hour, tag
+  `pg:search_listings`). `runAndReturn`'s default revalidation and `setListingStatus` expire the tag,
+  so every listing, review, category and city write is visible at once. Failures throw inside the
+  cached function, so an outage is never stored. Keyword and location searches stay live. Measured:
+  repeated renders of a category or city page make no database call.

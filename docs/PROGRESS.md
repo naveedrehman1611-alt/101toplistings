@@ -3,7 +3,8 @@
 Living status file. Updated after every phase. Do not delete criteria — mark them
 `[x]` only with evidence, or annotate them `BLOCKED` with the reason.
 
-**Last updated:** 2026-09-27. Live at https://rankyousite.vercel.app on Supabase `cwnqvngpjxvodbvdhpzf`. Admin can now manage categories, locations, listings, reviews and the contact inbox; owners can register and submit listings; visitors can review and use the contact form.
+**Last updated:** 2026-09-27. **Homepage rebuilt as SmartBizDir** (see `docs/HOMEPAGE.md`): 14 admin-editable sections, migration 0021 (run `supabase/update_0020_to_0021.sql`), verified on a local PostgreSQL 16 + PostGIS + PostgREST stack — 40 public and 12 admin end-to-end checks at 1440/1280/768/390/320.
+Previously: Live at https://rankyousite.vercel.app on Supabase `cwnqvngpjxvodbvdhpzf`. Admin can now manage categories, locations, listings, reviews and the contact inbox; owners can register and submit listings; visitors can review and use the contact form.
 
 ---
 

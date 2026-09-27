@@ -14,12 +14,19 @@ if (!url || !anonKey) {
  * refetches it. Writes do not wait for this: every admin action calls
  * revalidateTag() for the tables it touched (see lib/admin-actions.ts).
  */
-export const READ_REVALIDATE_SECONDS = 600;
+export const READ_REVALIDATE_SECONDS = 3600;
 
 /** Cache tag for one table/view. Admin writes revalidate by this name. */
 export function tableTag(table: string): string {
   return `pg:${table}`;
 }
+
+/**
+ * Cache tag for stored search_listings results (queries.ts). Every write that
+ * can change a result — listings, reviews, categories, cities — expires it:
+ * runAndReturn's default revalidation and setListingStatus both do.
+ */
+export const SEARCH_TAG = tableTag('search_listings');
 
 /** `/rest/v1/categories?select=…` → `categories`. Null for anything else. */
 function tableFromUrl(input: string): string | null {
