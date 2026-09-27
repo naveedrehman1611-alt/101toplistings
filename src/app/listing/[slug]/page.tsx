@@ -121,7 +121,9 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
     <div className="container-page py-12">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // Names and descriptions come from business owners; escaping < stops a
+        // "</script>" in them from closing the tag and injecting markup.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <Breadcrumbs
         trail={[
