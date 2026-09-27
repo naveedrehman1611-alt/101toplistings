@@ -2,7 +2,13 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
-import { deleteLocation, saveCity, saveCountry, saveRegion } from '@/lib/taxonomy-actions';
+import {
+  deleteLocation,
+  loadStarterData,
+  saveCity,
+  saveCountry,
+  saveRegion,
+} from '@/lib/taxonomy-actions';
 import {
   Check,
   DangerButton,
@@ -67,6 +73,22 @@ export default async function AdminLocations({
         city. Featured cities appear on the home page. Slugs must be unique across all three levels.
       </p>
       <Notice ok={sp.ok} error={sp.error} />
+
+      {cities.length === 0 ? (
+        <form
+          action={loadStarterData}
+          className="surface-card mt-6 flex flex-wrap items-center justify-between gap-4 p-5"
+        >
+          <p className="text-sm">
+            <span className="font-medium">Starting from empty?</span>{' '}
+            <span className="text-[var(--text-muted)]">
+              Load Pakistan&apos;s provinces, 27 larger cities and 22 common categories. Existing
+              rows are kept.
+            </span>
+          </p>
+          <SubmitButton>Load starter data</SubmitButton>
+        </form>
+      ) : null}
 
       {/* Countries ---------------------------------------------------------- */}
       <Block title="Countries">
