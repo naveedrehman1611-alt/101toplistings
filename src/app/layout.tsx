@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
@@ -8,17 +8,13 @@ import { getSettings, settingText } from '@/lib/queries';
 import { getChrome } from '@/lib/chrome';
 import { SITE_URL } from '@/lib/supabase';
 
-// Criterion 36: critical fonts preloaded. Self-hosted by next/font, so there
-// is no request to Google at runtime.
-const inter = Inter({
+// One font for every page, headings and text alike. Criterion 36: preloaded,
+// and self-hosted by next/font, so there is no request to Google at runtime.
+// Poppins is not a variable font, so the weights the site uses are listed.
+const poppins = Poppins({
   subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-  preload: true,
-});
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  variable: '--font-jakarta',
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-poppins',
   display: 'swap',
   preload: true,
 });
@@ -52,7 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const chrome = await getChrome();
 
   return (
-    <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
+    <html lang="en" className={poppins.variable}>
       <body className="flex min-h-screen flex-col">
         <a
           href="#main"
