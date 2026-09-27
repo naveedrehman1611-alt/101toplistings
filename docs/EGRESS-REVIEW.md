@@ -11,6 +11,16 @@ This document is the result of auditing this repository for the same defects:
 what was found, what was fixed, and what is still open. Reviewed at commit
 `9e05539`, against the schema in `supabase/migrations/`.
 
+**Status note.** The pull request carrying this work (#4) was closed without
+being merged, so none of it is in `main`, and `main` has moved a long way since
+(media library, blog editor, SEO manager, ~26 files in `src/lib`). The findings
+below still describe `main`: it has no fetch caching and around 30 reads that
+discard `error`. Two things have changed for the better on their own — the
+Storage uploads added in `0015` already pass `cacheControl: '31536000'`, which
+is the defect that caused the incident, and `main`'s own
+`0012_search_performance.sql` already clamps the search RPC. Re-landing the rest
+means redoing it against the current, larger read layer.
+
 ## Summary
 
 The headline cause there — a one-hour `Cache-Control` on immutable Storage
@@ -102,14 +112,16 @@ Cache between revalidations.
 
 `search_listings` is `security definer` and anon holds EXECUTE on it, so anyone
 with the publishable key can POST to `/rest/v1/rpc/search_listings` directly.
-The function ended in `limit greatest(p_limit, 0)`, which has no upper bound —
-and `p_limit => null` means `LIMIT NULL`, which in Postgres means _no limit_.
-A single crafted request could pull the entire approved table.
+The function as written in `0007` ended in `limit greatest(p_limit, 0)`, which
+has no upper bound — and `p_limit => null` means `LIMIT NULL`, which in Postgres
+means _no limit_. A single crafted request could pull the entire approved table.
 
-`supabase/migrations/0012_bound_search_result_size.sql` clamps it to 60 rows and
-an offset of 6000, well above anything the site itself asks for (12, and 6 on
-the homepage rail). **This migration still has to be applied to the project** —
-it has not been run against production from here.
+**This one needs no change: `main` has already closed it.** Its own
+`0012_search_performance.sql` rewrote the function with
+`least(greatest(coalesce(p_limit, 20), 0), 100)`, which is the same clamp, on
+top of a faster index-walking query. A migration from this branch that redefined
+the function would have overwritten that newer version and taken the speed work
+with it, so the one written here was dropped rather than carried.
 
 On the application side, `parsePage()` now clamps `?page=` to 500 instead of
 passing any integer through to a deep `OFFSET`, and the pagination control
