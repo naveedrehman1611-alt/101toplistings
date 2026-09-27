@@ -65,7 +65,12 @@ export function SectionShell({
   containerClassName = 'container-page',
   showHeader = true,
 }: {
-  section: { key: string; heading: string | null; subheading: string | null; background: Background };
+  section: {
+    key: string;
+    heading: string | null;
+    subheading: string | null;
+    background: Background;
+  };
   children: ReactNode;
   /** Vertical padding and any extra classes for the full-width band. */
   className?: string;

@@ -555,11 +555,7 @@ export const getMediaByIds = cache(async function getMediaByIds(
   if (ids.length === 0) return [];
   return readList(
     'media.byIds',
-    supabase
-      .from('media')
-      .select('id, path, alt, width, height')
-      .in('id', ids)
-      .limit(ids.length),
+    supabase.from('media').select('id, path, alt, width, height').in('id', ids).limit(ids.length),
   );
 });
 

@@ -269,7 +269,8 @@ export const SECTION_TYPES = {
   },
   faq: {
     label: 'FAQ accordion',
-    description: 'Questions that expand to show their answers. Also published as FAQ structured data.',
+    description:
+      'Questions that expand to show their answers. Also published as FAQ structured data.',
     settings: [
       { key: 'open_first', label: 'Open the first question', kind: 'boolean', default: true },
       {

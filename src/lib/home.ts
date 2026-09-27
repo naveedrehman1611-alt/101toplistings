@@ -146,7 +146,13 @@ function categoryOptions(categories: Category[]): CategoryOption[] {
 }
 
 function hoursVM(
-  rows: { day_of_week: number; opens_at: string | null; closes_at: string | null; is_closed: boolean; is_24h: boolean }[],
+  rows: {
+    day_of_week: number;
+    opens_at: string | null;
+    closes_at: string | null;
+    is_closed: boolean;
+    is_24h: boolean;
+  }[],
 ): OpeningHourVM[] {
   return rows.map((h) => ({
     day: h.day_of_week,
@@ -320,9 +326,7 @@ async function buildSection(
         const name = text(item.title, brand) ?? refName(item, l);
         const linked = item.url || (item.ref_type === 'city' && item.ref_id);
         const href = linked ? itemHref(item, name, l) : null;
-        return name && href
-          ? [{ id: item.id, name, href, image: img(item.image, name) }]
-          : [];
+        return name && href ? [{ id: item.id, name, href, image: img(item.image, name) }] : [];
       });
       return items.length ? { ...base, type, items } : null;
     }

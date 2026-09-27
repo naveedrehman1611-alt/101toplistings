@@ -2,12 +2,7 @@
 
 import { Children, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { SvgIcon } from '@/components/svg-icon';
-import {
-  chevronLeftIcon,
-  chevronRightIcon,
-  pauseIcon,
-  playIcon,
-} from '@/components/icon-nodes';
+import { chevronLeftIcon, chevronRightIcon, pauseIcon, playIcon } from '@/components/icon-nodes';
 
 /**
  * The one carousel behind every homepage slider. Native horizontal scrolling
@@ -41,7 +36,9 @@ type Props = {
 };
 
 function prefersReducedMotion(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return (
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 }
 
 export function Carousel({
@@ -68,7 +65,8 @@ export function Carousel({
   const maxFirst = Math.max(0, count - perView);
   const positions =
     step === 'slide' ? maxFirst + 1 : Math.max(1, Math.ceil(count / Math.max(perView, 1)));
-  const active = step === 'slide' ? first : first >= maxFirst ? positions - 1 : Math.floor(first / perView);
+  const active =
+    step === 'slide' ? first : first >= maxFirst ? positions - 1 : Math.floor(first / perView);
   const scrollable = count > perView;
 
   const slideOffset = useCallback((index: number) => {
@@ -91,7 +89,10 @@ export function Carousel({
       if (!track) return;
       const wrapped = ((position % positions) + positions) % positions;
       const index = step === 'slide' ? wrapped : Math.min(wrapped * perView, maxFirst);
-      track.scrollTo({ left: slideOffset(index), behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+      track.scrollTo({
+        left: slideOffset(index),
+        behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+      });
     },
     [positions, perView, maxFirst, step, slideOffset],
   );
