@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { supabase } from './supabase';
+import { mediaUrl, type MediaItem } from './media';
 
 /**
  * Every read below used to end in `data ?? []`, which makes a failed request
@@ -10,7 +11,9 @@ import { supabase } from './supabase';
  */
 function reportError(what: string, error: { message: string; code?: string } | null): void {
   if (!error) return;
-  console.error(`[supabase] ${what} failed: ${error.message}${error.code ? ` (${error.code})` : ''}`);
+  console.error(
+    `[supabase] ${what} failed: ${error.message}${error.code ? ` (${error.code})` : ''}`,
+  );
 }
 
 type Result<T> = { data: T | null; error: { message: string; code?: string } | null };
@@ -42,6 +45,8 @@ export type ListingCard = {
   published_at: string | null;
   distance_km: number | null;
   total_count: number;
+  /** Added by attachCovers, not by search_listings. */
+  cover_url?: string | null;
 };
 
 export type Category = {
@@ -85,11 +90,7 @@ export const getSettings = cache(async function getSettings(): Promise<Record<st
   return out;
 });
 
-export function settingText(
-  settings: Record<string, unknown>,
-  key: string,
-  fallback = '',
-): string {
+export function settingText(settings: Record<string, unknown>, key: string, fallback = ''): string {
   const v = settings[key];
   return typeof v === 'string' ? v : fallback;
 }
@@ -176,7 +177,58 @@ export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
   // keeps the last good page being served instead of replacing it with an
   // empty one.
   if (error) throw new Error(`search_listings failed: ${error.message}`);
-  return (data ?? []) as ListingCard[];
+  return attachCovers((data ?? []) as ListingCard[]);
+}
+
+/**
+ * Adds each card's cover image URL with one extra query for the whole page of
+ * results, which keeps search_listings itself untouched. A failure here only
+ * costs the covers, never the search, so cards fall back to the gradient.
+ */
+async function attachCovers(cards: ListingCard[]): Promise<ListingCard[]> {
+  if (cards.length === 0) return cards;
+  const { data, error } = await supabase
+    .from('listing_images')
+    .select('listing_id, media(path)')
+    .eq('kind', 'cover')
+    .in(
+      'listing_id',
+      cards.map((c) => c.id),
+    );
+  if (error || !data) return cards;
+  const rows = data as unknown as { listing_id: string; media: { path: string } | null }[];
+  const covers = new Map(
+    rows.flatMap((r) => (r.media ? [[r.listing_id, mediaUrl(r.media.path)] as const] : [])),
+  );
+  return cards.map((c) => ({ ...c, cover_url: covers.get(c.id) ?? null }));
+}
+
+export type ListingImage = MediaItem & { url: string };
+
+export type ListingImages = {
+  cover: ListingImage | null;
+  logo: ListingImage | null;
+  gallery: ListingImage[];
+};
+
+/** Cover, logo and gallery for a public listing page. RLS returns rows only for approved listings. */
+export async function getListingImages(listingId: string): Promise<ListingImages> {
+  const { data } = await supabase
+    .from('listing_images')
+    .select('kind, sort_order, media(id, path, alt, width, height)')
+    .eq('listing_id', listingId)
+    .order('sort_order');
+  const rows = (data ?? []) as unknown as { kind: string; media: MediaItem | null }[];
+  const withUrl = (m: MediaItem): ListingImage => ({ ...m, url: mediaUrl(m.path) });
+  const pick = (kind: string) => {
+    const m = rows.find((r) => r.kind === kind)?.media;
+    return m ? withUrl(m) : null;
+  };
+  return {
+    cover: pick('cover'),
+    logo: pick('logo'),
+    gallery: rows.flatMap((r) => (r.kind === 'gallery' && r.media ? [withUrl(r.media)] : [])),
+  };
 }
 
 export const getCategories = cache(async function getCategories(
@@ -213,7 +265,9 @@ export const getCities = cache(async function getCities(featuredOnly = false): P
   return (await readList('cities.select', q)) as City[];
 });
 
-export const getCityBySlug = cache(async function getCityBySlug(slug: string): Promise<City | null> {
+export const getCityBySlug = cache(async function getCityBySlug(
+  slug: string,
+): Promise<City | null> {
   const data = await read(
     'cities.bySlug',
     supabase
@@ -265,10 +319,10 @@ export const getListing = cache(async function getListing(
   const data = await read(
     'public_listings.bySlug',
     supabase
-    .from('public_listings')
-    .select(
-      'id, slug, name, tagline, description, category_id, city_id, phone_primary, phone_secondary, email, website, address, postal_code, latitude, longitude, social_links, rating_average, review_count, verification, published_at, seo_title, seo_description',
-    )
+      .from('public_listings')
+      .select(
+        'id, slug, name, tagline, description, category_id, city_id, phone_primary, phone_secondary, email, website, address, postal_code, latitude, longitude, social_links, rating_average, review_count, verification, published_at, seo_title, seo_description',
+      )
       .eq('slug', slug)
       .maybeSingle(),
   );
@@ -342,16 +396,50 @@ export const getBlogPosts = cache(async function getBlogPosts(
   )) as BlogPostSummary[];
 });
 
+export type BlogPostDetail = BlogPost & {
+  seo_title: string | null;
+  seo_description: string | null;
+  canonical_url: string | null;
+};
+
 /** The one place the body is needed: the article page itself. */
-export const getBlogPost = cache(async function getBlogPost(slug: string): Promise<BlogPost | null> {
+export const getBlogPost = cache(async function getBlogPost(
+  slug: string,
+): Promise<BlogPostDetail | null> {
   const data = await read(
     'blog_posts.bySlug',
     supabase
       .from('blog_posts')
-      .select(`${POST_SUMMARY_COLUMNS}, body`)
+      .select(`${POST_SUMMARY_COLUMNS}, body, seo_title, seo_description, canonical_url`)
       .eq('slug', slug)
+      // RLS already hides drafts from this anon client; the filter states the
+      // intent so a draft stays unreachable without relying on the policy alone.
       .eq('is_published', true)
       .maybeSingle(),
   );
-  return (data as BlogPost | null) ?? null;
+  return (data as BlogPostDetail | null) ?? null;
 });
+
+export type PublicReview = {
+  id: string;
+  rating: number;
+  title: string | null;
+  body: string | null;
+  author_name: string | null;
+  reply_body: string | null;
+  created_at: string;
+};
+
+/** Approved reviews only — RLS hides pending ones from the public client anyway. */
+export async function getApprovedReviews(listingId: string): Promise<PublicReview[]> {
+  return readList<PublicReview>(
+    'reviews.select',
+    supabase
+      .from('reviews')
+      .select('id, rating, title, body, author_name, reply_body, created_at')
+      .eq('listing_id', listingId)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(50),
+  );
+}

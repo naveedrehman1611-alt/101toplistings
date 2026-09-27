@@ -80,6 +80,17 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Cur
 export async function requireRole(required: Role): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect(`/login?next=/admin`);
-  if (!roleAtLeast(user.role, required)) redirect('/admin/no-access');
+  if (!roleAtLeast(user.role, required)) {
+    // /admin/no-access renders inside the admin layout, which itself requires
+    // moderator — sending a non-staff user there would redirect forever.
+    redirect(roleAtLeast(user.role, 'moderator') ? '/admin/no-access' : '/dashboard');
+  }
+  return user;
+}
+
+/** Any signed-in, non-suspended user. Sends everyone else to sign in first. */
+export async function requireUser(next: string): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (!user) redirect(`/login?next=${encodeURIComponent(next)}`);
   return user;
 }

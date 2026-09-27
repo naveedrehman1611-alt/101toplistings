@@ -14,7 +14,17 @@ export const metadata: Metadata = {
 const NAV = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/listings', label: 'Listings' },
+  { href: '/admin/reviews', label: 'Reviews' },
+  { href: '/admin/inbox', label: 'Inbox' },
+  { href: '/admin/categories', label: 'Categories' },
+  { href: '/admin/locations', label: 'Locations' },
+  { href: '/admin/blog', label: 'Blog' },
+  { href: '/admin/media', label: 'Media' },
+  { href: '/admin/menus', label: 'Menus' },
   { href: '/admin/pages', label: 'Pages & sections' },
+  { href: '/admin/seo', label: 'SEO' },
+  { href: '/admin/redirects', label: 'Redirects' },
+  { href: '/admin/users', label: 'Users' },
   { href: '/admin/settings', label: 'Settings' },
 ];
 
@@ -34,7 +44,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sm text-brand-700 hover:underline">
+          <Link href="/" className="text-brand-700 text-sm hover:underline">
             View site
           </Link>
           <form action={signOut}>

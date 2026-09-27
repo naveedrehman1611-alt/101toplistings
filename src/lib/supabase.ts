@@ -28,7 +28,7 @@ function tableFromUrl(input: string): string | null {
   if (at === -1) return null;
   const rest = path.slice(at + '/rest/v1/'.length);
   // rpc/<name> is a POST and is never cached; everything else is a table/view.
-  return rest.startsWith('rpc/') ? null : (rest.split('/')[0] || null);
+  return rest.startsWith('rpc/') ? null : rest.split('/')[0] || null;
 }
 
 /**

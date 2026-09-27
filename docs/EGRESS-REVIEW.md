@@ -106,10 +106,12 @@ The function ended in `limit greatest(p_limit, 0)`, which has no upper bound —
 and `p_limit => null` means `LIMIT NULL`, which in Postgres means _no limit_.
 A single crafted request could pull the entire approved table.
 
-`supabase/migrations/0012_bound_search_result_size.sql` clamps it to 60 rows and
-an offset of 6000, well above anything the site itself asks for (12, and 6 on
-the homepage rail). **This migration still has to be applied to the project** —
-it has not been run against production from here.
+**Superseded.** This branch originally added `0012_bound_search_result_size.sql`
+(clamping to 60 rows). `main` independently shipped `0012_search_performance.sql`,
+which rewrites the same function with per-filter plans and clamps `p_limit` to 100
+and the offset to non-negative. That migration is the one in `full_setup.sql` and
+on production, so the bound-size file was dropped when the branches were merged —
+applying it after 0012_search_performance would have reverted the index work.
 
 On the application side, `parsePage()` now clamps `?page=` to 500 instead of
 passing any integer through to a deep `OFFSET`, and the pagination control
