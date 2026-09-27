@@ -32,7 +32,10 @@ async function signIn(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent('Those details did not match an account.')}`);
   }
 
-  redirect(next.startsWith('/') ? next : '/admin');
+  // `//evil.example` also starts with '/' and is a protocol-relative URL, so a
+  // bare startsWith check would forward the user off-site after a real sign-in.
+  const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/admin';
+  redirect(safeNext);
 }
 
 export default async function LoginPage({
