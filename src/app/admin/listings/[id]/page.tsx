@@ -6,6 +6,7 @@ import { deleteListing, saveListingAsStaff } from '@/lib/listing-actions';
 import { LISTING_EDIT_COLUMNS, getListingFormOptions } from '@/lib/listing-options';
 import { ListingForm, type EditableHour, type EditableListing } from '@/components/listing-form';
 import { DangerButton, Notice } from '@/components/admin-ui';
+import { ListingImages } from '@/components/listing-images';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Edit listing' };
@@ -63,6 +64,8 @@ export default async function EditListing({
           submitLabel="Save changes"
         />
       </div>
+
+      <ListingImages listingId={l.id} context="admin" />
 
       {user.role === 'admin' || user.role === 'super_admin' ? (
         <form action={deleteListing} className="mt-10 border-t border-[var(--border)] pt-6">
