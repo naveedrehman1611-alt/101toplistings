@@ -89,11 +89,28 @@ silently.**
 publishable key is protected by row level security rather than by secrecy. The service role key
 is not in the repository and must never be added to it.
 
-**Live Supabase project:** `rccuhznzediwocwlqflk` (`101toplistings-directory`, ap-south-1), created
-in the `mr-medico` organisation at $0/month. The other project in that org,
-`utfpmyolqdtpnbiknlvm`, was deliberately left untouched — it holds 39 tables of a live
-application, including its own `profiles` and `reviews` tables that would have collided with
-this schema.
+**Live Supabase project:** `cwnqvngpjxvodbvdhpzf`, RankYouSite only. Built from
+`supabase/full_setup.sql` (migrations 0001–0012 in one transaction) on 2026-09-27; it started
+empty, so all content is entered through the admin panel. The first admin was created in
+Supabase Auth and promoted with `update profiles set role = 'super_admin' ...`.
+
+It replaced `rccuhznzediwocwlqflk` (`101toplistings-directory`, in the `mr-medico` org), which
+the free tier paused for inactivity. That project's data was never exported and there is no
+backup; it is recoverable only by restoring that project. Never write this schema into
+`utfpmyolqdtpnbiknlvm` — it is the separate Mr Medico application.
+
+**Migrations 0013 and 0014 are not in the live database yet** — it was built from the earlier
+`full_setup.sql` (0001–0012). Run `supabase/migrations/0013_base_content.sql` and then
+`0014_review_author_name.sql` in the SQL Editor. Both are safe to re-run. Until 0013 runs, the
+header, footer and home page have no content; until 0014 runs, submitting a review fails.
+
+**Free tier pauses a project after 7 days without activity.** That is what took the site down
+here. Keep the project active or move to a paid plan once real content is in it.
+
+**Vercel:** `rankyousite.vercel.app` is served by the `rankyousite` project in the
+`muhammad-rehmans-projects-9a5018fb` team, whose environment variables point at
+`cwnqvngpjxvodbvdhpzf`. A second project, `naveedrehman1611-alts-projects/rankyousite`, also
+exists; it needs the same three `NEXT_PUBLIC_` variables before it can serve the site.
 
 | Variable | Scope | Notes |
 |---|---|---|

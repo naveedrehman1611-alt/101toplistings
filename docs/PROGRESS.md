@@ -3,7 +3,7 @@
 Living status file. Updated after every phase. Do not delete criteria — mark them
 `[x]` only with evidence, or annotate them `BLOCKED` with the reason.
 
-**Last updated:** Public site is LIVE at https://rankyousite.vercel.app on the live Supabase schema. Phases 0–5 substantially complete; admin panel, auth, reviews and forms outstanding.
+**Last updated:** 2026-09-27. Live at https://rankyousite.vercel.app on Supabase `cwnqvngpjxvodbvdhpzf`. Admin can now manage categories, locations, listings, reviews and the contact inbox; owners can register and submit listings; visitors can review and use the contact form.
 
 ---
 
@@ -34,10 +34,11 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
 - [x] **Phase 4 — Design system.** Tokens in the `@theme` block, shared Framer variants with one
       easing/duration set, and the component set the built pages use.
       → `src/app/globals.css`, `src/lib/motion.ts`, `src/components/`
-- [~] **Phase 5 — Implement every page.** 12 public routes live. Auth, dashboard and
-      add-listing are not built.
-- [ ] **Phase 5B — Admin panel.** Unblocked now — the `section_type` enum is derived and the
-      whole CMS content model is live in the database. Not started.
+- [~] **Phase 5 — Implement every page.** Public routes plus `/register`, `/dashboard`,
+      `/dashboard/listings/new|[id]` and `/listing/[slug]/review`. Password reset not built.
+- [~] **Phase 5B — Admin panel.** Dashboard, listings (moderate, create, edit, delete),
+      categories, locations, reviews, inbox, pages & sections, settings. Media library, menu
+      builder, blog editor, SEO manager and redirects not built.
 - [~] **Phase 6 — Query, search, and form states.** Search, sorting and pagination done with
       state in the URL. Filters and every form still outstanding.
 - [ ] **Phase 7 — Responsive QA.** Breakpoints implemented; nothing verified at real widths.
@@ -52,7 +53,7 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
 | ID | Blocker | Impact | Owner |
 |---|---|---|---|
 | ~~B-1~~ | ~~`101toplistings.com` denied by egress policy~~ **RESOLVED** for research — captured in-browser via Claude in Chrome. Still blocks Phase 8 side-by-side comparison. | Phase 8 only | Closed for Phases 1–2 |
-| ~~B-2~~ | ~~Supabase unreachable~~ **RESOLVED** — new project `rccuhznzediwocwlqflk` created at $0/month; all 9 migrations applied and verified live | — | Closed |
+| ~~B-2~~ | ~~Supabase unreachable~~ **RESOLVED** — originally `rccuhznzediwocwlqflk`; after the free tier paused it, the site moved to `cwnqvngpjxvodbvdhpzf` (2026-09-27), built from `supabase/full_setup.sql`. Content starts empty. | — | Closed |
 | ~~B-3~~ | ~~No write access~~ **RESOLVED** — Claude GitHub App installed; branch pushed, PR #1 open | — | Closed |
 | B-4 | No **continuous** deployment — Vercel's GitHub App is not installed on `naveedrehman1611-alt`, so pushes do not redeploy. The live site was uploaded directly. | Redeploys only | User — install https://github.com/apps/vercel |
 
@@ -76,10 +77,10 @@ Numbering matches the master prompt exactly.
 | 10 | Filters implemented | `[ ]` | |
 | 11 | Sorting implemented | `[x]` | Newest / oldest / rating / A–Z, state in the URL |
 | 12 | Pagination implemented | `[x]` | Server-side offset paging, page number in the URL |
-| 13 | All forms implemented | `[ ]` | |
-| 14 | Authentication implemented | `[ ]` | |
-| 15 | Listing submission implemented | `[ ]` | |
-| 16 | Reviews implemented | `[ ]` | |
+| 13 | All forms implemented | `[~]` | Contact (honeypot, stored in `form_submissions`), register, sign in, listing submit/edit, review. Claim and report forms not built |
+| 14 | Authentication implemented | `[x]` | `/login`, `/register` (Supabase Auth, email confirmation aware), role-based redirect; `requireUser`/`requireRole` in every action |
+| 15 | Listing submission implemented | `[x]` | Owners submit at `/dashboard/listings/new` as `pending`; staff approve in admin. RLS blocks self-approval (tested) |
+| 16 | Reviews implemented | `[x]` | `/listing/[slug]/review`, moderated in `/admin/reviews`, approved reviews and replies on the listing page; rating trigger recounts |
 | 17 | Opening hours implemented | `[x]` | Table with Closed / Open 24 hours / ranges; absent section when no hours |
 | 18 | Blog/content pages implemented | `[x]` | Index + post with Article JSON-LD |
 | 19 | Category pages implemented | `[x]` | `/categories` and `/category/[slug]` |
@@ -120,7 +121,7 @@ Numbering matches the master prompt exactly.
 | 54 | Role permission matrix documented and enforced by RLS + route guards | `[~]` | Matrix in `docs/data-model.md`; RLS done, route guards pending |
 | 55 | Privilege-escalation attempts fail, results recorded | `[x]` | 6 attempts, all denied — `docs/qa/admin-qa.md` |
 | 56 | Audit log records every admin write with before/after | `[ ]` | |
-| 57 | Media library, SEO manager, menu builder, redirects, forms inbox functional | `[ ]` | |
+| 57 | Media library, SEO manager, menu builder, redirects, forms inbox functional | `[~]` | Forms inbox done (`/admin/inbox`); the rest not built |
 
 ---
 

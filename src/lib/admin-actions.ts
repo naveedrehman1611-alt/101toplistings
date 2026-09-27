@@ -3,32 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from './supabase-server';
 import { requireRole, type Role } from './auth';
+import { writeAudit } from './audit';
 
 export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
-
-/**
- * Criterion 56: every admin write records who changed what, with before/after.
- * Called inside the action rather than by a database trigger so the actor and
- * the intent ("approve" vs a bare "update") are both captured.
- */
-async function writeAudit(
-  actorId: string,
-  action: string,
-  entityType: string,
-  entityId: string,
-  before: unknown,
-  after: unknown,
-) {
-  const supabase = await createClient();
-  await supabase.from('audit_logs').insert({
-    actor_id: actorId,
-    action,
-    entity_type: entityType,
-    entity_id: entityId,
-    before: before ?? null,
-    after: after ?? null,
-  });
-}
 
 /**
  * Moderates a listing. The role check runs here as well as in RLS — a Server
@@ -72,7 +49,7 @@ export async function setListingStatus(
   // not surface until the revalidate window elapsed.
   revalidatePath('/');
   revalidatePath('/listings');
-  revalidatePath(`/listing/${after?.id ?? ''}`);
+  revalidatePath('/listing/[slug]', 'page');
   revalidatePath('/admin/listings');
 
   return { ok: true, message: `${before.name} is now ${status}.` };
@@ -105,7 +82,7 @@ export async function updateSetting(key: string, value: string): Promise<ActionR
 
   if (error) return { ok: false, error: error.message };
 
-  await writeAudit(user.id, 'update', 'setting', key, before, after);
+  await writeAudit(user.id, 'update', 'setting', null, before, after);
 
   // Brand name and contact details render in the root layout, so every route
   // is stale after this.
