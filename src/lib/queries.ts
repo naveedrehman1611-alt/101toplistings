@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { mediaUrl, type MediaItem } from './media';
 
 export type Setting = Record<string, unknown>;
 
@@ -17,6 +18,8 @@ export type ListingCard = {
   published_at: string | null;
   distance_km: number | null;
   total_count: number;
+  /** Added by attachCovers, not by search_listings. */
+  cover_url?: string | null;
 };
 
 export type Category = {
@@ -60,20 +63,13 @@ export async function getSettings(): Promise<Record<string, unknown>> {
   return out;
 }
 
-export function settingText(
-  settings: Record<string, unknown>,
-  key: string,
-  fallback = '',
-): string {
+export function settingText(settings: Record<string, unknown>, key: string, fallback = ''): string {
   const v = settings[key];
   return typeof v === 'string' ? v : fallback;
 }
 
 export async function getMenu(location: string, name?: string): Promise<MenuItem[]> {
-  const { data: menus } = await supabase
-    .from('menus')
-    .select('id, name')
-    .eq('location', location);
+  const { data: menus } = await supabase.from('menus').select('id, name').eq('location', location);
   const menu = name ? menus?.find((m) => m.name === name) : menus?.[0];
   if (!menu) return [];
   const { data } = await supabase
@@ -86,11 +82,7 @@ export async function getMenu(location: string, name?: string): Promise<MenuItem
 }
 
 export async function getPageSections(slug: string): Promise<PageSection[]> {
-  const { data: page } = await supabase
-    .from('pages')
-    .select('id')
-    .eq('slug', slug)
-    .maybeSingle();
+  const { data: page } = await supabase.from('pages').select('id').eq('slug', slug).maybeSingle();
   if (!page) return [];
   const { data } = await supabase
     .from('page_sections')
@@ -137,7 +129,58 @@ export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
     p_offset: args.offset ?? 0,
   });
   if (error) throw new Error(`search_listings failed: ${error.message}`);
-  return (data ?? []) as ListingCard[];
+  return attachCovers((data ?? []) as ListingCard[]);
+}
+
+/**
+ * Adds each card's cover image URL with one extra query for the whole page of
+ * results, which keeps search_listings itself untouched. A failure here only
+ * costs the covers, never the search, so cards fall back to the gradient.
+ */
+async function attachCovers(cards: ListingCard[]): Promise<ListingCard[]> {
+  if (cards.length === 0) return cards;
+  const { data, error } = await supabase
+    .from('listing_images')
+    .select('listing_id, media(path)')
+    .eq('kind', 'cover')
+    .in(
+      'listing_id',
+      cards.map((c) => c.id),
+    );
+  if (error || !data) return cards;
+  const rows = data as unknown as { listing_id: string; media: { path: string } | null }[];
+  const covers = new Map(
+    rows.flatMap((r) => (r.media ? [[r.listing_id, mediaUrl(r.media.path)] as const] : [])),
+  );
+  return cards.map((c) => ({ ...c, cover_url: covers.get(c.id) ?? null }));
+}
+
+export type ListingImage = MediaItem & { url: string };
+
+export type ListingImages = {
+  cover: ListingImage | null;
+  logo: ListingImage | null;
+  gallery: ListingImage[];
+};
+
+/** Cover, logo and gallery for a public listing page. RLS returns rows only for approved listings. */
+export async function getListingImages(listingId: string): Promise<ListingImages> {
+  const { data } = await supabase
+    .from('listing_images')
+    .select('kind, sort_order, media(id, path, alt, width, height)')
+    .eq('listing_id', listingId)
+    .order('sort_order');
+  const rows = (data ?? []) as unknown as { kind: string; media: MediaItem | null }[];
+  const withUrl = (m: MediaItem): ListingImage => ({ ...m, url: mediaUrl(m.path) });
+  const pick = (kind: string) => {
+    const m = rows.find((r) => r.kind === kind)?.media;
+    return m ? withUrl(m) : null;
+  };
+  return {
+    cover: pick('cover'),
+    logo: pick('logo'),
+    gallery: rows.flatMap((r) => (r.kind === 'gallery' && r.media ? [withUrl(r.media)] : [])),
+  };
 }
 
 export async function getCategories(featuredOnly = false): Promise<Category[]> {
@@ -252,7 +295,9 @@ export type BlogPost = {
 export async function getBlogPosts(): Promise<BlogPost[]> {
   const { data } = await supabase
     .from('blog_posts')
-    .select('id, slug, title, standfirst, body, read_minutes, is_featured, published_at, category_id')
+    .select(
+      'id, slug, title, standfirst, body, read_minutes, is_featured, published_at, category_id',
+    )
     .eq('is_published', true)
     .order('published_at', { ascending: false });
   return (data ?? []) as BlogPost[];
@@ -261,7 +306,9 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   const { data } = await supabase
     .from('blog_posts')
-    .select('id, slug, title, standfirst, body, read_minutes, is_featured, published_at, category_id')
+    .select(
+      'id, slug, title, standfirst, body, read_minutes, is_featured, published_at, category_id',
+    )
     .eq('slug', slug)
     .eq('is_published', true)
     .maybeSingle();
