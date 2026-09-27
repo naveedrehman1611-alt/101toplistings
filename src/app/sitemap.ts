@@ -15,9 +15,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   // Pages switched off, or set to noindex, in the admin SEO manager are left out.
-  const staticRoutes = ['', '/listings', '/categories', '/blog', '/about', '/contact'].filter(
-    (p) => !excluded.has(p || '/'),
-  );
+  const staticRoutes = [
+    '',
+    '/listings',
+    '/categories',
+    '/blog',
+    '/about',
+    '/contact',
+    '/privacy',
+    '/terms',
+  ].filter((p) => !excluded.has(p || '/'));
 
   return [
     ...staticRoutes.map((p) => ({
