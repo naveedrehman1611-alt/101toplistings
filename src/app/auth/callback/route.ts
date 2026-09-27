@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase-server';
 
 /**
  * Landing point for every link Supabase Auth emails out: password recovery,
- * signup confirmation, magic links, email changes. It turns the one-time
+ * signup confirmation, magic links, email changes — and for the return leg of
+ * "Continue with Google" (?code=&oauth=google). It turns the one-time
  * credential in the URL into a session cookie, then forwards to `next`.
  *
  * Two shapes arrive here:
@@ -57,6 +58,16 @@ export async function GET(request: NextRequest) {
   }
 
   if (ok) return to(next);
+
+  // "Continue with Google" (see lib/oauth-actions.ts). Cancelling on Google's
+  // consent screen comes back as ?error=access_denied.
+  if (params.get('oauth')) {
+    const msg =
+      params.get('error') === 'access_denied'
+        ? 'Google sign-in was cancelled.'
+        : 'Google sign-in did not complete. Try again, making sure to finish in this same browser.';
+    return to(`/login?error=${encodeURIComponent(msg)}`);
+  }
 
   // A dead recovery link is best answered with the form to request a new one.
   if (next.startsWith('/reset-password') || type === 'recovery') {

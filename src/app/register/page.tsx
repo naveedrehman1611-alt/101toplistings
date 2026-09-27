@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase-server';
 import { getCurrentUser } from '@/lib/auth';
 import { SITE_URL } from '@/lib/supabase';
 import { Breadcrumbs } from '@/components/ui';
+import { GoogleSignIn } from '@/components/google-sign-in';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,6 +89,8 @@ export default async function RegisterPage({
             {sp.error}
           </p>
         ) : null}
+
+        <GoogleSignIn next={sp.next} from="register" />
 
         <form action={register} className="mt-6 space-y-4">
           <input type="hidden" name="next" value={safeNext(sp.next)} />
