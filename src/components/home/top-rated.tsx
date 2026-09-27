@@ -1,4 +1,5 @@
-import Link from 'next/link';
+// Prefetch on intent, not on sight: see hover-prefetch-link.tsx.
+import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
 import type { ListingsVM } from '@/lib/home-types';
 import { Icon } from '@/components/icons';
 import { SectionShell } from './section-shell';

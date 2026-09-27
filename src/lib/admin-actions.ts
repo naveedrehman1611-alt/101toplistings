@@ -2,7 +2,7 @@
 
 import { revalidatePath, updateTag } from 'next/cache';
 import { createClient } from './supabase-server';
-import { tableTag } from './supabase';
+import { SEARCH_TAG, tableTag } from './supabase';
 import { requireRole, type Role } from './auth';
 import { writeAudit } from './audit';
 import { FormError, errorMessage } from './form-data';
@@ -61,6 +61,7 @@ export async function setListingStatus(
   // Cache, so a moderation decision needs both cleared or it would not surface
   // until the revalidate window elapsed.
   updateTag(tableTag('public_listings'));
+  updateTag(SEARCH_TAG);
   revalidatePath('/');
   revalidatePath('/listings');
   revalidatePath('/listing/[slug]', 'page');

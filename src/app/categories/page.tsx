@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+// Up to ~165 links to per-request pages: prefetch on intent only.
+import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
 import { findSection, getCategories, getPageSections, type Category } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
 import { seoMetadata } from '@/lib/seo';

@@ -74,6 +74,9 @@ Uploads are stored under unique names with a one-year cache header and optimised
 
 ## 4. Content that needs the owner's input
 
+- **Favourites.** The ♡ on a business card saves the business for a signed-in visitor (listed under
+  "Saved businesses" in the dashboard); signed-out visitors are asked to sign in. The reference site
+  let guests save without an account.
 - **Testimonials.** The five people shown on the live site (Mudassir, Asad Saleem, Aqsa Asghar, Zunaira,
   Mateen Awan) are seeded with their names and roles only. Their quotes and photos are not copied, and a
   testimonial is never displayed without its quote, so the section stays hidden until the real quotes are
@@ -98,5 +101,11 @@ Uploads are stored under unique names with a one-year cache header and optimised
   directly in the database.
 - Nothing on the page talks to Supabase from the browser. The search bar navigates to `/search`; the
   newsletter form and the favourite button are Server Actions (one small write per submit/click).
+- Links on the homepage, header and footer prefetch on hover, touch or focus, not on sight: prefetching
+  on sight rendered ~30 per-request pages per visitor (measured: 50 prefetches, 7 search calls per
+  scrolled visit; now 0 and 0). Browse searches (category / city / sort / page) are cached for an hour
+  and expired by every listing, review and taxonomy write.
+- Newsletter sign-ups go through the `subscribe_newsletter()` RPC, which answers the same for new and
+  existing addresses, so the public API cannot be used to test who is subscribed.
 - The search dropdowns receive categories and cities as props (≈8 KB of HTML), so typing never hits the
   database.

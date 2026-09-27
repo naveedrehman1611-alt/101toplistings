@@ -2,6 +2,7 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 import { revalidatePath, updateTag } from 'next/cache';
 import { errorMessage } from './form-data';
+import { SEARCH_TAG } from './supabase';
 
 /**
  * The shared shape of every admin form action: run the write, then send the
@@ -40,7 +41,9 @@ export async function runAndReturn(
     for (const p of scope.paths ?? []) revalidatePath(p.path, p.type);
   } else {
     // Public pages are ISR-cached and read taxonomy, menus and listings from
-    // almost everywhere, so any content write refreshes the whole tree.
+    // almost everywhere, so any content write refreshes the whole tree, and
+    // the stored search results with it.
+    updateTag(SEARCH_TAG);
     revalidatePath('/', 'layout');
   }
   redirect(withParam(path, 'ok', message));

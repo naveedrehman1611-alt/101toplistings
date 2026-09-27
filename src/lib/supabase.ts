@@ -21,6 +21,13 @@ export function tableTag(table: string): string {
   return `pg:${table}`;
 }
 
+/**
+ * Cache tag for stored search_listings results (queries.ts). Every write that
+ * can change a result — listings, reviews, categories, cities — expires it:
+ * runAndReturn's default revalidation and setListingStatus both do.
+ */
+export const SEARCH_TAG = tableTag('search_listings');
+
 /** `/rest/v1/categories?select=…` → `categories`. Null for anything else. */
 function tableFromUrl(input: string): string | null {
   const path = input.split('?')[0];

@@ -197,3 +197,18 @@ Re-checked when the homepage became a section builder (`docs/HOMEPAGE.md`).
   one-year `cacheControl`), so an optimised variant never goes stale, and each one is fetched from
   Storage about once a month at most.
 - **Still no browser → Supabase traffic.** Search, newsletter and favourites are server-side.
+- **Link prefetching was rendering dynamic pages for every visitor.** Next prefetches every
+  `<Link>` that scrolls into view, and for a route rendered per request (`ƒ`: listings, category,
+  city, sign-in, dashboard) with no `loading.js` it renders the whole page. Measured on the local
+  stack, one scrolled homepage visit fired **50 prefetches and 7 `search_listings` calls**. The
+  homepage, header, footer and `/categories` now use `HoverPrefetchLink`
+  (`src/components/hover-prefetch-link.tsx`), the hover/touch/focus pattern from Next's prefetching
+  guide: the same visit now makes **0 prefetches and 0 Supabase calls**, and a link the visitor
+  points at is still prefetched before the click.
+- **Browse searches are cached.** The "still open" item above — RPC results can never be cached by
+  the fetch layer — is closed for browse views: `searchListingsResult` keeps results for a category /
+  city / sort / page with no keyword and no location in `unstable_cache` (1 hour, tag
+  `pg:search_listings`). `runAndReturn`'s default revalidation and `setListingStatus` expire the tag,
+  so every listing, review, category and city write is visible at once. Failures throw inside the
+  cached function, so an outage is never stored. Keyword and location searches stay live. Measured:
+  repeated renders of a category or city page make no database call.

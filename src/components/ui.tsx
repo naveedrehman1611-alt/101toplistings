@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 export function Badge({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
+    <span className="bg-brand-50 text-brand-700 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
       {children}
     </span>
   );
@@ -29,7 +29,15 @@ export function Distance({ km }: { km: number | null }) {
   return <span className="text-sm text-[var(--text-muted)]">{km.toFixed(1)} km away</span>;
 }
 
-export function EmptyState({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
+export function EmptyState({
+  title,
+  body,
+  action,
+}: {
+  title: string;
+  body: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="surface-card border-dashed p-10 text-center">
       <p className="font-display text-lg font-semibold">{title}</p>
@@ -109,7 +117,7 @@ export function SectionHeading({
         {subheading ? <p className="mt-2 text-[var(--text-muted)]">{subheading}</p> : null}
       </div>
       {cta?.label && cta.url ? (
-        <Link href={cta.url} className="text-sm font-medium text-brand-700 hover:underline">
+        <Link href={cta.url} className="text-brand-700 text-sm font-medium hover:underline">
           {cta.label} →
         </Link>
       ) : null}

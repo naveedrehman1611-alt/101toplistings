@@ -1,5 +1,6 @@
 import { cache } from 'react';
-import { supabase } from './supabase';
+import { unstable_cache } from 'next/cache';
+import { READ_REVALIDATE_SECONDS, SEARCH_TAG, supabase } from './supabase';
 import { mediaUrl, type MediaItem } from './media';
 
 /**
@@ -164,13 +165,10 @@ export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
   return (await searchListingsResult(args)).listings;
 }
 
-/**
- * searchListings, but also saying whether the read failed, for callers that
- * render a distinct error state (the homepage carousel) instead of "no results".
- */
-export async function searchListingsResult(
-  args: SearchArgs,
-): Promise<{ listings: ListingCard[]; failed: boolean }> {
+type SearchRow = Omit<ListingCard, 'cover_url'>;
+
+/** One search_listings call, retried once on a network failure. Throws on error. */
+async function rpcSearch(args: SearchArgs): Promise<SearchRow[]> {
   const call = () =>
     supabase.rpc('search_listings', {
       p_query: args.query ?? null,
@@ -187,17 +185,54 @@ export async function searchListingsResult(
   // "fetch failed" is a network-level failure (DNS, TLS, cold connection), not
   // a query error, and is often transient on serverless. One retry is cheap.
   if (error && /fetch failed/i.test(error.message)) ({ data, error } = await call());
-  // Logs and degrades instead of throwing. Throwing took down every page that
-  // lists businesses (home, listings, search, category, city and even listing
-  // detail via "related") with Next's bare "This page couldn't load" whenever
-  // Supabase was unreachable, and most of those routes render per request, so
-  // there was no cached page to fall back to. The failure stays visible in the
-  // runtime logs via reportError.
-  if (error) {
-    reportError('search_listings', error);
+  if (error) throw error;
+  return (data ?? []) as SearchRow[];
+}
+
+/**
+ * Browse views — a category, a city, a sort order and a page, with no keyword
+ * and no location — are a small, finite set that every visitor, link prefetch
+ * and crawler repeats. PostgREST RPC is a POST, which the fetch-level Data
+ * Cache never stores, so without this every render of a category, city or
+ * listings page, and the homepage carousel, was a database call. Results are
+ * kept for READ_REVALIDATE_SECONDS under SEARCH_TAG, which writes expire.
+ * rpcSearch throws on failure, so an outage is never cached.
+ */
+const cachedRpcSearch = unstable_cache(rpcSearch, ['search_listings'], {
+  revalidate: READ_REVALIDATE_SECONDS,
+  tags: [SEARCH_TAG],
+});
+
+/**
+ * searchListings, but also saying whether the read failed, for callers that
+ * render a distinct error state (the homepage carousel) instead of "no results".
+ */
+export async function searchListingsResult(
+  args: SearchArgs,
+): Promise<{ listings: ListingCard[]; failed: boolean }> {
+  const browse = !args.query && args.lat === undefined && args.lng === undefined;
+  try {
+    const rows = browse
+      ? // Normalised so equivalent calls share one cache entry.
+        await cachedRpcSearch({
+          categoryId: args.categoryId,
+          cityId: args.cityId,
+          sort: args.sort ?? 'newest',
+          limit: args.limit ?? 12,
+          offset: args.offset ?? 0,
+        })
+      : await rpcSearch(args);
+    return { listings: await attachCovers(rows), failed: false };
+  } catch (e) {
+    // Logs and degrades instead of throwing. Throwing took down every page that
+    // lists businesses (home, listings, search, category, city and even listing
+    // detail via "related") with Next's bare "This page couldn't load" whenever
+    // Supabase was unreachable, and most of those routes render per request, so
+    // there was no cached page to fall back to. The failure stays visible in the
+    // runtime logs via reportError.
+    reportError('search_listings', e as { message: string; code?: string });
     return { listings: [], failed: true };
   }
-  return { listings: await attachCovers((data ?? []) as ListingCard[]), failed: false };
 }
 
 /**

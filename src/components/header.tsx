@@ -1,6 +1,7 @@
 'use client';
 
-import Link from 'next/link';
+// Prefetch on intent, not on sight: see hover-prefetch-link.tsx.
+import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
 import { usePathname } from 'next/navigation';
 import {
   useCallback,

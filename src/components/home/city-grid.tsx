@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import Link from 'next/link';
+// Prefetch on intent, not on sight: see hover-prefetch-link.tsx.
+import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
 import { Icon } from '@/components/icons';
 import type { CityGridVM } from '@/lib/home-types';
 import { SectionShell } from './section-shell';
