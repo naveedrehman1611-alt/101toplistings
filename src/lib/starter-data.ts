@@ -1,6 +1,6 @@
 // Starter taxonomy for the three launch markets — the United Kingdom, the
 // United States and the United Arab Emirates — identical to
-// supabase/migrations/0018. The admin "Load starter data" button inserts it
+// supabase/migrations/0018 (categories: 0017 + 0020). The admin "Load starter data" button inserts it
 // through the normal RLS-checked client, so a fresh database can be filled
 // without opening the SQL editor.
 //
@@ -429,7 +429,7 @@ export const STARTER_CATEGORIES: {
   {
     slug: 'pharmacies',
     name: 'Pharmacies',
-    description: 'Chemists and medical stores.',
+    description: 'Pharmacies, chemists and drugstores.',
     sort_order: 50,
     is_featured: false,
   },
@@ -450,14 +450,14 @@ export const STARTER_CATEGORIES: {
   {
     slug: 'schools',
     name: 'Schools & Academies',
-    description: 'Schools, tuition centres and training institutes.',
+    description: 'Schools, tutoring centres and training institutes.',
     sort_order: 80,
     is_featured: true,
   },
   {
     slug: 'real-estate',
     name: 'Real Estate',
-    description: 'Property dealers, builders and developers.',
+    description: 'Estate agents, realtors, builders and developers.',
     sort_order: 90,
     is_featured: true,
   },
@@ -478,49 +478,49 @@ export const STARTER_CATEGORIES: {
   {
     slug: 'plumbers',
     name: 'Plumbers',
-    description: 'Plumbing, water tanks and sanitary work.',
+    description: 'Plumbing, heating, boilers and bathroom fitting.',
     sort_order: 120,
     is_featured: true,
   },
   {
     slug: 'electricians',
     name: 'Electricians',
-    description: 'Electrical repair, wiring, solar and UPS.',
+    description: 'Electrical repair, wiring, EV chargers and solar panels.',
     sort_order: 130,
     is_featured: true,
   },
   {
     slug: 'ac-repair',
     name: 'AC & Appliance Repair',
-    description: 'Air conditioner, fridge and appliance servicing.',
+    description: 'Air conditioning, heating and appliance servicing.',
     sort_order: 140,
     is_featured: false,
   },
   {
     slug: 'lawyers',
     name: 'Lawyers',
-    description: 'Law firms, advocates and legal consultants.',
+    description: 'Law firms, solicitors, attorneys and legal consultants.',
     sort_order: 150,
     is_featured: false,
   },
   {
     slug: 'accountants',
     name: 'Accountants & Tax',
-    description: 'Accountants, tax consultants and auditors.',
+    description: 'Accountants, tax advisers, CPAs and auditors.',
     sort_order: 160,
     is_featured: false,
   },
   {
     slug: 'hotels',
     name: 'Hotels & Guest Houses',
-    description: 'Hotels, guest houses and short stays.',
+    description: 'Hotels, B&Bs, serviced apartments and short stays.',
     sort_order: 170,
     is_featured: false,
   },
   {
     slug: 'travel-agents',
     name: 'Travel Agents',
-    description: 'Travel, tickets, visas, Hajj and Umrah.',
+    description: 'Travel agents, tours, flights and visa services.',
     sort_order: 180,
     is_featured: false,
   },
@@ -534,14 +534,14 @@ export const STARTER_CATEGORIES: {
   {
     slug: 'it-services',
     name: 'IT & Web Services',
-    description: 'Software houses, web design, repair and internet.',
+    description: 'IT support, web design, software development and computer repair.',
     sort_order: 200,
     is_featured: false,
   },
   {
     slug: 'event-services',
     name: 'Events & Wedding',
-    description: 'Marquees, caterers, photographers and decorators.',
+    description: 'Venues, caterers, photographers and event planners.',
     sort_order: 210,
     is_featured: false,
   },
