@@ -15,13 +15,22 @@ const jakarta = Plus_Jakarta_Sans({
   preload: true,
 });
 
+/** A SITE_URL without a scheme (e.g. "example.com") would make new URL throw on every page. */
+function safeUrl(value: string): URL | undefined {
+  try {
+    return new URL(/^https?:\/\//.test(value) ? value : `https://${value}`);
+  } catch {
+    return undefined;
+  }
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
   const brand = settingText(s, 'brand.name', 'RankYouSite');
   const title = settingText(s, 'seo.default_title', brand);
   const description = settingText(s, 'seo.default_description', '');
   return {
-    metadataBase: new URL(SITE_URL),
+    metadataBase: safeUrl(SITE_URL),
     title: { default: title, template: `%s · ${brand}` },
     description,
     openGraph: { title, description, siteName: brand, type: 'website', url: SITE_URL },
