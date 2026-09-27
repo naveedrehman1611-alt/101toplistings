@@ -1,6 +1,5 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
 import { createClient } from './supabase-server';
 import { getCurrentUser, requireUser } from './auth';
 import { check, runAndReturn } from './action-flow';
@@ -52,7 +51,9 @@ export async function toggleFavourite(listingId: string): Promise<{ status: Favo
       if (error && error.code !== '23505') throw error;
       status = 'added';
     }
-    revalidatePath('/dashboard');
+    // Nothing to revalidate: /dashboard renders per request anyway, and a
+    // revalidatePath here would make Next re-render the page the button is on
+    // (the homepage, with an uncached search) into every click's response.
     return { status };
   } catch (e) {
     console.error('[favourites] toggle failed:', e);
