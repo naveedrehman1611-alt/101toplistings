@@ -39,7 +39,8 @@ Living status file. Updated after every phase. Do not delete criteria — mark t
       `/reset-password` and `/auth/callback`.
 - [~] **Phase 5B — Admin panel.** Dashboard, listings (moderate, create, edit, delete, images),
       categories, locations, reviews, inbox, blog, media library, menus, pages & sections, SEO,
-      redirects, settings. Not built: announcements, amenities, claims, user management.
+      redirects, settings, users (roles and suspension, admin-only). Not built: announcements,
+      amenities, claims.
 - [~] **Phase 6 — Query, search, and form states.** Search, sorting and pagination done with
       state in the URL. Filters and every form still outstanding.
 - [ ] **Phase 7 — Responsive QA.** Breakpoints implemented; nothing verified at real widths.

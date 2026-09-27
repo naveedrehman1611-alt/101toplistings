@@ -24,6 +24,7 @@ const NAV = [
   { href: '/admin/pages', label: 'Pages & sections' },
   { href: '/admin/seo', label: 'SEO' },
   { href: '/admin/redirects', label: 'Redirects' },
+  { href: '/admin/users', label: 'Users' },
   { href: '/admin/settings', label: 'Settings' },
 ];
 
@@ -43,7 +44,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sm text-brand-700 hover:underline">
+          <Link href="/" className="text-brand-700 text-sm hover:underline">
             View site
           </Link>
           <form action={signOut}>
