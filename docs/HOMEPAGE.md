@@ -6,7 +6,7 @@ section on it is data: editors change it in **Admin → Pages & sections**, **Ad
 
 ## 1. Deploying it
 
-Run **`supabase/update_0017_to_0018.sql`** once in the Supabase SQL Editor (a fresh database uses
+Run **`supabase/update_0020_to_0021.sql`** once in the Supabase SQL Editor (a fresh database uses
 `supabase/full_setup.sql` instead). It is a single transaction, safe to re-run, and it only changes rows
 that still hold an earlier migration's default values, so nothing an admin edited is overwritten. It:
 
@@ -32,22 +32,22 @@ in one request) and turns each into a typed view model (`src/lib/home-types.ts`)
 duplicate or add sections, and a new section of an existing type needs no code. The registry in
 `src/lib/sections.ts` defines, per type, which fields the editor shows and which settings the page reads.
 
-| # | Section (key) | Type | What it shows |
-|---|---|---|---|
-| 1 | `hero` | Hero with search | Photo, H1, What/Where search, six category tiles |
-| 2 | `featured` | Business carousel | Highest-rated (or newest, or pinned) approved listings |
-| 3 | `intro` | Image and text | "Find Trusted Local Businesses Across Pakistan" |
-| 4 | `why_choose` | Icon cards | Three reasons, Title Case like the reference |
-| 5 | `cities` | City mosaic | Lahore / Karachi / Multan / Islamabad photo cards |
-| 6 | `categories` | Service cards carousel | Six popular services linked to their categories |
-| 7 | `how_it_works` | Icon cards (grey band) | Search & Discover → Read Reviews & Compare → Connect & Visit |
-| 8 | `grow` | Call to action (cards) | Profile explainer + checklist + "Add Your Business — It's Free" |
-| 9 | `testimonials` | Testimonials carousel | Hidden until quotes are added (see §4) |
-| 10 | `guidance` | Image and text (image right) | "Helping Customers Make Better Local Choices" |
-| 11 | `listing_cta` | Call to action (banner, navy/photo) | "Get Your Business in Front of Thousands" |
-| 12 | `faq` | FAQ accordion | 11 questions, first open, one at a time, FAQPage JSON-LD |
-| 13 | `guides` | Blog carousel | Latest three published posts (or pinned posts) |
-| 14 | `cta` | Call to action (banner, brand blue) | "Submit Your Listing Today!" |
+| #   | Section (key)  | Type                                | What it shows                                                   |
+| --- | -------------- | ----------------------------------- | --------------------------------------------------------------- |
+| 1   | `hero`         | Hero with search                    | Photo, H1, What/Where search, six category tiles                |
+| 2   | `featured`     | Business carousel                   | Highest-rated (or newest, or pinned) approved listings          |
+| 3   | `intro`        | Image and text                      | "Find Trusted Local Businesses Across Pakistan"                 |
+| 4   | `why_choose`   | Icon cards                          | Three reasons, Title Case like the reference                    |
+| 5   | `cities`       | City mosaic                         | Lahore / Karachi / Multan / Islamabad photo cards               |
+| 6   | `categories`   | Service cards carousel              | Six popular services linked to their categories                 |
+| 7   | `how_it_works` | Icon cards (grey band)              | Search & Discover → Read Reviews & Compare → Connect & Visit    |
+| 8   | `grow`         | Call to action (cards)              | Profile explainer + checklist + "Add Your Business — It's Free" |
+| 9   | `testimonials` | Testimonials carousel               | Hidden until quotes are added (see §4)                          |
+| 10  | `guidance`     | Image and text (image right)        | "Helping Customers Make Better Local Choices"                   |
+| 11  | `listing_cta`  | Call to action (banner, navy/photo) | "Get Your Business in Front of Thousands"                       |
+| 12  | `faq`          | FAQ accordion                       | 11 questions, first open, one at a time, FAQPage JSON-LD        |
+| 13  | `guides`       | Blog carousel                       | Latest three published posts (or pinned posts)                  |
+| 14  | `cta`          | Call to action (banner, brand blue) | "Submit Your Listing Today!"                                    |
 
 Copy may contain `{brand}`, replaced with the `brand.name` setting, so a rebrand is one edit.
 
@@ -57,17 +57,17 @@ The reference site's photos could not be fetched from this environment (its host
 session's network policy), so no photo ships with the code. Until one is chosen each slot falls back to a
 plain design: navy hero, text-only intro, navy city cards with a pin icon, navy banner.
 
-| Where | Pick it in | Suggested size |
-|---|---|---|
-| Hero background (market street) | Pages & sections → `hero` → Background photo | 1920 × 900 |
-| Intro photo (bazaar) | `intro` → Photo | 1200 × 1200 |
-| Lahore, Karachi, Multan, Islamabad | `cities` → each city item → Photo | 1400 × 700 (wide), 800 × 700 (narrow) |
-| Guidance photo | `guidance` → Photo | 1200 × 1100 |
-| "Get Your Business in Front of Thousands" background | `listing_cta` → Background photo | 1920 × 800 |
-| Logo on dark backgrounds (homepage header, footer) | Settings → `brand.logo_dark_media_id` | ~360 × 88, transparent PNG/WebP |
-| Logo on white backgrounds (inner pages) | Settings → `brand.logo_light_media_id` | ~360 × 88 |
-| Testimonial photos | `testimonials` → each item → Photo | 300 × 300 |
-| Blog covers | Admin → Blog → each post | 1200 × 800 |
+| Where                                                | Pick it in                                   | Suggested size                        |
+| ---------------------------------------------------- | -------------------------------------------- | ------------------------------------- |
+| Hero background (market street)                      | Pages & sections → `hero` → Background photo | 1920 × 900                            |
+| Intro photo (bazaar)                                 | `intro` → Photo                              | 1200 × 1200                           |
+| Lahore, Karachi, Multan, Islamabad                   | `cities` → each city item → Photo            | 1400 × 700 (wide), 800 × 700 (narrow) |
+| Guidance photo                                       | `guidance` → Photo                           | 1200 × 1100                           |
+| "Get Your Business in Front of Thousands" background | `listing_cta` → Background photo             | 1920 × 800                            |
+| Logo on dark backgrounds (homepage header, footer)   | Settings → `brand.logo_dark_media_id`        | ~360 × 88, transparent PNG/WebP       |
+| Logo on white backgrounds (inner pages)              | Settings → `brand.logo_light_media_id`       | ~360 × 88                             |
+| Testimonial photos                                   | `testimonials` → each item → Photo           | 300 × 300                             |
+| Blog covers                                          | Admin → Blog → each post                     | 1200 × 800                            |
 
 Uploads are stored under unique names with a one-year cache header and optimised by Next.js with a
 31-day cache, so each image is fetched from Supabase Storage rarely, not per visit.

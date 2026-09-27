@@ -8,7 +8,7 @@ import { FormError, bool, num, required, slugFrom, text, uuid } from './form-dat
 import {
   STARTER_CATEGORIES,
   STARTER_CITIES,
-  STARTER_COUNTRY,
+  STARTER_COUNTRIES,
   STARTER_REGIONS,
 } from './starter-data';
 
@@ -197,11 +197,12 @@ export async function deleteLocation(fd: FormData) {
 // ---------------------------------------------------------------------------
 
 /**
- * Fills an empty database with Pakistan's provinces, its larger cities and a set
- * of common categories — the same rows as migration 0017. Without at least one
- * city nobody can add a business. Only inserts what is missing, so pressing it
- * twice (or after running 0017) changes nothing, and admin edits are never
- * overwritten.
+ * Fills an empty database with the three launch markets — the United Kingdom,
+ * the United States and the United Arab Emirates — with their regions, larger
+ * cities and a set of common categories: the same rows as migration 0018 (plus
+ * 0017's categories). Without at least one city nobody can add a business.
+ * Only inserts what is missing, so pressing it twice (or after running 0018)
+ * changes nothing, and admin edits are never overwritten.
  */
 export async function loadStarterData(fd: FormData) {
   const user = await requireRole('editor');
@@ -214,7 +215,7 @@ export async function loadStarterData(fd: FormData) {
     // Location slugs are unique across all three levels (a trigger enforces
     // it), so collect every slug already in use before inserting.
     const [{ data: c }, { data: r }, { data: ci }, { data: cat }] = await Promise.all([
-      supabase.from('countries').select('id, slug'),
+      supabase.from('countries').select('id, slug, iso2'),
       supabase.from('regions').select('id, slug'),
       supabase.from('cities').select('slug'),
       supabase.from('categories').select('slug'),
@@ -222,24 +223,33 @@ export async function loadStarterData(fd: FormData) {
     const taken = new Set([...(c ?? []), ...(r ?? []), ...(ci ?? [])].map((x) => x.slug));
     let added = 0;
 
-    let countryId = (c ?? []).find((x) => x.slug === STARTER_COUNTRY.slug)?.id as
-      string | undefined;
-    if (!countryId) {
-      if (taken.has(STARTER_COUNTRY.slug))
-        throw new FormError(`The slug "${STARTER_COUNTRY.slug}" is already used elsewhere.`);
-      const row = check(
-        await supabase.from('countries').insert(STARTER_COUNTRY).select('*').single(),
+    // A country already present by slug or ISO code is reused, not duplicated.
+    const countryIds = new Map<string, string>();
+    for (const country of STARTER_COUNTRIES) {
+      const existing = (c ?? []).find(
+        (x) => x.slug === country.slug || x.iso2?.toUpperCase() === country.iso2,
       );
+      if (existing) {
+        countryIds.set(country.slug, existing.id as string);
+        continue;
+      }
+      if (taken.has(country.slug))
+        throw new FormError(`The slug "${country.slug}" is already used elsewhere.`);
+      const row = check(await supabase.from('countries').insert(country).select('*').single());
       await writeAudit(user.id, 'create', 'country', row.id, null, row);
-      countryId = row.id as string;
+      countryIds.set(country.slug, row.id as string);
+      taken.add(country.slug);
       added++;
     }
 
     const regionIds = new Map((r ?? []).map((x) => [x.slug as string, x.id as string] as const));
-    const newRegions = STARTER_REGIONS.filter((x) => !taken.has(x.slug)).map((x) => ({
-      country_id: countryId,
+    const newRegions = STARTER_REGIONS.filter(
+      (x) => !taken.has(x.slug) && countryIds.has(x.country),
+    ).map((x) => ({
+      country_id: countryIds.get(x.country)!,
       slug: x.slug,
       name: x.name,
+      code: x.code,
       latitude: x.lat,
       longitude: x.lng,
     }));

@@ -1,4 +1,4 @@
--- 0018 — SmartBizDir homepage: page builder fields, taxonomy, content, newsletter
+-- 0021 — SmartBizDir homepage: page builder fields, taxonomy, content, newsletter
 --
 -- The homepage is now rendered section by section from page_sections in
 -- sort_order, by section_type (src/lib/home.ts), so editors can reorder,

@@ -638,7 +638,7 @@ export async function getListingCardsByIds(ids: string[]): Promise<ListingCard[]
 
 export type CardExtras = { id: string; phone_primary: string | null; excerpt: string | null };
 
-/** Phone and a 200-character excerpt per card, from the public_listing_cards view (0018). */
+/** Phone and a 200-character excerpt per card, from the public_listing_cards view (0021). */
 export async function getCardExtras(ids: string[]): Promise<CardExtras[]> {
   if (ids.length === 0) return [];
   return readList(

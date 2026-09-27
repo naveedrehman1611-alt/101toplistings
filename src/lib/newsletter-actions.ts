@@ -5,7 +5,7 @@ import { text } from './form-data';
 
 export type NewsletterState = { status: 'idle' | 'ok' | 'error'; message: string };
 
-// The newsletter_email_format check in migration 0018, so an address accepted
+// The newsletter_email_format check in migration 0021, so an address accepted
 // here is not then refused by the table.
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,7 +21,7 @@ const invalid = (): NewsletterState => ({
 
 /**
  * The footer newsletter form. Subscribing goes through the subscribe_newsletter
- * RPC (migration 0018), which answers the same for a new address and one
+ * RPC (migration 0021), which answers the same for a new address and one
  * already on the list, and only staff can read the list back — so neither this
  * form nor the public API tells anyone who has subscribed. Nothing public
  * changes, so nothing is revalidated.

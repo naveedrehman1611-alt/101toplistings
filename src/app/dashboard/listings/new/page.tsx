@@ -32,8 +32,8 @@ export default async function NewOwnListing({
             <>
               <p className="font-medium">No cities have been set up yet.</p>
               <p className="mt-1 text-[var(--text-muted)]">
-                A listing needs a city. Load Pakistan&apos;s provinces, 27 larger cities and 22
-                common categories in one click, or add your own under{' '}
+                A listing needs a city. Load the UK, US and UAE with 21 regions, 32 major cities and
+                22 common categories in one click, or add your own under{' '}
                 <Link href="/admin/locations" className="text-brand-700 hover:underline">
                   Admin → Locations
                 </Link>

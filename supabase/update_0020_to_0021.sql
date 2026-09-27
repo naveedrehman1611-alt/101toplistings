@@ -1,15 +1,17 @@
--- Migration 0018 in one transaction, for a database that already has 0001–0017
--- (the live project, built from full_setup.sql). Every statement is safe to re-run
--- and changes a row only while it still holds an earlier migration's default, so
--- no admin edit is overwritten. Paste into the Supabase SQL Editor and Run.
+-- Migration 0021 in one transaction, for a database that already has 0001–0020.
+-- If the live database only has 0001–0017, run 0018, 0019 and 0020 first (or
+-- this file will still work: 0021 does not depend on them). Every statement is
+-- safe to re-run and changes a row only while it still holds an earlier
+-- migration's default, so no admin edit is overwritten. Paste into the Supabase
+-- SQL Editor and Run.
 
 begin;
 
 -- =====================================================================
--- 0018_smartbizdir_homepage.sql
+-- 0021_smartbizdir_homepage.sql
 -- =====================================================================
 
--- 0018 — SmartBizDir homepage: page builder fields, taxonomy, content, newsletter
+-- 0021 — SmartBizDir homepage: page builder fields, taxonomy, content, newsletter
 --
 -- The homepage is now rendered section by section from page_sections in
 -- sort_order, by section_type (src/lib/home.ts), so editors can reorder,

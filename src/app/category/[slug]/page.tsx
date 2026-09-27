@@ -52,7 +52,7 @@ export default async function CategoryPage({
   const q = sp.q?.trim().slice(0, 100) || undefined;
   const [cities, categories] = await Promise.all([getCities(), getCategories()]);
   const city = cities.find((c) => c.slug === sp.city);
-  // A parent's results already include its children (search_listings, 0018);
+  // A parent's results already include its children (search_listings, 0021);
   // the links below let visitors narrow to one of them.
   const parent = cat.parent_id ? categories.find((c) => c.id === cat.parent_id) : undefined;
   const children = categories.filter((c) => c.parent_id === cat.id);

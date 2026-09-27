@@ -177,7 +177,7 @@ supabase.from(…)` in a page is the silent-failure bug being reinvented.
 6. **Budget check:** 5 GB ÷ 30 days ≈ 170 MB/day. The Supabase dashboard's daily
    egress chart is the only thing that actually confirms any of this.
 
-## Homepage rebuild (0018) — what it adds to the read path
+## Homepage rebuild (0021) — what it adds to the read path
 
 Re-checked when the homepage became a section builder (`docs/HOMEPAGE.md`).
 
