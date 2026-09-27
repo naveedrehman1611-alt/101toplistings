@@ -135,7 +135,7 @@ function UploadForm({
           name="alt"
           maxLength={300}
           placeholder="Describe the image (alt text)"
-          className="focus:border-brand-500 h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none"
+          className="focus:border-primary-container focus:ring-primary-container/20 h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-hidden focus:ring-2"
         />
       </label>
       <p className="text-xs text-[var(--text-muted)]">{HINT}</p>

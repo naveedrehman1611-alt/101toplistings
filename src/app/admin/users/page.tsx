@@ -82,7 +82,7 @@ export default async function AdminUsers({
             defaultValue={q}
             placeholder="Search by name"
             aria-label="Search by name"
-            className="focus:border-brand-500 h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none"
+            className="focus:border-primary-container focus:ring-primary-container/20 h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-hidden focus:ring-2"
           />
           <button
             type="submit"
@@ -155,7 +155,7 @@ export default async function AdminUsers({
                     </td>
                     <td className="py-2">
                       {locked ? (
-                        <span className={u.is_suspended ? 'text-red-800' : ''}>
+                        <span className={u.is_suspended ? 'text-on-error-container' : ''}>
                           {u.is_suspended ? 'Suspended' : 'Active'}
                         </span>
                       ) : (
@@ -172,7 +172,7 @@ export default async function AdminUsers({
                             className={`rounded-lg border px-2.5 py-1 text-xs ${
                               u.is_suspended
                                 ? 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-                                : 'border-red-300 text-red-800 hover:bg-red-50'
+                                : 'border-error/30 text-on-error-container hover:bg-error-container/40'
                             }`}
                           >
                             {u.is_suspended ? 'Restore' : 'Suspend'}

@@ -55,7 +55,7 @@ export default async function ResetPasswordPage({
     <div className="container-page py-12">
       <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: 'Choose a new password' }]} />
       <div className="mx-auto max-w-sm">
-        <h1 className="text-3xl font-bold">Choose a new password</h1>
+        <h1 className="font-headline-lg text-headline-lg">Choose a new password</h1>
 
         {!user ? (
           <p className="mt-6 text-[var(--text-muted)]">
@@ -76,7 +76,7 @@ export default async function ResetPasswordPage({
             {sp.error ? (
               <p
                 role="alert"
-                className="mt-6 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+                className="border-error/30 bg-error-container/40 text-on-error-container mt-6 rounded-lg border px-4 py-3 text-sm"
               >
                 {sp.error}
               </p>
@@ -94,7 +94,7 @@ export default async function ResetPasswordPage({
                   autoComplete="new-password"
                   minLength={8}
                   required
-                  className="focus:border-brand-500 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"
+                  className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-hidden focus:ring-2"
                 />
                 <p className="mt-1 text-xs text-[var(--text-muted)]">At least 8 characters.</p>
               </div>
@@ -109,12 +109,12 @@ export default async function ResetPasswordPage({
                   autoComplete="new-password"
                   minLength={8}
                   required
-                  className="focus:border-brand-500 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"
+                  className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-hidden focus:ring-2"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-brand-700 hover:bg-brand-800 h-11 w-full rounded-lg font-medium text-white"
+                className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 w-full rounded-lg shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
               >
                 Update password
               </button>

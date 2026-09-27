@@ -12,6 +12,7 @@ import {
   searchListings,
 } from '@/lib/queries';
 import { Badge, Breadcrumbs, Stars } from '@/components/ui';
+import { Icon } from '@/components/icon';
 import { ListingCard } from '@/components/listing-card';
 import { SITE_URL } from '@/lib/supabase';
 import { redirectOrNotFound } from '@/lib/redirects';
@@ -78,6 +79,17 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
   const city = cities.find((c) => c.id === listing.city_id);
   const related = await searchListings({ categoryId: listing.category_id ?? undefined, limit: 4 });
   const cityNames = new Map(cities.map((c) => [c.id, c.name]));
+
+  // Google Maps directions: the exact coordinates when the listing has them,
+  // otherwise its written address. No location at all means no link.
+  const directionsUrl =
+    listing.latitude !== null && listing.longitude !== null
+      ? `https://www.google.com/maps/dir/?api=1&destination=${listing.latitude},${listing.longitude}`
+      : listing.address
+        ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+            `${listing.address}${city ? `, ${city.name}` : ''}, Pakistan`,
+          )}`
+        : null;
 
   // §7.5.8 / criterion 48: emit only what is real and visible on the page.
   const jsonLd: Record<string, unknown> = {
@@ -178,7 +190,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
                 className="size-16 shrink-0 rounded-lg border border-[var(--border)] bg-[var(--surface)] object-contain"
               />
             ) : null}
-            <h1 className="text-3xl font-bold sm:text-4xl">{listing.name}</h1>
+            <h1 className="font-headline-lg text-headline-lg">{listing.name}</h1>
           </div>
           {listing.tagline ? (
             <p className="mt-2 text-lg text-[var(--text-muted)]">{listing.tagline}</p>
@@ -190,7 +202,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
           {listing.description ? (
             <section className="mt-10">
-              <h2 className="text-xl font-semibold">About</h2>
+              <h2 className="font-headline-sm text-headline-sm">About</h2>
               <p className="mt-3 leading-relaxed whitespace-pre-line text-[var(--text-muted)]">
                 {listing.description}
               </p>
@@ -199,7 +211,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
           {images.gallery.length > 0 ? (
             <section className="mt-10">
-              <h2 className="text-xl font-semibold">Photos</h2>
+              <h2 className="font-headline-sm text-headline-sm">Photos</h2>
               <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {images.gallery.map((g) => (
                   <li key={g.id}>
@@ -225,7 +237,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
           {hours.length > 0 ? (
             <section className="mt-10">
-              <h2 className="text-xl font-semibold">Opening hours</h2>
+              <h2 className="font-headline-sm text-headline-sm">Opening hours</h2>
               <table className="mt-4 w-full max-w-md text-sm">
                 <tbody>
                   {hours.map((h) => (
@@ -252,7 +264,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
           <section className="mt-10">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-semibold">Reviews</h2>
+              <h2 className="font-headline-sm text-headline-sm">Reviews</h2>
               <Link
                 href={`/listing/${listing.slug}/review`}
                 className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]"
@@ -269,7 +281,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
                 {reviews.map((r) => (
                   <li key={r.id} className="surface-card p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span aria-label={`${r.rating} out of 5 stars`} className="text-accent-500">
+                      <span aria-label={`${r.rating} out of 5 stars`} className="text-badge-gold">
                         {'★'.repeat(r.rating)}
                         <span className="text-[var(--border)]">{'★'.repeat(5 - r.rating)}</span>
                       </span>
@@ -303,12 +315,27 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <div className="surface-card p-5">
-            <h2 className="font-display font-semibold">Contact</h2>
+            <h2 className="font-title-md text-title-md">Contact</h2>
             <dl className="mt-4 space-y-3 text-sm">
-              {listing.address ? (
+              {listing.address || directionsUrl ? (
                 <div>
-                  <dt className="text-[var(--text-muted)]">Address</dt>
-                  <dd>{listing.address}</dd>
+                  <dt className="text-[var(--text-muted)]">
+                    {listing.address ? 'Address' : 'Location'}
+                  </dt>
+                  {listing.address ? <dd>{listing.address}</dd> : null}
+                  {directionsUrl ? (
+                    <dd className={listing.address ? 'mt-1' : undefined}>
+                      <a
+                        href={directionsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-brand-700 inline-flex items-center gap-1 hover:underline"
+                      >
+                        <Icon name="near_me" size={16} />
+                        Get directions
+                      </a>
+                    </dd>
+                  ) : null}
                 </div>
               ) : null}
               {listing.phone_primary ? (
@@ -339,7 +366,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
             {listing.phone_primary ? (
               <a
                 href={`tel:${listing.phone_primary.replace(/\s+/g, '')}`}
-                className="bg-brand-700 hover:bg-brand-800 mt-5 flex h-11 items-center justify-center rounded-lg font-medium text-white"
+                className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container mt-5 flex h-11 items-center justify-center rounded-lg shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
               >
                 Call now
               </a>
@@ -397,7 +424,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
       {related.filter((r) => r.slug !== listing.slug).length > 0 ? (
         <section className="mt-16">
-          <h2 className="text-xl font-semibold">Related businesses</h2>
+          <h2 className="font-headline-sm text-headline-sm">Related businesses</h2>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {related
               .filter((r) => r.slug !== listing.slug)

@@ -38,7 +38,7 @@ export default async function ReviewPage({
         ]}
       />
       <div className="max-w-xl">
-        <h1 className="text-3xl font-bold">Review {listing.name}</h1>
+        <h1 className="font-headline-lg text-headline-lg">Review {listing.name}</h1>
 
         {sp.sent ? (
           <div className="border-brand-500/40 bg-brand-50 text-brand-800 mt-6 rounded-lg border px-4 py-3 text-sm">
@@ -75,7 +75,7 @@ export default async function ReviewPage({
             {sp.error ? (
               <p
                 role="alert"
-                className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+                className="border-error/30 bg-error-container/40 text-on-error-container rounded-lg border px-4 py-3 text-sm"
               >
                 {sp.error}
               </p>
@@ -90,8 +90,14 @@ export default async function ReviewPage({
                     key={n}
                     className="has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
                   >
-                    <input type="radio" name="rating" value={n} required className="size-4" />
-                    <span aria-hidden className="text-accent-500">
+                    <input
+                      type="radio"
+                      name="rating"
+                      value={n}
+                      required
+                      className="accent-primary-container size-4"
+                    />
+                    <span aria-hidden className="text-badge-gold">
                       {'★'.repeat(n)}
                     </span>
                     <span className="sr-only">{n} stars</span>
@@ -104,7 +110,7 @@ export default async function ReviewPage({
               <input
                 name="title"
                 maxLength={120}
-                className="focus:border-brand-500 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"
+                className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-hidden focus:ring-2"
               />
             </label>
             <label className="block text-sm">
@@ -115,12 +121,12 @@ export default async function ReviewPage({
                 minLength={10}
                 maxLength={3000}
                 rows={6}
-                className="focus:border-brand-500 mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 outline-none"
+                className="focus:border-primary-container focus:ring-primary-container/20 mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 outline-hidden focus:ring-2"
               />
             </label>
             <button
               type="submit"
-              className="bg-brand-700 hover:bg-brand-800 h-11 rounded-lg px-6 font-medium text-white"
+              className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 rounded-lg px-6 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
             >
               Submit review
             </button>

@@ -65,7 +65,7 @@ export default async function AdminMedia({
         <h2 className="text-lg font-semibold sm:col-span-2">Upload an image</h2>
         <label className="block text-sm">
           <span className="font-medium">
-            Image<span className="text-red-700"> *</span>
+            Image<span className="text-error"> *</span>
           </span>
           <input
             type="file"
@@ -151,7 +151,7 @@ export default async function AdminMedia({
                         maxLength={300}
                         defaultValue={m.alt ?? ''}
                         placeholder="Alt text"
-                        className="focus:border-brand-500 h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none"
+                        className="focus:border-primary-container focus:ring-primary-container/20 h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-hidden focus:ring-2"
                       />
                     </label>
                     <button
