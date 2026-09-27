@@ -65,25 +65,29 @@
   color-scheme: light;
 }
 
-body {
-  background: var(--surface);
-  color: var(--text);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-}
+/* Element defaults live in the base layer so any utility on an element wins
+   (unlayered CSS would beat every Tailwind utility regardless of specificity). */
+@layer base {
+  body {
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
 
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-display);
-  letter-spacing: -0.01em;
-}
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
 
-/* One visible focus style for every interactive element that lacks its own. */
-:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-brand-500);
-  outline-offset: 2px;
+  /* One visible focus style for every interactive element that lacks its own. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
 }
 
 /* Honour reduced motion everywhere, Framer Motion and smooth scrolling included. */

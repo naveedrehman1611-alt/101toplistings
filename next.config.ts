@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
     // without ever going stale. Every re-optimisation is a fetch from Supabase
     // Storage, so the longer TTL directly cuts Storage egress.
     minimumCacheTTL: 2678400,
+    // Next 16 refuses to optimise images from private addresses (SSRF guard).
+    // Only a local Supabase stack (`supabase start`, 127.0.0.1:54321) needs
+    // that, and remotePatterns still limits fetches to its media bucket.
+    dangerouslyAllowLocalIP: supabaseUrl
+      ? ['localhost', '127.0.0.1'].includes(supabaseUrl.hostname)
+      : false,
     remotePatterns: supabaseUrl
       ? [
           {

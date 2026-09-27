@@ -34,7 +34,7 @@ export function SectionHeader({
 }) {
   if (!heading && !subheading) return null;
   return (
-    <div className={`mx-auto mb-10 max-w-3xl text-center sm:mb-12 ${className}`}>
+    <div className={`mx-auto mb-10 max-w-5xl text-center sm:mb-12 ${className}`}>
       {heading ? (
         <h2
           id={id}
