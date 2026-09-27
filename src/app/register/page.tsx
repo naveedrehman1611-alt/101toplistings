@@ -41,7 +41,8 @@ async function register(formData: FormData) {
     options: {
       // Role is never taken from here — the signup trigger always creates 'user'.
       data: name ? { display_name: name } : undefined,
-      emailRedirectTo: `${SITE_URL}/login?next=${encodeURIComponent(next)}`,
+      // /auth/callback redeems the confirmation code, so the link signs them in.
+      emailRedirectTo: `${SITE_URL}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   });
 
