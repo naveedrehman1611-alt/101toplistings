@@ -15,7 +15,7 @@ const PROFILE_CHECKLIST: string[] = [
 export function GrowVisibility({ brand }: { brand: string }) {
   return (
     <section className="mx-auto w-full max-w-7xl px-6 py-20 lg:px-12">
-      <div className="bg-surface-card rounded-3xl p-8 shadow-md sm:p-14">
+      <div className="bg-surface-card rounded-3xl p-6 shadow-md sm:p-14">
         <div className="mb-12 max-w-3xl">
           <span className="font-label-sm text-label-sm text-primary-container font-semibold uppercase">
             Merchant & Provider Growth
@@ -29,7 +29,7 @@ export function GrowVisibility({ brand }: { brand: string }) {
           </p>
         </div>
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-          <div className="bg-surface-bg flex flex-col justify-between rounded-2xl p-8">
+          <div className="bg-surface-bg flex flex-col justify-between rounded-2xl p-5 sm:p-8">
             <div>
               <div className="text-primary-container mb-4 flex items-center gap-2">
                 <Icon name="visibility" size={24} />
@@ -60,7 +60,7 @@ export function GrowVisibility({ brand }: { brand: string }) {
               </span>
             </div>
           </div>
-          <div className="bg-surface-container flex flex-col justify-between rounded-2xl p-8">
+          <div className="bg-surface-container flex flex-col justify-between rounded-2xl p-5 sm:p-8">
             <div>
               <div className="text-primary-container mb-4 flex items-center gap-2">
                 <Icon name="checklist" size={24} />
@@ -80,10 +80,10 @@ export function GrowVisibility({ brand }: { brand: string }) {
             <div className="mt-8 pt-4">
               <Link
                 href="/dashboard/listings/new"
-                className="bg-tertiary-container font-title-md text-title-md text-on-tertiary hover:bg-tertiary focus-visible:ring-primary-container inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
+                className="bg-tertiary-container font-title-md text-title-md text-on-tertiary hover:bg-tertiary focus-visible:ring-primary-container inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden sm:px-6"
               >
                 <Icon name="add_business" size={20} />
-                <span>Add Your Business — It&apos;s Free</span>
+                <span className="text-center text-balance">Add Your Business — It&apos;s Free</span>
               </Link>
             </div>
           </div>

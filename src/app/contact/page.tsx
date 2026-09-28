@@ -167,7 +167,7 @@ export default async function ContactPage({
         </div>
       </section>
 
-      <div className="container-page grid items-start gap-8 py-12 sm:py-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,11fr)]">
+      <div className="container-page grid grid-cols-1 items-start gap-8 py-12 sm:py-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,11fr)]">
         <aside className="space-y-8 lg:sticky lg:top-24">
           <div className="surface-card p-6 shadow-sm sm:p-7">
             <h2 className="font-headline-sm text-headline-sm flex items-center gap-2.5">

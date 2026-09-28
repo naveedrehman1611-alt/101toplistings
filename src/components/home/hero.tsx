@@ -54,7 +54,10 @@ export function Hero({
             Pakistan&apos;s Verified Commercial Network
           </span>
         </div>
-        <h1 className="font-display-hero text-display-hero-mobile md:text-display-hero max-w-3xl leading-tight tracking-tight text-white">
+        {/* 50rem rather than the design's max-w-3xl (48rem): browsers that round glyph
+            widths draw "…Directory –" a few pixels wider than 48rem, which pushed
+            the dash onto the second line. */}
+        <h1 className="font-display-hero text-display-hero-mobile md:text-display-hero max-w-[50rem] leading-tight tracking-tight text-white">
           Pakistan&apos;s #1 Business Directory – Find Local Businesses
         </h1>
         <p className="font-body-lg text-body-lg text-surface-container-high/90 mt-4 max-w-2xl">

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui';
 
 export default function NotFound() {
   return (
-    <div className="container-page grid min-h-[60vh] place-items-center py-20 text-center">
+    <div className="container-page grid min-h-[60vh] grid-cols-1 place-items-center py-20 text-center">
       <div className="w-full max-w-md">
         <span className="bg-surface-container text-primary-container mx-auto grid size-14 place-items-center rounded-xl">
           <Icon name="travel_explore" size={28} />

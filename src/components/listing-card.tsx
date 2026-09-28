@@ -126,7 +126,7 @@ export function ListingCard({
           ) : null}
         </div>
 
-        <div className="bg-surface-bg/50 mt-6 flex items-center justify-between gap-3 rounded-xl p-3 pt-5">
+        <div className="bg-surface-bg/50 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl p-3 pt-5">
           {phone ? (
             <div className="flex min-w-0 items-center gap-2">
               <span className="bg-surface-container text-primary-container flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
@@ -134,7 +134,7 @@ export function ListingCard({
               </span>
               <a
                 href={`tel:${phone.replace(/\s+/g, '')}`}
-                className="font-label-md text-label-md text-on-surface hover:text-primary-container focus-visible:ring-primary-container relative z-10 truncate rounded-sm font-semibold focus-visible:ring-2 focus-visible:outline-hidden"
+                className="font-label-md text-label-md text-on-surface hover:text-primary-container focus-visible:ring-primary-container relative z-10 rounded-sm font-semibold whitespace-nowrap focus-visible:ring-2 focus-visible:outline-hidden"
               >
                 {phone}
               </a>
