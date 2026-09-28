@@ -1,65 +1,172 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Icon } from '@/components/icon';
 import { drawer } from '@/lib/motion';
 import type { MenuItem } from '@/lib/queries';
 
+const ADD_LISTING = '/dashboard/listings/new';
+
+const focusRing =
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+/** "Home" leads the menu unless the admin has already added a link to "/". */
+function withHome(items: MenuItem[]): MenuItem[] {
+  return items.some((item) => item.url === '/')
+    ? items
+    : [{ label: 'Home', url: '/', sort_order: 0 }, ...items];
+}
+
+/** "/" matches only the home page; any other path also covers the pages below it. */
+function isActive(pathname: string, url: string): boolean {
+  if (!url.startsWith('/') || url.startsWith('//') || /[?#]/.test(url)) return false;
+  if (url === '/') return pathname === '/';
+  const base = url.replace(/\/+$/, '');
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
+
+/**
+ * "RankYouSite" -> "RankYou" + "Site" in the accent colour, as in the design. A
+ * name without a trailing capitalised word renders whole. Same split as the footer.
+ */
+function Wordmark({ name }: { name: string }) {
+  const parts = /^(.+?)([A-Z][a-z0-9]*)$/.exec(name);
+  if (!parts) return <>{name}</>;
+  return (
+    <>
+      {parts[1]}
+      <span className="text-primary-container">{parts[2]}</span>
+    </>
+  );
+}
+
 export function Header({
   brand,
+  subtitle,
   nav,
   mobileNav,
 }: {
   brand: string;
+  subtitle: string;
   nav: MenuItem[];
   mobileNav: MenuItem[];
 }) {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const closeButton = useRef<HTMLButtonElement>(null);
+
+  // While the drawer is open, focus starts on its close button and Escape
+  // closes it; focus then goes back to the menu button.
+  useEffect(() => {
+    if (!open) return;
+    const trigger = menuButton.current;
+    closeButton.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      trigger?.focus();
+    };
+  }, [open]);
+
+  const close = () => setOpen(false);
+  const primary = withHome(nav);
+  // Login and Add Listing have their own buttons at the foot of the drawer.
+  const drawerItems = withHome(mobileNav).filter(
+    (item) => item.url !== '/login' && item.url !== ADD_LISTING,
+  );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--surface)]/90 backdrop-blur">
-      <div className="container-page flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="font-display text-lg font-bold tracking-tight">
-          {brand}
-        </Link>
+    <>
+      <header className="bg-surface-card/90 sticky top-0 z-40 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+        <div className="mx-auto max-w-7xl px-6 lg:px-12">
+          <div className="flex h-20 items-center justify-between gap-3 sm:gap-6">
+            <Link href="/" className={`flex min-w-0 items-center gap-3 rounded-xl ${focusRing}`}>
+              <span className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-xs">
+                <Icon name="verified" className="text-on-primary" />
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="font-headline-sm text-headline-sm text-on-surface leading-none tracking-tight">
+                  <Wordmark name={brand} />
+                </span>
+                {subtitle ? (
+                  <span className="font-label-sm text-label-sm text-secondary mt-1 truncate leading-none tracking-wider uppercase">
+                    {subtitle}
+                  </span>
+                ) : null}
+              </span>
+            </Link>
 
-        <nav aria-label="Primary" className="hidden md:block">
-          <ul className="flex items-center gap-6 text-sm">
-            {nav.map((item) => (
-              <li key={item.url}>
-                <Link href={item.url} className="hover:text-brand-700">
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+            {/* gap-6 until xl: with gap-8 the row is ~2px too wide at 1024px. */}
+            <nav aria-label="Primary" className="hidden items-center gap-6 lg:flex xl:gap-8">
+              {primary.map((item) => {
+                const active = isActive(pathname, item.url);
+                return (
+                  <Link
+                    key={`${item.url}|${item.label}`}
+                    href={item.url}
+                    aria-current={active ? 'page' : undefined}
+                    className={`rounded-sm transition-colors ${focusRing} ${
+                      active
+                        ? 'text-primary-container font-semibold'
+                        : 'font-label-md text-label-md text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
 
-        <div className="hidden md:block">
-          <Link
-            href="/dashboard/listings/new"
-            className="inline-flex h-10 items-center rounded-lg bg-brand-700 px-4 text-sm font-medium text-white hover:bg-brand-800"
-          >
-            Add your business
-          </Link>
+            <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+              <Link
+                href="/login"
+                className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm transition-colors sm:inline-flex ${focusRing}`}
+              >
+                Login / Sign Up
+              </Link>
+              {/* Icon only below sm, so the bar fits a 360px screen. */}
+              <Link
+                href={ADD_LISTING}
+                className={`bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary inline-flex size-10 items-center justify-center gap-2 rounded-lg shadow-xs transition-all hover:shadow-sm sm:size-auto sm:px-5 sm:py-2.5 ${focusRing}`}
+              >
+                <Icon name="add_circle" size={18} />
+                <span className="sr-only sm:not-sr-only">Add Listing</span>
+              </Link>
+              <Link
+                href="/dashboard"
+                aria-label="Your account"
+                className={`bg-primary hidden h-8 w-8 shrink-0 items-center justify-center rounded-full sm:flex ${focusRing}`}
+              >
+                <Icon name="person" size={18} className="text-on-primary" />
+              </Link>
+              <button
+                ref={menuButton}
+                type="button"
+                onClick={() => setOpen(true)}
+                aria-label="Open menu"
+                aria-expanded={open}
+                className={`border-border-subtle text-on-surface hover:bg-surface-container-low grid size-10 place-items-center rounded-lg border transition-colors lg:hidden ${focusRing}`}
+              >
+                <Icon name="menu" />
+              </button>
+            </div>
+          </div>
         </div>
+      </header>
 
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label="Open menu"
-          aria-expanded={open}
-          className="grid size-10 place-items-center rounded-lg border border-[var(--border)] md:hidden"
-        >
-          <span aria-hidden>☰</span>
-        </button>
-      </div>
-
+      {/* Outside <header> on purpose: its backdrop-filter would make it the
+          containing block of this fixed overlay, clipping it to the bar. */}
       <AnimatePresence>
         {open ? (
           <motion.div
-            className="fixed inset-0 z-50 md:hidden"
+            className="fixed inset-0 z-50 lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -67,8 +174,9 @@ export function Header({
             <button
               type="button"
               aria-label="Close menu"
-              className="absolute inset-0 bg-black/40"
-              onClick={() => setOpen(false)}
+              tabIndex={-1}
+              className="bg-on-background/50 absolute inset-0 backdrop-blur-xs"
+              onClick={close}
             />
             <motion.nav
               aria-label="Mobile"
@@ -76,40 +184,66 @@ export function Header({
               initial="hidden"
               animate="show"
               exit="exit"
-              className="absolute right-0 top-0 flex h-full w-80 max-w-[85vw] flex-col gap-1 overflow-y-auto bg-[var(--surface)] p-6 shadow-2xl"
+              className="bg-surface-card absolute top-0 right-0 flex h-full w-80 max-w-[85vw] flex-col overflow-y-auto p-6 shadow-2xl"
             >
-              <div className="mb-4 flex items-center justify-between">
-                <span className="font-display font-bold">{brand}</span>
+              <div className="mb-6 flex items-center justify-between gap-4">
+                <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight">
+                  <Wordmark name={brand} />
+                </span>
                 <button
+                  ref={closeButton}
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={close}
                   aria-label="Close menu"
-                  className="grid size-9 place-items-center rounded-lg border border-[var(--border)]"
+                  className={`text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface grid size-10 shrink-0 place-items-center rounded-lg transition-colors ${focusRing}`}
                 >
-                  <span aria-hidden>✕</span>
+                  <Icon name="close" />
                 </button>
               </div>
-              {mobileNav.map((item) => (
+
+              <ul className="flex flex-col gap-1">
+                {drawerItems.map((item) => {
+                  const active = isActive(pathname, item.url);
+                  return (
+                    <li key={`${item.url}|${item.label}`}>
+                      <Link
+                        href={item.url}
+                        onClick={close}
+                        aria-current={active ? 'page' : undefined}
+                        className={`font-label-md text-label-md block rounded-lg px-3 py-3 transition-colors ${focusRing} ${
+                          active
+                            ? 'bg-surface-container-low text-primary-container font-semibold'
+                            : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="border-border-subtle mt-6 flex flex-col gap-3 border-t pt-6">
                 <Link
-                  key={item.url}
-                  href={item.url}
-                  onClick={() => setOpen(false)}
-                  className="rounded-lg px-3 py-3 text-base hover:bg-[var(--surface-2)]"
+                  href="/login"
+                  onClick={close}
+                  className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low inline-flex h-11 items-center justify-center rounded-lg border transition-colors ${focusRing}`}
                 >
-                  {item.label}
+                  Login / Sign Up
                 </Link>
-              ))}
-              <Link
-                href="/dashboard/listings/new"
-                onClick={() => setOpen(false)}
-                className="mt-4 inline-flex h-11 items-center justify-center rounded-lg bg-brand-700 px-4 font-medium text-white"
-              >
-                Add your business
-              </Link>
+                <Link
+                  href={ADD_LISTING}
+                  onClick={close}
+                  className={`bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary inline-flex h-11 items-center justify-center gap-2 rounded-lg shadow-xs transition-all hover:shadow-sm ${focusRing}`}
+                >
+                  <Icon name="add_circle" size={18} />
+                  Add Listing
+                </Link>
+              </div>
             </motion.nav>
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </header>
+    </>
   );
 }

@@ -1,18 +1,27 @@
 import type { Metadata, ResolvingMetadata } from 'next';
-import Link from 'next/link';
 import {
-  findSection,
   getCategories,
   getCities,
-  getPageSections,
+  getCityListingCounts,
+  getDirectoryStats,
+  getListingHighlights,
   getSettings,
   searchListings,
   settingText,
 } from '@/lib/queries';
-import { ListingCard } from '@/components/listing-card';
-import { SectionHeading } from '@/components/ui';
 import { seoMetadata } from '@/lib/seo';
-import { NearMeButton } from '@/components/near-me-button';
+import { Hero } from '@/components/home/hero';
+import { TopRated } from '@/components/home/top-rated';
+import { Story } from '@/components/home/story';
+import { WhyChoose } from '@/components/home/why-choose';
+import { Cities, pickHomeCities } from '@/components/home/cities';
+import { Services } from '@/components/home/services';
+import { HowItWorks } from '@/components/home/how-it-works';
+import { GrowVisibility } from '@/components/home/grow-visibility';
+import { HelpingCustomers } from '@/components/home/helping-customers';
+import { CtaBanner } from '@/components/home/cta-banner';
+import { Faq } from '@/components/home/faq';
+import { FinalCta } from '@/components/home/final-cta';
 
 export const revalidate = 300; // ISR — §1.5 rendering table
 
@@ -25,130 +34,49 @@ export async function generateMetadata(
   return seoMetadata('/', {}, parent);
 }
 
+/**
+ * The Stitch home page. Copy lives in the section components; every figure,
+ * card and city count comes from Supabase and is hidden when it is missing.
+ */
 export default async function HomePage() {
-  const [sections, settings, categories, cities] = await Promise.all([
-    getPageSections('home'),
+  const [settings, categories, cities, topRated, stats] = await Promise.all([
     getSettings(),
-    getCategories(true),
-    getCities(true),
+    getCategories(),
+    getCities(),
+    searchListings({ sort: 'rating', limit: 3 }),
+    getDirectoryStats(),
   ]);
 
-  const hero = findSection(sections, 'hero');
-  const catSection = findSection(sections, 'categories');
-  const featured = findSection(sections, 'featured');
-  const citySection = findSection(sections, 'cities');
-  const cta = findSection(sections, 'cta');
+  const brand = settingText(settings, 'brand.name', 'RankYouSite');
+  const homeCities = pickHomeCities(cities);
+  const [highlights, cityCounts] = await Promise.all([
+    getListingHighlights(topRated.map((l) => l.id)),
+    getCityListingCounts(homeCities.map((c) => c.id)),
+  ]);
 
-  const listings = await searchListings({ limit: featured?.item_limit ?? 6, sort: 'newest' });
-  const cityById = new Map(cities.map((c) => [c.id, c.name]));
+  const categorySlugs = new Set(categories.map((c) => c.slug));
+  const categoryNames = new Map(categories.map((c) => [c.id, c.name]));
+  const cityNames = new Map(cities.map((c) => [c.id, c.name]));
 
   return (
     <>
-      {hero ? (
-        <section className="border-b border-[var(--border)] bg-[var(--surface-2)]">
-          <div className="container-page py-16 sm:py-24">
-            <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
-              {hero.heading}
-            </h1>
-            {hero.subheading ? (
-              <p className="mt-4 max-w-2xl text-lg text-[var(--text-muted)]">{hero.subheading}</p>
-            ) : null}
-            <form action="/search" className="mt-8 flex max-w-2xl flex-col gap-3 sm:flex-row">
-              <input
-                type="search"
-                name="q"
-                placeholder="Business name, category or city"
-                aria-label="Search businesses"
-                className="h-12 flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 text-base outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30"
-              />
-              <button
-                type="submit"
-                className="h-12 rounded-lg bg-brand-700 px-6 font-medium text-white hover:bg-brand-800"
-              >
-                Search
-              </button>
-              <NearMeButton className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-5 font-medium whitespace-nowrap hover:bg-[var(--surface-2)] disabled:opacity-60" />
-            </form>
-          </div>
-        </section>
-      ) : null}
-
-      {catSection ? (
-        <section className="container-page py-16">
-          <SectionHeading
-            heading={catSection.heading}
-            subheading={catSection.subheading}
-            cta={{ label: catSection.cta_label, url: catSection.cta_url }}
-          />
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {categories.slice(0, catSection.item_limit ?? 8).map((c) => (
-              <Link
-                key={c.id}
-                href={`/category/${c.slug}`}
-                className="surface-card p-5 transition-colors hover:border-brand-500"
-              >
-                <p className="font-display font-semibold">{c.name}</p>
-                {c.description ? (
-                  <p className="mt-1 line-clamp-2 text-sm text-[var(--text-muted)]">
-                    {c.description}
-                  </p>
-                ) : null}
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {featured ? (
-        <section className="container-page py-16">
-          <SectionHeading
-            heading={featured.heading}
-            subheading={featured.subheading}
-            cta={{ label: featured.cta_label, url: featured.cta_url }}
-          />
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {listings.map((l) => (
-              <ListingCard key={l.id} listing={l} cityName={cityById.get(l.city_id ?? '')} />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {citySection ? (
-        <section className="container-page py-16">
-          <SectionHeading heading={citySection.heading} subheading={citySection.subheading} />
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {cities.slice(0, citySection.item_limit ?? 4).map((c) => (
-              <Link
-                key={c.id}
-                href={`/city/${c.slug}`}
-                className="surface-card p-5 transition-colors hover:border-brand-500"
-              >
-                <p className="font-display font-semibold">{c.name}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {cta ? (
-        <section className="container-page pb-20">
-          <div className="surface-card bg-brand-700 p-10 text-center text-white">
-            <h2 className="text-2xl font-semibold sm:text-3xl">{cta.heading}</h2>
-            {cta.subheading ? <p className="mt-3 text-brand-100">{cta.subheading}</p> : null}
-            {cta.cta_label && cta.cta_url ? (
-              <Link
-                href={cta.cta_url}
-                className="mt-6 inline-flex h-11 items-center rounded-lg bg-white px-6 font-medium text-brand-800"
-              >
-                {cta.cta_label}
-              </Link>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
-
-      <span className="sr-only">{settingText(settings, 'brand.tagline')}</span>
+      <Hero cities={cities} categorySlugs={categorySlugs} />
+      <TopRated
+        listings={topRated}
+        highlights={highlights}
+        categoryNames={categoryNames}
+        cityNames={cityNames}
+      />
+      <Story stats={stats} />
+      <WhyChoose brand={brand} />
+      <Cities cities={homeCities} counts={cityCounts} />
+      <Services categorySlugs={categorySlugs} />
+      <HowItWorks brand={brand} />
+      <GrowVisibility brand={brand} />
+      <HelpingCustomers brand={brand} />
+      <CtaBanner brand={brand} />
+      <Faq brand={brand} />
+      <FinalCta brand={brand} />
     </>
   );
 }

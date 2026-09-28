@@ -119,7 +119,7 @@ export default async function AdminClaims({
                 </p>
               ) : null}
               {open && ownedByOther ? (
-                <p className="mt-2 text-sm text-red-800">
+                <p className="text-on-error-container mt-2 text-sm">
                   This listing is already managed by another account.
                 </p>
               ) : null}
@@ -133,12 +133,17 @@ export default async function AdminClaims({
                       <input type="hidden" name="decision" value="approve" />
                       <button
                         type="submit"
-                        className="bg-brand-700 hover:bg-brand-800 rounded-lg px-3 py-1 text-xs font-medium text-white"
+                        className="bg-primary-container hover:bg-primary text-on-primary rounded-lg px-3 py-1 text-xs font-medium"
                       >
                         Approve
                       </button>
                       <label className="flex items-center gap-1.5 text-xs">
-                        <input type="checkbox" name="verify" defaultChecked className="size-3.5" />
+                        <input
+                          type="checkbox"
+                          name="verify"
+                          defaultChecked
+                          className="accent-primary-container size-3.5"
+                        />
                         Also mark Verified
                       </label>
                     </form>
@@ -184,7 +189,7 @@ function DecisionButton({
         type="submit"
         className={`rounded-lg border px-2.5 py-1 text-xs ${
           decision === 'reject'
-            ? 'border-red-300 text-red-800 hover:bg-red-50'
+            ? 'border-error/30 text-on-error-container hover:bg-error-container/40'
             : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
         }`}
       >

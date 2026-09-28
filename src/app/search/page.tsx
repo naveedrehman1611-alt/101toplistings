@@ -74,7 +74,7 @@ export default async function SearchPage({
   return (
     <div className="container-page py-12">
       <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: 'Search' }]} />
-      <h1 className="text-3xl font-bold sm:text-4xl">{heading}</h1>
+      <h1 className="font-headline-lg text-headline-lg">{heading}</h1>
 
       <div className="mt-6">
         <ListingFilters

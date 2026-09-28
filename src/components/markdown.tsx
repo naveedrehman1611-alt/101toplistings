@@ -73,11 +73,11 @@ function renderBlock(block: Block, i: number) {
   switch (block.kind) {
     case 'heading':
       return block.level === 2 ? (
-        <h2 key={i} className="mt-10 text-2xl font-semibold">
+        <h2 key={i} className="font-headline-md text-headline-md mt-10">
           {inline(block.text)}
         </h2>
       ) : (
-        <h3 key={i} className="mt-8 text-xl font-semibold">
+        <h3 key={i} className="font-headline-sm text-headline-sm mt-8">
           {inline(block.text)}
         </h3>
       );

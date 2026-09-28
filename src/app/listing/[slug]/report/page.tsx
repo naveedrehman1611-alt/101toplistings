@@ -35,7 +35,7 @@ export default async function ReportPage({
         ]}
       />
       <div className="max-w-xl">
-        <h1 className="text-3xl font-bold">Report a problem</h1>
+        <h1 className="font-headline-lg text-headline-lg">Report a problem</h1>
         <p className="mt-3 text-[var(--text-muted)]">
           Something wrong with <span className="font-medium">{listing.name}</span>? Let us know and
           our team will look into it.
@@ -56,7 +56,7 @@ export default async function ReportPage({
             {sp.error ? (
               <p
                 role="alert"
-                className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+                className="border-error/30 bg-error-container/40 text-on-error-container rounded-lg border px-4 py-3 text-sm"
               >
                 {sp.error}
               </p>
@@ -72,7 +72,13 @@ export default async function ReportPage({
                     key={value}
                     className="has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
                   >
-                    <input type="radio" name="reason" value={value} required className="size-4" />
+                    <input
+                      type="radio"
+                      name="reason"
+                      value={value}
+                      required
+                      className="accent-primary-container size-4"
+                    />
                     {label}
                   </label>
                 ))}
@@ -85,7 +91,7 @@ export default async function ReportPage({
                 maxLength={3000}
                 rows={4}
                 placeholder="For example, the correct phone number or address."
-                className="focus:border-brand-500 mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 outline-none"
+                className="focus:border-primary-container focus:ring-primary-container/20 mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 outline-hidden focus:ring-2"
               />
             </label>
             <label className="block text-sm">
@@ -95,7 +101,7 @@ export default async function ReportPage({
                 type="email"
                 maxLength={200}
                 autoComplete="email"
-                className="focus:border-brand-500 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"
+                className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-hidden focus:ring-2"
               />
               <span className="mt-1 block text-xs text-[var(--text-muted)]">
                 Only if you&apos;d like us to follow up with you.
@@ -110,7 +116,7 @@ export default async function ReportPage({
             </div>
             <button
               type="submit"
-              className="bg-brand-700 hover:bg-brand-800 h-11 rounded-lg px-6 font-medium text-white"
+              className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 rounded-lg px-6 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
             >
               Send report
             </button>

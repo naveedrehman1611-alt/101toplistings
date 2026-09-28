@@ -58,7 +58,7 @@ export default async function ForgotPasswordPage({
         ]}
       />
       <div className="mx-auto max-w-sm">
-        <h1 className="text-3xl font-bold">Reset your password</h1>
+        <h1 className="font-headline-lg text-headline-lg">Reset your password</h1>
         <p className="mt-3 text-[var(--text-muted)]">
           Enter the email you signed up with and we will send you a link to choose a new password.
         </p>
@@ -75,7 +75,7 @@ export default async function ForgotPasswordPage({
         {sp.error ? (
           <p
             role="alert"
-            className="mt-6 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+            className="border-error/30 bg-error-container/40 text-on-error-container mt-6 rounded-lg border px-4 py-3 text-sm"
           >
             {sp.error}
           </p>
@@ -92,12 +92,12 @@ export default async function ForgotPasswordPage({
               type="email"
               autoComplete="email"
               required
-              className="focus:border-brand-500 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none"
+              className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-hidden focus:ring-2"
             />
           </div>
           <button
             type="submit"
-            className="bg-brand-700 hover:bg-brand-800 h-11 w-full rounded-lg font-medium text-white"
+            className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 w-full rounded-lg shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
           >
             Send reset link
           </button>

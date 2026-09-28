@@ -69,7 +69,7 @@ export default async function CategoryPage({
           { label: cat.name },
         ]}
       />
-      <h1 className="text-3xl font-bold sm:text-4xl">{cat.name}</h1>
+      <h1 className="font-headline-lg text-headline-lg">{cat.name}</h1>
       {cat.description ? (
         <p className="mt-3 max-w-2xl text-[var(--text-muted)]">{cat.description}</p>
       ) : null}

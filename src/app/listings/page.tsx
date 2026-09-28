@@ -77,7 +77,7 @@ export default async function ListingsPage({
       <Breadcrumbs
         trail={[{ label: 'Home', href: '/' }, { label: header?.heading ?? 'Listings' }]}
       />
-      <h1 className="text-3xl font-bold sm:text-4xl">{header?.heading}</h1>
+      <h1 className="font-headline-lg text-headline-lg">{header?.heading}</h1>
       {header?.subheading ? (
         <p className="mt-3 max-w-2xl text-[var(--text-muted)]">{header.subheading}</p>
       ) : null}
