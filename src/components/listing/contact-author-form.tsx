@@ -6,9 +6,9 @@ import { sendListingMessage, type ListingMessageState } from '@/lib/listing-mess
 const initialState: ListingMessageState = { status: 'idle', message: '' };
 
 const input =
-  'focus:border-brand-500 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none';
+  'focus:border-primary-container focus:ring-primary-container/20 font-body-md text-body-md mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-hidden focus:ring-2';
 const textarea =
-  'focus:border-brand-500 mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 outline-none';
+  'focus:border-primary-container focus:ring-primary-container/20 font-body-md text-body-md mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 outline-hidden focus:ring-2';
 
 /**
  * Private message to the business, sent through RankYouSite (see
@@ -31,10 +31,8 @@ export function ContactAuthorForm({
 
   return (
     <section id="contact-author" className="surface-card scroll-mt-24 p-5">
-      <h2 className="font-display text-lg font-semibold">Contact Author</h2>
-      <h3 className="mt-1 text-sm font-medium text-[var(--text-muted)]">
-        Send message to “{name}”
-      </h3>
+      <h2 className="font-title-md text-title-md text-on-surface">Contact Author</h2>
+      <h3 className="font-label-md text-label-md text-secondary mt-1">Send message to “{name}”</h3>
 
       {/* Always mounted so screen readers announce the confirmation when it appears. */}
       <div role="status">
@@ -50,7 +48,7 @@ export function ContactAuthorForm({
           {state.status === 'error' ? (
             <p
               role="alert"
-              className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+              className="border-error/30 bg-error-container/40 text-on-error-container rounded-lg border px-4 py-3 text-sm"
             >
               {state.message}
             </p>
@@ -60,8 +58,8 @@ export function ContactAuthorForm({
           <input type="hidden" name="listing_slug" value={slug} />
           <input type="hidden" name="listing_name" value={name} />
 
-          <label className="block text-sm">
-            <span className="font-medium">Name</span>
+          <label className="block">
+            <span className="font-label-md text-label-md">Name</span>
             <input
               name="name"
               required
@@ -71,8 +69,8 @@ export function ContactAuthorForm({
               className={input}
             />
           </label>
-          <label className="block text-sm">
-            <span className="font-medium">Email</span>
+          <label className="block">
+            <span className="font-label-md text-label-md">Email</span>
             <input
               name="email"
               type="email"
@@ -83,8 +81,8 @@ export function ContactAuthorForm({
               className={input}
             />
           </label>
-          <label className="block text-sm">
-            <span className="font-medium">Phone (optional)</span>
+          <label className="block">
+            <span className="font-label-md text-label-md">Phone (optional)</span>
             <input
               name="phone"
               type="tel"
@@ -94,8 +92,8 @@ export function ContactAuthorForm({
               className={input}
             />
           </label>
-          <label className="block text-sm">
-            <span className="font-medium">Message</span>
+          <label className="block">
+            <span className="font-label-md text-label-md">Message</span>
             <textarea
               name="message"
               required
@@ -106,13 +104,13 @@ export function ContactAuthorForm({
               className={textarea}
             />
           </label>
-          <label className="flex items-start gap-2 text-sm">
+          <label className="font-body-md text-body-md flex items-start gap-2">
             <input
               type="checkbox"
               name="terms"
               required
               defaultChecked={f.terms === 'on'}
-              className="accent-brand-700 mt-0.5 size-4 shrink-0"
+              className="accent-primary-container mt-1 size-4 shrink-0"
             />
             <span>I agree to share these details with {name} so they can reply.</span>
           </label>
@@ -130,7 +128,7 @@ export function ContactAuthorForm({
           <button
             type="submit"
             disabled={pending}
-            className="bg-brand-700 hover:bg-brand-800 inline-flex h-11 w-full items-center justify-center rounded-lg px-5 text-sm font-medium text-white disabled:opacity-60"
+            className="bg-primary-container text-on-primary hover:bg-primary font-label-md text-label-md focus-visible:ring-primary-container inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-5 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:opacity-60"
           >
             {pending ? 'Sending…' : 'Send Private Message'}
           </button>

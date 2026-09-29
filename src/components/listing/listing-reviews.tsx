@@ -35,7 +35,9 @@ export function ListingReviews({
   if (reviews.length === 0) {
     return (
       <section id="reviews" className="mt-10 scroll-mt-24">
-        <h2 className="text-xl font-semibold">Be the first to review “{listing.name}”</h2>
+        <h2 className="font-headline-sm text-headline-sm text-on-surface">
+          Be the first to review “{listing.name}”
+        </h2>
         {form}
       </section>
     );
@@ -53,7 +55,7 @@ export function ListingReviews({
 
   return (
     <section id="reviews" className="mt-10 scroll-mt-24">
-      <h2 className="text-xl font-semibold">
+      <h2 className="font-headline-sm text-headline-sm text-on-surface">
         {total} review{total === 1 ? '' : 's'} for “{listing.name}”
       </h2>
 
@@ -61,31 +63,31 @@ export function ListingReviews({
         <div className="surface-card mt-4 flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:gap-10">
           {hasOverall ? (
             <div className="shrink-0">
-              <p className="text-sm text-[var(--text-muted)]">Overall rating</p>
+              <p className="font-body-sm text-body-sm text-secondary">Overall rating</p>
               <div className="mt-1">
                 <Stars value={listing.rating_average} count={listing.review_count} />
               </div>
             </div>
           ) : null}
           {aspects.length > 0 ? (
-            <dl className="w-full max-w-md space-y-2 text-sm">
+            <dl className="font-body-md text-body-md w-full max-w-md space-y-2">
               {aspects.map((a) => (
                 <div key={a.key} className="flex items-center gap-3">
                   <dt className="w-24 shrink-0">{a.label}</dt>
                   <dd className="flex flex-1 items-center gap-3">
                     <span
                       aria-hidden
-                      className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--border)]"
+                      className="bg-surface-container h-2 flex-1 overflow-hidden rounded-full"
                     >
                       <span
-                        className="bg-accent-500 block h-full rounded-full"
+                        className="bg-badge-gold block h-full rounded-full"
                         style={{ width: `${(a.average / 5) * 100}%` }}
                       />
                     </span>
                     <span className="shrink-0 tabular-nums">
                       <span className="font-medium">{a.average.toFixed(1)}</span>
                       <span className="sr-only"> out of 5</span>{' '}
-                      <span className="text-[var(--text-muted)]">({a.count})</span>
+                      <span className="text-secondary">({a.count})</span>
                     </span>
                   </dd>
                 </div>
@@ -96,7 +98,7 @@ export function ListingReviews({
       ) : null}
 
       {total > reviews.length ? (
-        <p className="mt-4 text-sm text-[var(--text-muted)]">
+        <p className="font-body-sm text-body-sm text-secondary mt-4">
           Showing the {reviews.length} most recent.
         </p>
       ) : null}
@@ -114,20 +116,24 @@ export function ListingReviews({
                 <span
                   role="img"
                   aria-label={`${rating} out of 5 stars`}
-                  className="text-accent-500"
+                  className="text-badge-gold"
                 >
                   {'★'.repeat(rating)}
                   <span className="text-[var(--border)]">{'★'.repeat(5 - rating)}</span>
                 </span>
-                {r.title ? <span className="font-medium">{r.title}</span> : null}
+                {r.title ? (
+                  <span className="font-title-md text-title-md text-on-surface">{r.title}</span>
+                ) : null}
               </div>
               {details.length > 0 ? (
-                <p className="mt-1 text-xs text-[var(--text-muted)]">{details.join(' · ')}</p>
+                <p className="font-body-sm text-body-sm text-secondary mt-1">
+                  {details.join(' · ')}
+                </p>
               ) : null}
               {r.body ? (
-                <p className="mt-2 text-sm leading-relaxed whitespace-pre-line">{r.body}</p>
+                <p className="font-body-md text-body-md mt-2 whitespace-pre-line">{r.body}</p>
               ) : null}
-              <p className="mt-2 text-xs text-[var(--text-muted)]">
+              <p className="font-body-sm text-body-sm text-secondary mt-2">
                 {r.author_name ?? 'Visitor'} ·{' '}
                 <time dateTime={r.created_at}>
                   {new Date(r.created_at).toLocaleDateString('en-GB', {
@@ -138,9 +144,11 @@ export function ListingReviews({
                 </time>
               </p>
               {r.reply_body ? (
-                <div className="border-brand-500 mt-3 border-l-2 pl-3 text-sm">
-                  <p className="font-medium">Reply from the business</p>
-                  <p className="mt-1 whitespace-pre-line text-[var(--text-muted)]">
+                <div className="border-primary-container mt-3 border-l-2 pl-3">
+                  <p className="font-label-md text-label-md text-on-surface">
+                    Reply from the business
+                  </p>
+                  <p className="font-body-md text-body-md text-on-surface-variant mt-1 whitespace-pre-line">
                     {r.reply_body}
                   </p>
                 </div>
@@ -150,7 +158,7 @@ export function ListingReviews({
         })}
       </ul>
 
-      <h3 className="mt-10 text-lg font-semibold">Add a review</h3>
+      <h3 className="font-title-md text-title-md text-on-surface mt-10">Add a review</h3>
       {form}
     </section>
   );
