@@ -39,50 +39,6 @@ export async function submitContact(fd: FormData) {
 }
 
 /**
- * A signed-in visitor reviews a listing. Always inserted as 'pending' — RLS
- * rejects anything else — and only counts toward the rating once approved.
- */
-export async function submitReview(fd: FormData) {
-  const slug = (text(fd, 'slug', 120) ?? '').replace(/[^a-z0-9-]/g, '');
-  const page = `/listing/${slug}/review`;
-  const user = await requireUser(page);
-
-  let dest = `${page}?sent=1`;
-  try {
-    const listingId = uuid(fd, 'listing_id');
-    if (!listingId) throw new FormError('Listing not found.');
-    const rating = Number(text(fd, 'rating', 1));
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      throw new FormError('Choose a rating from 1 to 5 stars.');
-    }
-    const body = text(fd, 'body', 3000);
-    if (!body || body.length < 10)
-      throw new FormError('Please write a few words about your visit.');
-
-    const supabase = await createClient();
-    const { error } = await supabase.from('reviews').insert({
-      listing_id: listingId,
-      author_id: user.id,
-      author_name: user.displayName ?? user.email?.split('@')[0] ?? null,
-      rating,
-      title: text(fd, 'title', 120),
-      body,
-      status: 'pending',
-    });
-    if (error) {
-      if ((error as { code?: string }).code === '23505') {
-        throw new FormError('You have already reviewed this business.');
-      }
-      throw error;
-    }
-  } catch (e) {
-    dest = `${page}?error=${encodeURIComponent(errorMessage(e))}`;
-  }
-  revalidatePath('/admin/reviews');
-  redirect(dest);
-}
-
-/**
  * A signed-in user claims a listing as theirs. RLS (claims_own_insert) only
  * accepts status 'new' for the caller's own id; the unique (listing, claimant)
  * key stops duplicate claims. Staff approve it in /admin/claims, which is what
