@@ -5,12 +5,14 @@ import {
   getCityListingCounts,
   getDirectoryStats,
   getListingHighlights,
+  getReviewSummary,
   getSettings,
   searchListings,
   settingText,
 } from '@/lib/queries';
 import { seoMetadata } from '@/lib/seo';
 import { Hero } from '@/components/home/hero';
+import { HeroStats } from '@/components/home/hero-stats';
 import { TopRated } from '@/components/home/top-rated';
 import { Story } from '@/components/home/story';
 import { WhyChoose } from '@/components/home/why-choose';
@@ -39,12 +41,13 @@ export async function generateMetadata(
  * card and city count comes from Supabase and is hidden when it is missing.
  */
 export default async function HomePage() {
-  const [settings, categories, cities, topRated, stats] = await Promise.all([
+  const [settings, categories, cities, topRated, stats, reviews] = await Promise.all([
     getSettings(),
     getCategories(),
     getCities(),
     searchListings({ sort: 'rating', limit: 3 }),
     getDirectoryStats(),
+    getReviewSummary(),
   ]);
 
   const brand = settingText(settings, 'brand.name', 'RankYouSite');
@@ -60,7 +63,8 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero cities={cities} categorySlugs={categorySlugs} />
+      <Hero categories={categories} cities={cities} />
+      <HeroStats stats={stats} reviews={reviews} />
       <TopRated
         listings={topRated}
         highlights={highlights}

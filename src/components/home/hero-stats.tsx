@@ -158,7 +158,13 @@ export function HeroStats({
           <li
             key={cell.key}
             // A third cell alone on the second mobile row spans both columns, centred.
-            className={cells.length === 3 && i === 2 ? `${CELL} col-span-2 lg:col-span-1` : CELL}
+            className={[
+              CELL,
+              // lg: as in the design, figures sit left in their column, just after the
+              // divider; the rating stays centred.
+              cell.key === 'rating' ? '' : 'lg:justify-start lg:pl-8 lg:first:pl-0',
+              cells.length === 3 && i === 2 ? 'col-span-2 lg:col-span-1' : '',
+            ].join(' ')}
           >
             {cell.content}
           </li>
