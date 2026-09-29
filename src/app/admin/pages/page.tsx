@@ -67,6 +67,10 @@ export default async function AdminPages({
         a header whose copy you can edit. Homepage copy may say {'{brand}'}, which is replaced with
         the brand name from Settings.
       </p>
+      <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
+        The live homepage currently uses the fixed Stitch layout, so edits to the homepage sections
+        are saved here but do not change the homepage yet.
+      </p>
       <Notice ok={sp.ok} error={sp.error} />
 
       {pages.map((page) => {

@@ -1,84 +1,82 @@
 import type { Metadata, ResolvingMetadata } from 'next';
-import { getHomePage } from '@/lib/home';
-import { getChrome } from '@/lib/chrome';
+import {
+  getCategories,
+  getCities,
+  getCityListingCounts,
+  getDirectoryStats,
+  getListingHighlights,
+  getSettings,
+  searchListings,
+  settingText,
+} from '@/lib/queries';
 import { seoMetadata } from '@/lib/seo';
-import { SITE_URL } from '@/lib/supabase';
-import type { FaqVM } from '@/lib/home-types';
-import { HomeSection } from '@/components/home/render-section';
+import { Hero } from '@/components/home/hero';
+import { TopRated } from '@/components/home/top-rated';
+import { Story } from '@/components/home/story';
+import { WhyChoose } from '@/components/home/why-choose';
+import { Cities, pickHomeCities } from '@/components/home/cities';
+import { Services } from '@/components/home/services';
+import { HowItWorks } from '@/components/home/how-it-works';
+import { GrowVisibility } from '@/components/home/grow-visibility';
+import { HelpingCustomers } from '@/components/home/helping-customers';
+import { CtaBanner } from '@/components/home/cta-banner';
+import { Faq } from '@/components/home/faq';
+import { FinalCta } from '@/components/home/final-cta';
 
-// ISR. Every admin write that changes what this page shows (sections, items,
-// settings, menus, listings, reviews, posts) revalidates "/" on demand, so the
-// timer is only a backstop — and a long one keeps Supabase egress flat.
-export const revalidate = 3600;
+export const revalidate = 300; // ISR — §1.5 rendering table
 
-// The layout's defaults (from settings) are the home page's own title and
-// description; the SEO manager can still override them for "/".
+// The layout's defaults (from settings) are the home page's own metadata, so
+// this only changes anything when the SEO manager holds an override for "/".
 export async function generateMetadata(
   _props: unknown,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  return seoMetadata('/', { alternates: { canonical: '/' } }, parent);
+  return seoMetadata('/', {}, parent);
 }
 
-/** Structured data only for what the page really shows. */
-function jsonLd(
-  brand: string,
-  chrome: Awaited<ReturnType<typeof getChrome>>,
-  faq: FaqVM | undefined,
-) {
-  const site = SITE_URL.replace(/\/+$/, '');
-  const graph: Record<string, unknown>[] = [
-    {
-      '@type': 'WebSite',
-      '@id': `${site}/#website`,
-      url: `${site}/`,
-      name: brand,
-      // The hero search form submits to /search, so the sitelinks search box is real.
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: { '@type': 'EntryPoint', urlTemplate: `${site}/search?q={search_term_string}` },
-        'query-input': 'required name=search_term_string',
-      },
-    },
-    {
-      '@type': 'Organization',
-      '@id': `${site}/#organization`,
-      name: brand,
-      url: `${site}/`,
-      ...(chrome.brand.logoOnLight ? { logo: chrome.brand.logoOnLight.url } : {}),
-      ...(chrome.footer.social.length ? { sameAs: chrome.footer.social.map((s) => s.href) } : {}),
-    },
-  ];
-  if (faq) {
-    graph.push({
-      '@type': 'FAQPage',
-      '@id': `${site}/#faq`,
-      mainEntity: faq.items.map((q) => ({
-        '@type': 'Question',
-        name: q.question,
-        acceptedAnswer: { '@type': 'Answer', text: q.answer.join('\n\n') },
-      })),
-    });
-  }
-  return { '@context': 'https://schema.org', '@graph': graph };
-}
-
+/**
+ * The Stitch home page. Copy lives in the section components; every figure,
+ * card and city count comes from Supabase and is hidden when it is missing.
+ */
 export default async function HomePage() {
-  const [home, chrome] = await Promise.all([getHomePage(), getChrome()]);
-  const faq = home.sections.find((s): s is FaqVM => s.type === 'faq');
+  const [settings, categories, cities, topRated, stats] = await Promise.all([
+    getSettings(),
+    getCategories(),
+    getCities(),
+    searchListings({ sort: 'rating', limit: 3 }),
+    getDirectoryStats(),
+  ]);
+
+  const brand = settingText(settings, 'brand.name', 'RankYouSite');
+  const homeCities = pickHomeCities(cities);
+  const [highlights, cityCounts] = await Promise.all([
+    getListingHighlights(topRated.map((l) => l.id)),
+    getCityListingCounts(homeCities.map((c) => c.id)),
+  ]);
+
+  const categorySlugs = new Set(categories.map((c) => c.slug));
+  const categoryNames = new Map(categories.map((c) => [c.id, c.name]));
+  const cityNames = new Map(cities.map((c) => [c.id, c.name]));
 
   return (
     <>
-      {home.sections.map((section) => (
-        <HomeSection key={section.id} section={section} />
-      ))}
-      <script
-        type="application/ld+json"
-        // "<" is escaped so copy can never close the script element.
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd(home.brand, chrome, faq)).replace(/</g, '\\u003c'),
-        }}
+      <Hero cities={cities} categorySlugs={categorySlugs} />
+      <TopRated
+        listings={topRated}
+        highlights={highlights}
+        categoryNames={categoryNames}
+        cityNames={cityNames}
       />
+      <Story stats={stats} />
+      <WhyChoose brand={brand} />
+      <Cities cities={homeCities} counts={cityCounts} />
+      <Services categorySlugs={categorySlugs} />
+      <HowItWorks brand={brand} />
+      <GrowVisibility brand={brand} />
+      <HelpingCustomers brand={brand} />
+      <CtaBanner brand={brand} />
+      <Faq brand={brand} />
+      <FinalCta brand={brand} />
     </>
   );
 }

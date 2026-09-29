@@ -1,20 +1,22 @@
 import type { Metadata } from 'next';
-import { Poppins } from 'next/font/google';
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { BackToTop } from '@/components/back-to-top';
-import { getSettings, settingText } from '@/lib/queries';
-import { getChrome } from '@/lib/chrome';
+import { getCities, getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
 
-// One font for every page, headings and text alike. Criterion 36: preloaded,
-// and self-hosted by next/font, so there is no request to Google at runtime.
-// Poppins is not a variable font, so the weights the site uses are listed.
-const poppins = Poppins({
+// Criterion 36: critical fonts preloaded.
+const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-poppins',
+  variable: '--font-inter',
+  display: 'swap',
+  preload: true,
+});
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-jakarta',
   display: 'swap',
   preload: true,
 });
@@ -42,13 +44,20 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// The layout reads no cookies or headers — only cached settings and menus — so
-// every public route below it can still be prerendered and served from cache.
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const chrome = await getChrome();
+  const [settings, nav, mobileNav, explore, company, featuredCities] = await Promise.all([
+    getSettings(),
+    getMenu('header', 'Primary'),
+    getMenu('mobile', 'Mobile'),
+    getMenu('footer', 'Explore'),
+    getMenu('footer', 'Company'),
+    getCities(true),
+  ]);
+
+  const brand = settingText(settings, 'brand.name', 'RankYouSite');
 
   return (
-    <html lang="en" className={poppins.variable}>
+    <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body className="flex min-h-screen flex-col">
         <a
           href="#main"
@@ -56,11 +65,28 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Skip to content
         </a>
-        <Header chrome={chrome} />
+        <Header
+          brand={brand}
+          subtitle={settingText(settings, 'brand.subtitle', 'Pakistan Directory')}
+          nav={nav}
+          mobileNav={mobileNav}
+        />
         <main id="main" className="flex-1">
           {children}
         </main>
-        <Footer chrome={chrome} />
+        <Footer
+          brand={brand}
+          about={settingText(
+            settings,
+            'footer.about',
+            'Covering all of Pakistan, from Karachi to Lahore and Islamabad to Peshawar. Connecting customers with trusted local businesses.',
+          )}
+          copyright={settingText(settings, 'footer.copyright', brand)}
+          email={settingText(settings, 'contact.email')}
+          cities={featuredCities}
+          explore={explore}
+          company={company}
+        />
         <BackToTop />
       </body>
     </html>

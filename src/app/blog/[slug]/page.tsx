@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getBlogPost, getBlogPosts } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
 import { SITE_URL } from '@/lib/supabase';
+import { SHARE_IMAGE } from '@/lib/seo';
 import { Markdown } from '@/components/markdown';
 import { redirectOrNotFound } from '@/lib/redirects';
 
@@ -29,8 +30,8 @@ export async function generateMetadata({
     description,
     // Self-canonical unless the editor set an override (validated as http(s) on save).
     alternates: { canonical: post.canonical_url ?? url },
-    openGraph: { title, description, url, type: 'article' },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { title, description, url, type: 'article', images: [SHARE_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [SHARE_IMAGE] },
   };
 }
 
@@ -67,7 +68,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         ]}
       />
       <article className="mx-auto max-w-2xl">
-        <h1 className="text-3xl font-bold sm:text-4xl">{post.title}</h1>
+        <h1 className="font-headline-lg text-headline-lg">{post.title}</h1>
         {post.standfirst ? (
           <p className="mt-4 text-lg text-[var(--text-muted)]">{post.standfirst}</p>
         ) : null}
@@ -79,7 +80,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       {related.length > 0 ? (
         <section className="mx-auto mt-16 max-w-2xl">
-          <h2 className="text-xl font-semibold">Related articles</h2>
+          <h2 className="font-headline-sm text-headline-sm">Related articles</h2>
           <ul className="mt-4 space-y-2">
             {related.map((p) => (
               <li key={p.id}>

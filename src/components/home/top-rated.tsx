@@ -1,76 +1,80 @@
-// Prefetch on intent, not on sight: see hover-prefetch-link.tsx.
-import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
-import type { ListingsVM } from '@/lib/home-types';
-import { Icon } from '@/components/icons';
-import { SectionShell } from './section-shell';
-import { Carousel } from './carousel';
-import { BusinessCard } from './business-card';
+import Link from 'next/link';
+import { Icon } from '@/components/icon';
+import { ListingCard } from '@/components/listing-card';
+import { EmptyState } from '@/components/ui';
+import type { ListingCard as Card, ListingHighlight } from '@/lib/queries';
 
-/**
- * The business carousel ("Top-Rated Businesses"): three cards across on
- * desktop, two on tablets, one on phones, moved by dots and autoplay as on the
- * reference. The section is prerendered, so it has no client loading phase;
- * a failed read and an empty directory each get their own state instead.
- */
-export function TopRated({ section }: { section: ListingsVM }) {
+export function TopRated({
+  listings,
+  highlights,
+  categoryNames,
+  cityNames,
+}: {
+  listings: Card[];
+  highlights: Map<string, ListingHighlight>;
+  categoryNames: Map<string, string>;
+  cityNames: Map<string, string>;
+}) {
+  // The "Live Verified Registry" chip is a verification claim, so it only shows
+  // when a card below is actually verified.
+  const anyVerified = listings.some((l) => highlights.get(l.id)?.verified);
+
   return (
-    <SectionShell section={section}>
-      {section.status === 'ok' ? (
-        <>
-          <Carousel
-            label={section.heading ?? 'Businesses'}
-            // The vertical padding leaves room inside the scroller for the hover lift and shadow.
-            slideClassName="basis-full pt-1 pb-5 sm:basis-1/2 lg:basis-1/3"
-            step="slide"
-            dots
-            autoplayMs={section.autoplay ? 5000 : 0}
-          >
-            {section.listings.map((card) => (
-              <BusinessCard
-                key={card.id}
-                card={card}
-                showPhone={section.showPhone}
-                showStatus={section.showStatus}
-              />
-            ))}
-          </Carousel>
-          {section.cta ? (
-            <div className="mt-6 text-center">
-              <Link
-                href={section.cta.href}
-                className="border-brand-700 text-brand-700 hover:bg-brand-700 inline-flex h-11 items-center rounded-lg border px-6 text-[0.9375rem] font-medium transition-colors hover:text-white"
-              >
-                {section.cta.label}
-              </Link>
-            </div>
-          ) : null}
-        </>
-      ) : section.status === 'empty' ? (
-        <div className="border-ink-300 mx-auto max-w-xl rounded-lg border border-dashed px-6 py-12 text-center">
-          <span className="text-brand-700 mx-auto grid size-14 place-items-center rounded-full bg-[var(--surface-2)]">
-            <Icon name="store" size={26} />
+    <section className="container-page py-20">
+      <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div className="max-w-2xl">
+          <span className="font-label-sm text-label-sm text-primary-container font-semibold tracking-wider uppercase">
+            Curated Recommendations
           </span>
-          <h3 className="text-ink-900 mt-5 text-lg font-medium">{section.emptyTitle}</h3>
-          <p className="text-ink-500 mt-2 text-[0.9375rem]">{section.emptyText}</p>
-          <Link
-            href={section.addListingHref}
-            className="bg-brand-700 hover:bg-brand-800 mt-6 inline-flex h-11 items-center rounded-lg px-6 text-[0.9375rem] font-medium text-white transition-colors"
-          >
-            Add your business
-          </Link>
+          <h2 className="font-headline-lg text-headline-lg-mobile text-on-surface md:text-headline-lg mt-1">
+            Top-Rated Businesses in Your Area
+          </h2>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-2">
+            Find trusted local businesses reviewed by real customers across Karachi, Lahore,
+            Islamabad, Rawalpindi, Faisalabad, and other cities of Pakistan.
+          </p>
+        </div>
+        {anyVerified ? (
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="bg-surface-container font-label-sm text-label-sm text-on-surface inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5">
+              <span
+                aria-hidden
+                className="bg-primary-container h-2 w-2 animate-pulse rounded-full"
+              />
+              <span>Live Verified Registry</span>
+            </span>
+          </div>
+        ) : null}
+      </div>
+
+      {listings.length > 0 ? (
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {listings.slice(0, 3).map((l) => (
+            <ListingCard
+              key={l.id}
+              variant="featured"
+              listing={l}
+              highlight={highlights.get(l.id)}
+              categoryName={l.category_id ? categoryNames.get(l.category_id) : undefined}
+              cityName={l.city_id ? cityNames.get(l.city_id) : undefined}
+            />
+          ))}
         </div>
       ) : (
-        <div role="status" className="mx-auto max-w-xl text-center">
-          <p className="text-ink-700 text-[0.9375rem]">Businesses could not be loaded right now.</p>
-          <Link
-            href={section.browseHref}
-            className="text-brand-700 hover:text-brand-800 mt-3 inline-flex min-h-11 items-center gap-1.5 text-[0.9375rem] font-medium underline-offset-4 hover:underline"
-          >
-            Browse all listings
-            <Icon name="arrow-right" size={16} />
-          </Link>
-        </div>
+        <EmptyState
+          title="No businesses to show yet"
+          body="Published listings appear here as soon as they are approved. Add yours for free and be among the first."
+          action={
+            <Link
+              href="/dashboard/listings/new"
+              className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex items-center gap-2 rounded-lg px-5 py-2.5 shadow-xs transition-all hover:shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
+            >
+              <Icon name="add_business" size={18} />
+              <span>Add your business</span>
+            </Link>
+          }
+        />
       )}
-    </SectionShell>
+    </section>
   );
 }

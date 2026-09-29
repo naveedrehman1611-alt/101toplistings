@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { READ_REVALIDATE_SECONDS, SEARCH_TAG, supabase } from './supabase';
 import { mediaUrl, type MediaItem } from './media';
+import { isMissingColumnError } from './review-criteria';
 
 /**
  * Every read below used to end in `data ?? []`, which makes a failed request
@@ -10,7 +11,7 @@ import { mediaUrl, type MediaItem } from './media';
  * nothing. Routing every read through here keeps the graceful fallback but
  * makes the failure visible in the server logs.
  */
-function reportError(what: string, error: { message: string; code?: string } | null): void {
+export function reportError(what: string, error: { message: string; code?: string } | null): void {
   if (!error) return;
   console.error(
     `[supabase] ${what} failed: ${error.message}${error.code ? ` (${error.code})` : ''}`,
@@ -240,22 +241,31 @@ export async function searchListingsResult(
  * results, which keeps search_listings itself untouched. A failure here only
  * costs the covers, never the search, so cards fall back to the gradient.
  */
-async function attachCovers(cards: ListingCard[]): Promise<ListingCard[]> {
+async function attachCovers<T extends { id: string }>(
+  cards: T[],
+): Promise<(T & { cover_url?: string | null })[]> {
   if (cards.length === 0) return cards;
+  const covers = await coverUrls(cards.map((c) => c.id));
+  return cards.map((c) => ({ ...c, cover_url: covers.get(c.id) ?? null }));
+}
+
+/**
+ * Cover image URL by listing id, in one query for a whole page of results.
+ * Empty on any failure: a listing without a cover falls back to the gradient,
+ * so losing the covers must never cost the results they decorate.
+ */
+export async function coverUrls(listingIds: string[]): Promise<Map<string, string>> {
+  if (listingIds.length === 0) return new Map();
   const { data, error } = await supabase
     .from('listing_images')
     .select('listing_id, media(path)')
     .eq('kind', 'cover')
-    .in(
-      'listing_id',
-      cards.map((c) => c.id),
-    );
-  if (error || !data) return cards;
+    .in('listing_id', listingIds);
+  if (error || !data) return new Map();
   const rows = data as unknown as { listing_id: string; media: { path: string } | null }[];
-  const covers = new Map(
+  return new Map(
     rows.flatMap((r) => (r.media ? [[r.listing_id, mediaUrl(r.media.path)] as const] : [])),
   );
-  return cards.map((c) => ({ ...c, cover_url: covers.get(c.id) ?? null }));
 }
 
 export type ListingImage = MediaItem & { url: string };
@@ -362,6 +372,7 @@ export type ListingDetail = {
   tagline: string | null;
   description: string | null;
   category_id: string | null;
+  subcategory_id: string | null;
   city_id: string | null;
   phone_primary: string | null;
   phone_secondary: string | null;
@@ -374,6 +385,7 @@ export type ListingDetail = {
   social_links: { label: string; url: string }[];
   rating_average: number | null;
   review_count: number;
+  is_featured: boolean;
   verification: string;
   published_at: string | null;
   seo_title: string | null;
@@ -397,7 +409,7 @@ export const getListing = cache(async function getListing(
     supabase
       .from('public_listings')
       .select(
-        'id, slug, name, tagline, description, category_id, city_id, phone_primary, phone_secondary, email, website, address, postal_code, latitude, longitude, social_links, rating_average, review_count, verification, published_at, seo_title, seo_description',
+        'id, slug, name, tagline, description, category_id, subcategory_id, city_id, phone_primary, phone_secondary, email, website, address, postal_code, latitude, longitude, social_links, rating_average, review_count, is_featured, verification, published_at, seo_title, seo_description',
       )
       .eq('slug', slug)
       .maybeSingle(),
@@ -504,20 +516,201 @@ export type PublicReview = {
   author_name: string | null;
   reply_body: string | null;
   created_at: string;
+  /** Per-aspect ratings (migration 0018). Absent before it is applied, null when skipped. */
+  rating_service?: number | null;
+  rating_hospitality?: number | null;
+  rating_pricing?: number | null;
 };
+
+const REVIEW_COLUMNS = 'id, rating, title, body, author_name, reply_body, created_at';
+const REVIEW_CRITERIA_COLUMNS = 'rating_service, rating_hospitality, rating_pricing';
 
 /** Approved reviews only — RLS hides pending ones from the public client anyway. */
 export async function getApprovedReviews(listingId: string): Promise<PublicReview[]> {
-  return readList<PublicReview>(
-    'reviews.select',
+  const run = (columns: string) =>
     supabase
       .from('reviews')
-      .select('id, rating, title, body, author_name, reply_body, created_at')
+      .select(columns)
       .eq('listing_id', listingId)
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
-      .limit(50),
+      .limit(50);
+  let { data, error } = await run(`${REVIEW_COLUMNS}, ${REVIEW_CRITERIA_COLUMNS}`);
+  // Before migration 0018 the aspect columns do not exist; read the old shape
+  // rather than losing every review on the page.
+  if (isMissingColumnError(error)) ({ data, error } = await run(REVIEW_COLUMNS));
+  reportError('reviews.select', error);
+  return (data ?? []) as unknown as PublicReview[];
+}
+
+/**
+ * A search-result card (so the shared ListingCard renders it) plus what the
+ * listing page's Similar Listings adds: the phone, verification and hours.
+ */
+export type SimilarListing = ListingCard & {
+  phone_primary: string | null;
+  verification: string;
+  hours: OpeningHour[];
+};
+
+/**
+ * Up to `limit` other listings in the same category: same city first, then
+ * featured, then newest. The order is fully determined by the data, so the same
+ * listing always shows the same neighbours. Three small reads in total — the
+ * candidates, then their hours and covers together.
+ */
+export async function getSimilarListings(
+  listing: Pick<ListingDetail, 'id' | 'category_id' | 'city_id'>,
+  limit = 3,
+): Promise<SimilarListing[]> {
+  if (!listing.category_id) return [];
+  const rows = (await readList(
+    'public_listings.similar',
+    supabase
+      .from('public_listings')
+      .select(
+        'id, slug, name, tagline, phone_primary, category_id, city_id, latitude, longitude, rating_average, review_count, is_featured, verification, published_at',
+      )
+      .eq('category_id', listing.category_id)
+      .neq('id', listing.id)
+      .order('published_at', { ascending: false })
+      .order('id')
+      .limit(12),
+  )) as Omit<SimilarListing, 'hours' | 'cover_url' | 'distance_km' | 'total_count'>[];
+
+  const picked = rows
+    .map((row, index) => ({ row, index }))
+    .sort(
+      (a, b) =>
+        Number(b.row.city_id === listing.city_id) - Number(a.row.city_id === listing.city_id) ||
+        Number(b.row.is_featured) - Number(a.row.is_featured) ||
+        a.index - b.index,
+    )
+    .slice(0, limit)
+    .map(({ row }) => row);
+  if (picked.length === 0) return [];
+
+  const [hours, withCovers] = await Promise.all([
+    readList(
+      'opening_hours.similar',
+      supabase
+        .from('opening_hours')
+        .select('listing_id, day_of_week, opens_at, closes_at, is_closed, is_24h')
+        .in(
+          'listing_id',
+          picked.map((p) => p.id),
+        )
+        .order('day_of_week'),
+    ) as Promise<(OpeningHour & { listing_id: string })[]>,
+    attachCovers(picked),
+  ]);
+  return withCovers.map((card) => ({
+    ...card,
+    // Not a search: there is no origin to measure from and no result total.
+    distance_km: null,
+    total_count: 0,
+    hours: hours
+      .filter((h) => h.listing_id === card.id)
+      .map(({ listing_id, ...h }) => {
+        void listing_id;
+        return h;
+      }),
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Home page
+// ---------------------------------------------------------------------------
+
+/** The card extras search_listings does not return. */
+export type ListingHighlight = {
+  description: string | null;
+  phone: string | null;
+  verified: boolean;
+};
+
+/**
+ * Description, phone and verification for a handful of cards, in one request.
+ * Not wrapped in cache(): it memoises on argument identity, and every caller
+ * builds a fresh array.
+ */
+export async function getListingHighlights(ids: string[]): Promise<Map<string, ListingHighlight>> {
+  const out = new Map<string, ListingHighlight>();
+  if (ids.length === 0) return out;
+  const rows = (await readList(
+    'public_listings.highlights',
+    supabase
+      .from('public_listings')
+      .select('id, description, phone_primary, verification')
+      .in('id', ids),
+  )) as {
+    id: string;
+    description: string | null;
+    phone_primary: string | null;
+    verification: string | null;
+  }[];
+  for (const row of rows) {
+    out.set(row.id, {
+      description: row.description,
+      phone: row.phone_primary,
+      verified: row.verification === 'verified',
+    });
+  }
+  return out;
+}
+
+type CountResult = { count: number | null; error: { message: string; code?: string } | null };
+
+/** read() for head-only count queries: the number, or null when the request failed. */
+async function readCount(what: string, q: PromiseLike<CountResult>): Promise<number | null> {
+  const { count, error } = await q;
+  reportError(what, error);
+  return error ? null : count;
+}
+
+/** Row count only: a HEAD request, so no rows cross the wire. */
+const HEAD_COUNT = { count: 'exact', head: true } as const;
+
+/** Each figure is null when its count failed, so the page hides it instead of printing 0. */
+export type DirectoryStats = {
+  listings: number | null;
+  verified: number | null;
+  cities: number | null;
+  categories: number | null;
+};
+
+export const getDirectoryStats = cache(async function getDirectoryStats(): Promise<DirectoryStats> {
+  const [listings, verified, cities, categories] = await Promise.all([
+    readCount('public_listings.count', supabase.from('public_listings').select('id', HEAD_COUNT)),
+    readCount(
+      'public_listings.countVerified',
+      supabase.from('public_listings').select('id', HEAD_COUNT).eq('verification', 'verified'),
+    ),
+    readCount('cities.count', supabase.from('cities').select('id', HEAD_COUNT)),
+    readCount('categories.count', supabase.from('categories').select('id', HEAD_COUNT)),
+  ]);
+  return { listings, verified, cities, categories };
+});
+
+/** Per id, so cache() can deduplicate it within a render. */
+const countCityListings = cache(async function countCityListings(
+  cityId: string,
+): Promise<number | null> {
+  return readCount(
+    'public_listings.countByCity',
+    supabase.from('public_listings').select('id', HEAD_COUNT).eq('city_id', cityId),
   );
+});
+
+/** Published listings per city. A city whose count failed is left out of the map. */
+export async function getCityListingCounts(cityIds: string[]): Promise<Map<string, number>> {
+  const counts = await Promise.all(cityIds.map((id) => countCityListings(id)));
+  const out = new Map<string, number>();
+  cityIds.forEach((id, i) => {
+    const n = counts[i];
+    if (n !== null) out.set(id, n);
+  });
+  return out;
 }
 
 // ---------------------------------------------------------------------------

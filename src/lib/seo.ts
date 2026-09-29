@@ -15,8 +15,9 @@ export const SEO_ROUTES = [
   { route: '/blog', label: 'Blog' },
   { route: '/about', label: 'About' },
   { route: '/contact', label: 'Contact' },
-  { route: '/privacy', label: 'Privacy Policy' },
-  { route: '/terms', label: 'Terms of Service' },
+  { route: '/services', label: 'SEO services' },
+  { route: '/privacy', label: 'Privacy policy' },
+  { route: '/terms', label: 'Terms of use' },
   // Always noindex and disallowed in robots.ts: result pages are thin and
   // endless. Its title and description can still be changed.
   { route: '/search', label: 'Search' },
@@ -33,6 +34,26 @@ export type SeoOverride = {
   description: string | null;
   noindex: boolean;
   inSitemap: boolean;
+};
+
+/**
+ * §7.5.7 / criterion 47 — a city page with fewer published listings than this
+ * is noindex rather than thin. The sitemap reads the same number, so a city is
+ * never submitted while it asks not to be indexed, and it joins the sitemap on
+ * its own once enough listings are approved.
+ */
+export const MIN_CITY_LISTINGS_TO_INDEX = 3;
+
+/**
+ * The site-wide share image (src/app/opengraph-image.tsx). The root file only
+ * reaches pages that set no openGraph of their own: Next.js replaces the whole
+ * openGraph object per page, so every page that sets one lists this again.
+ */
+export const SHARE_IMAGE = {
+  url: '/opengraph-image',
+  width: 1200,
+  height: 630,
+  alt: 'RankYouSite — SEO services and local business directory for Pakistan',
 };
 
 /** The stored robots value for the "hide from search engines" toggle. */
@@ -68,6 +89,11 @@ export async function seoMetadata(
   base: Metadata,
   parent?: ResolvingMetadata,
 ): Promise<Metadata> {
+  // Every static route is its own canonical (resolved against metadataBase),
+  // unless the page already set one.
+  base = { ...base, alternates: { canonical: route, ...base.alternates } };
+  if (base.openGraph) base.openGraph = { images: [SHARE_IMAGE], ...base.openGraph };
+  if (base.twitter) base.twitter = { images: [SHARE_IMAGE], ...base.twitter };
   const o = await getSeoOverride(route);
   if (!o) return base;
 
@@ -85,10 +111,21 @@ export async function seoMetadata(
       merged.openGraph = { ...base.openGraph, ...text };
     } else if (parent) {
       const { openGraph } = await parent;
-      merged.openGraph = { siteName: openGraph?.siteName, type: 'website', url: '/', ...text };
+      merged.openGraph = {
+        siteName: openGraph?.siteName,
+        type: 'website',
+        url: '/',
+        images: [SHARE_IMAGE],
+        ...text,
+      };
     }
     if (base.twitter || parent) {
-      merged.twitter = { card: 'summary_large_image', ...base.twitter, ...text };
+      merged.twitter = {
+        card: 'summary_large_image',
+        images: [SHARE_IMAGE],
+        ...base.twitter,
+        ...text,
+      };
     }
   }
   if (o.noindex) merged.robots = { index: false, follow: true };

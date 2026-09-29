@@ -40,8 +40,8 @@ Previously: Live at https://rankyousite.vercel.app on Supabase `cwnqvngpjxvodbvd
       `/reset-password` and `/auth/callback`.
 - [~] **Phase 5B — Admin panel.** Dashboard, listings (moderate, create, edit, delete, images),
       categories, locations, reviews, inbox, blog, media library, menus, pages & sections, SEO,
-      redirects, settings, users (roles and suspension, admin-only). Not built: announcements,
-      amenities, claims.
+      redirects, settings, users (roles and suspension, admin-only). claims. Not built: announcements,
+      amenities.
 - [~] **Phase 6 — Query, search, and form states.** Search, filters, sorting and pagination done
       with state in the URL.
 - [ ] **Phase 7 — Responsive QA.** Breakpoints implemented; nothing verified at real widths.
@@ -77,10 +77,10 @@ Numbering matches the master prompt exactly.
 | 7 | Desktop layouts tested | `[ ]` | |
 | 8 | Mobile layouts tested | `[ ]` | |
 | 9 | Search implemented | `[x]` | `/search?q=`, SSR, zero-result state |
-| 10 | Filters implemented | `[x]` | Keyword, category and city on `/listings` and `/search`; city on category pages, category on city pages. GET form, state in the URL, carried through sort and paging |
-| 11 | Sorting implemented | `[x]` | Newest / oldest / rating / A–Z, state in the URL |
-| 12 | Pagination implemented | `[x]` | Server-side offset paging, page number in the URL |
-| 13 | All forms implemented | `[~]` | Contact (honeypot, stored in `form_submissions`), register, sign in, listing submit/edit, review. Claim and report forms not built |
+| 10 | Filters implemented | `[x]` | Keyword, category and city on `/listings` and `/search`; city on category pages, category on city pages. GET form, state in the URL, carried through sort and paging. `/listings` also filters from its top-category and top-city chips |
+| 11 | Sorting implemented | `[x]` | Newest / oldest / rating / A–Z, state in the URL. `/listings` defaults to featured first, then newest |
+| 12 | Pagination implemented | `[x]` | Server-side offset paging, page number in the URL. `/listings` shows 15 per page with previous/next |
+| 13 | All forms implemented | `[x]` | Contact (honeypot, stored in `form_submissions`), register, sign in, listing submit/edit, review, claim (`/listing/[slug]/claim` → `/admin/claims`), report (`/listing/[slug]/report` → Inbox) |
 | 14 | Authentication implemented | `[x]` | `/login`, `/register` (Supabase Auth, email confirmation aware), role-based redirect; `requireUser`/`requireRole` in every action |
 | 15 | Listing submission implemented | `[x]` | Owners submit at `/dashboard/listings/new` as `pending`; staff approve in admin. RLS blocks self-approval (tested) |
 | 16 | Reviews implemented | `[x]` | `/listing/[slug]/review`, moderated in `/admin/reviews`, approved reviews and replies on the listing page; rating trigger recounts |
@@ -112,7 +112,7 @@ Numbering matches the master prompt exactly.
 | 42 | Location hierarchy relational with indexes | `[x]` | 0002; all FKs indexed |
 | 43 | PostGIS enabled; radius search server-side; no client-side distance | `[x]` | `search_listings` RPC + GiST index; `docs/qa/geo-qa.md` |
 | 44 | Displayed distances verified against real coordinates | `[x]` | 5 pairs verified; London–Paris 343.9 km |
-| 45 | Geolocation requested only on explicit user action | `[ ]` | |
+| 45 | Geolocation requested only on explicit user action | `[x]` | `NearMeButton` calls `getCurrentPosition` only on click; position rounded to 3 dp (~100 m) before it enters the URL; denied/unavailable states handled. Verified in Chromium with a mocked position and with permission denied |
 | 46 | Keyword + category + location combined search, state in URL | `[x]` | `ListingFilters` → one `search_listings` call; filtered `/listings` views are noindex |
 | 47 | Location / category+location SEO pages with density threshold | `[~]` | City pages noindex below 3 listings; category+location combinations not built |
 | 48 | Structured data emitted only where data is real and visible | `[x]` | LocalBusiness/PostalAddress/GeoCoordinates/OpeningHours conditional; aggregateRating only when review_count > 0 |

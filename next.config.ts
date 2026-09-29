@@ -8,6 +8,21 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL)
   : null;
 
+// Once NEXT_PUBLIC_SITE_URL points at the custom domain, production requests
+// that arrive on a *.vercel.app host get a 301 redirect there, so search
+// engines consolidate on one domain. Preview deployments keep their own
+// vercel.app URLs, and nothing changes while SITE_URL is still a vercel.app
+// address.
+const siteHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL ?? '').host;
+  } catch {
+    return '';
+  }
+})();
+const redirectVercelHost =
+  process.env.VERCEL_ENV === 'production' && siteHost !== '' && !siteHost.endsWith('.vercel.app');
+
 const nextConfig: NextConfig = {
   images: {
     // Uploads get a fresh, unguessable object name and are never overwritten
@@ -32,10 +47,21 @@ const nextConfig: NextConfig = {
         ]
       : [],
   },
+  // Production *.vercel.app hosts go to the custom domain (see siteHost above).
   // The reference site ran on WordPress; its public URLs map onto this app's
   // routes so existing links and search results keep working after a move.
   async redirects() {
     return [
+      ...(redirectVercelHost
+        ? [
+            {
+              source: '/:path*',
+              has: [{ type: 'host' as const, value: '.*\\.vercel\\.app' }],
+              destination: `https://${siteHost}/:path*`,
+              statusCode: 301 as const,
+            },
+          ]
+        : []),
       { source: '/listing-category/:slug', destination: '/category/:slug', permanent: true },
       { source: '/listing-location/:slug', destination: '/city/:slug', permanent: true },
       { source: '/listing-top-filter', destination: '/listings', permanent: true },

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { NearMeButton } from './near-me-button';
 
 type Option = { slug: string; name: string; parent_id?: string | null };
 
@@ -14,20 +15,29 @@ export function ListingFilters({
   category,
   city,
   sort,
+  defaultSort = 'newest',
   categories,
   cities,
+  nearMe,
+  near,
 }: {
   action: string;
   q?: string;
   category?: string;
   city?: string;
   sort?: string;
+  /** The page's own default order, which is left out of the URL. */
+  defaultSort?: string;
   categories?: Option[];
   cities?: Option[];
+  /** Show the "Near me" button (it searches from /search). */
+  nearMe?: boolean;
+  /** An active location search, kept when the other filters change. */
+  near?: { lat: number; lng: number; radius: number };
 }) {
-  const active = Boolean(q || category || city);
+  const active = Boolean(q || category || city || near);
   const selectCls =
-    'focus:border-brand-500 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none';
+    'focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-hidden';
 
   return (
     <form
@@ -72,14 +82,22 @@ export function ListingFilters({
           </select>
         </label>
       ) : null}
-      {sort && sort !== 'newest' ? <input type="hidden" name="sort" value={sort} /> : null}
+      {sort && sort !== defaultSort ? <input type="hidden" name="sort" value={sort} /> : null}
+      {near ? (
+        <>
+          <input type="hidden" name="lat" value={near.lat} />
+          <input type="hidden" name="lng" value={near.lng} />
+          <input type="hidden" name="radius" value={near.radius} />
+        </>
+      ) : null}
       <div className="flex items-center gap-3">
         <button
           type="submit"
-          className="bg-brand-700 hover:bg-brand-800 h-11 rounded-lg px-5 text-sm font-medium text-white"
+          className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 rounded-lg px-5 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
         >
           Filter
         </button>
+        {nearMe && !near ? <NearMeButton /> : null}
         {active ? (
           <Link href={action} className="text-brand-700 text-sm whitespace-nowrap hover:underline">
             Clear

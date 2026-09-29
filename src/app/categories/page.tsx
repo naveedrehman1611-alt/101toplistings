@@ -37,7 +37,7 @@ export default async function CategoriesPage() {
       <Breadcrumbs
         trail={[{ label: 'Home', href: '/' }, { label: header?.heading ?? 'Categories' }]}
       />
-      <h1 className="text-3xl font-bold sm:text-4xl">{header?.heading}</h1>
+      <h1 className="font-headline-lg text-headline-lg">{header?.heading}</h1>
       {header?.subheading ? (
         <p className="mt-3 text-[var(--text-muted)]">{header.subheading}</p>
       ) : null}
@@ -46,7 +46,7 @@ export default async function CategoriesPage() {
           const kids = childrenOf.get(c.id) ?? [];
           return (
             <section key={c.id} className="surface-card p-5">
-              <h2 className="text-lg font-medium">
+              <h2 className="font-title-md text-title-md">
                 <Link href={`/category/${c.slug}`} className="hover:text-brand-700">
                   {c.name}
                 </Link>

@@ -6,6 +6,8 @@ import { Results, parsePage, parseSort } from '@/components/results';
 import { Breadcrumbs } from '@/components/ui';
 import { ListingFilters } from '@/components/listing-filters';
 import { SITE_URL } from '@/lib/supabase';
+import { SHARE_IMAGE } from '@/lib/seo';
+import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { redirectOrNotFound } from '@/lib/redirects';
 
 export const revalidate = 600;
@@ -30,8 +32,13 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `${SITE_URL}/category/${cat.slug}` },
-    openGraph: { title, description, url: `${SITE_URL}/category/${cat.slug}` },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/category/${cat.slug}`,
+      images: [SHARE_IMAGE],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: [SHARE_IMAGE] },
   };
 }
 
@@ -65,18 +72,22 @@ export default async function CategoryPage({
     offset: (page - 1) * PER_PAGE,
   });
   const filtered = Boolean(q || city);
+  const trail = [
+    { label: 'Home', href: '/' },
+    { label: 'Categories', href: '/categories' },
+    ...(parent ? [{ label: parent.name, href: `/category/${parent.slug}` }] : []),
+    { label: cat.name },
+  ];
+  const path = `/category/${cat.slug}`;
 
   return (
     <div className="container-page py-12">
-      <Breadcrumbs
-        trail={[
-          { label: 'Home', href: '/' },
-          { label: 'Categories', href: '/categories' },
-          ...(parent ? [{ label: parent.name, href: `/category/${parent.slug}` }] : []),
-          { label: cat.name },
-        ]}
-      />
-      <h1 className="text-3xl font-bold sm:text-4xl">{cat.name}</h1>
+      <JsonLd data={breadcrumbSchema(trail, path)} />
+      {listings.length > 0 ? (
+        <JsonLd data={itemListSchema(cat.name, listings, (page - 1) * PER_PAGE)} />
+      ) : null}
+      <Breadcrumbs trail={trail} />
+      <h1 className="font-headline-lg text-headline-lg">{cat.name}</h1>
       {cat.description ? (
         <p className="mt-3 max-w-2xl text-[var(--text-muted)]">{cat.description}</p>
       ) : null}

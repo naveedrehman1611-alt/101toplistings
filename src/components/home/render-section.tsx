@@ -1,13 +1,13 @@
 import type { HomeSectionVM } from '@/lib/home-types';
-import { Hero } from './hero';
-import { TopRated } from './top-rated';
+import { Hero } from './hero-section';
+import { TopRated } from './top-rated-section';
 import { ImageText } from './image-text';
 import { ValueProps } from './value-props';
 import { CityGrid } from './city-grid';
-import { Services } from './services';
+import { Services } from './services-section';
 import { Cta } from './cta';
 import { Testimonials } from './testimonials';
-import { Faq } from './faq';
+import { Faq } from './faq-section';
 import { Guides } from './guides';
 
 /** One homepage section, chosen by its section_type. */

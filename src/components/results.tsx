@@ -29,6 +29,7 @@ export function Results({
   sort,
   query,
   params,
+  nearest,
   cityNames,
   emptyTitle,
   emptyBody,
@@ -41,6 +42,8 @@ export function Results({
   query?: string;
   /** Active filters, carried through the sort and page links. */
   params?: Record<string, string | undefined>;
+  /** Offer "Nearest" as a sort — only when the search has an origin. */
+  nearest?: boolean;
   cityNames: Map<string, string>;
   emptyTitle: string;
   emptyBody: string;
@@ -66,19 +69,21 @@ export function Results({
           {total} {Number(total) === 1 ? 'business' : 'businesses'}
         </p>
         <div className="flex flex-wrap gap-2">
-          {SORTS.map((s) => (
-            <Link
-              key={s.key}
-              href={buildHref(basePath, { ...params, q: query, sort: s.key })}
-              className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
-                sort === s.key
-                  ? 'border-brand-500 bg-brand-50 text-brand-800'
-                  : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-              }`}
-            >
-              {s.label}
-            </Link>
-          ))}
+          {(nearest ? [{ key: 'nearest' as const, label: 'Nearest' }, ...SORTS] : SORTS).map(
+            (s) => (
+              <Link
+                key={s.key}
+                href={buildHref(basePath, { ...params, q: query, sort: s.key })}
+                className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                  sort === s.key
+                    ? 'border-brand-500 bg-brand-50 text-brand-800'
+                    : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
+                }`}
+              >
+                {s.label}
+              </Link>
+            ),
+          )}
         </div>
       </div>
 
@@ -114,7 +119,7 @@ export function Results({
                 aria-current={p === page ? 'page' : undefined}
                 className={`grid h-10 min-w-10 place-items-center rounded-lg border px-3 text-sm ${
                   p === page
-                    ? 'border-brand-500 bg-brand-700 text-white'
+                    ? 'border-primary-container bg-primary-container text-on-primary'
                     : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
                 }`}
               >

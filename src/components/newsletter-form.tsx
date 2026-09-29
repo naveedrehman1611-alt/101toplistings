@@ -1,11 +1,9 @@
 'use client';
 
-import { startTransition, useActionState, useEffect, useId, useRef, type FormEvent } from 'react';
+import { useActionState, useId, useState } from 'react';
 import { subscribeNewsletter, type NewsletterState } from '@/lib/newsletter-actions';
-import { SvgIcon } from '@/components/svg-icon';
-import { loaderCircleIcon } from '@/components/icon-nodes';
 
-const INITIAL: NewsletterState = { status: 'idle', message: '' };
+const initialState: NewsletterState = { status: 'idle', message: '' };
 
 // A request that never reaches the server (offline, or a deploy that retired
 // the action's ID) rejects here. useActionState would rethrow that while
@@ -19,90 +17,63 @@ async function subscribe(prev: NewsletterState, fd: FormData): Promise<Newslette
   }
 }
 
-/** The footer newsletter sign-up; the result is shown inline, without a page load. */
-export function NewsletterForm({
-  placeholder,
-  buttonLabel,
-}: {
-  placeholder: string;
-  buttonLabel: string;
-}) {
-  const [state, formAction, pending] = useActionState(subscribe, INITIAL);
-  const formRef = useRef<HTMLFormElement>(null);
+/** Footer newsletter sign-up. Stays on the page and reports the result inline. */
+export function NewsletterForm() {
   const id = useId();
-  const statusId = `${id}-status`;
-
-  // Clear the field once the address is in; after an error it stays, to be fixed.
-  useEffect(() => {
-    if (state.status === 'ok') formRef.current?.reset();
-  }, [state]);
-
-  // React resets a form after every action it runs from `action`, which would
-  // also wipe a mistyped address, so submissions are dispatched here and the
-  // reset is left to the effect above. `action` stays set so that a submit
-  // before hydration goes nowhere rather than putting the address in a GET URL.
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (pending) return;
-    const data = new FormData(e.currentTarget);
-    startTransition(() => formAction(data));
-  }
+  const [state, formAction, pending] = useActionState(subscribe, initialState);
+  // React resets the form whenever the action returns, errors included. Using
+  // the last address as the default value keeps a rejected one there to fix.
+  const [lastEmail, setLastEmail] = useState('');
+  const ok = state.status === 'ok';
+  const failed = state.status === 'error';
 
   return (
-    <form ref={formRef} action={formAction} onSubmit={onSubmit} className="mt-5">
-      <div className="flex gap-2">
+    <div>
+      <form
+        action={formAction}
+        onSubmit={(event) =>
+          setLastEmail(new FormData(event.currentTarget).get('email')?.toString() ?? '')
+        }
+        className="flex flex-col gap-2 pt-1 sm:flex-row"
+      >
         <label htmlFor={`${id}-email`} className="sr-only">
           Email address
         </label>
         <input
           id={`${id}-email`}
-          type="email"
           name="email"
+          type="email"
           required
           autoComplete="email"
-          placeholder={placeholder}
-          aria-describedby={statusId}
-          className="h-12 min-w-0 flex-1 rounded-lg border border-white/15 bg-white/10 px-4 text-[15px] text-white transition-colors placeholder:text-white/60 hover:border-white/30 focus:border-white/40"
+          placeholder="Enter your email"
+          defaultValue={ok ? '' : lastEmail}
+          className="bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:ring-primary-container min-w-0 flex-1 rounded-lg px-4 py-2.5 focus:ring-2 focus:outline-hidden"
         />
+        {/* Honeypot: people never see it, bots fill it in. */}
+        <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+          <label>
+            Company
+            <input name="company" tabIndex={-1} autoComplete="off" />
+          </label>
+        </div>
         <button
           type="submit"
           disabled={pending}
-          aria-disabled={pending}
-          className="text-navy-900 hover:bg-brand-50 relative h-12 shrink-0 rounded-lg bg-white px-6 text-[15px] font-medium transition-colors disabled:cursor-wait disabled:hover:bg-white"
+          className="bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary focus-visible:outline-primary-container shrink-0 rounded-lg px-5 py-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-wait disabled:opacity-70"
         >
-          <span className={pending ? 'invisible' : undefined}>{buttonLabel}</span>
-          {pending ? (
-            <span className="absolute inset-0 grid place-items-center">
-              <SvgIcon
-                node={loaderCircleIcon}
-                size={20}
-                strokeWidth={2}
-                title="Subscribing"
-                className="motion-safe:animate-spin"
-              />
-            </span>
-          ) : null}
+          {pending ? 'Subscribing…' : 'Subscribe'}
         </button>
-      </div>
-
-      {/* Honeypot: hidden from people and assistive tech; bots fill in every field. */}
-      <div aria-hidden className="sr-only">
-        <label>
-          Company
-          <input type="text" name="company" tabIndex={-1} autoComplete="off" />
-        </label>
-      </div>
-
-      {/* Emptied while a submission is pending, so the old result is not left
-          on screen and a repeated message is announced again. */}
+      </form>
+      {/* Both regions are always in the page so screen readers announce changes. */}
       <p
-        id={statusId}
         role="status"
-        aria-live="polite"
-        className={`mt-3 text-sm empty:mt-0 ${state.status === 'error' ? 'text-red-300' : 'text-emerald-300'}`}
+        className="font-label-sm text-label-sm text-primary-container not-empty:mt-2"
       >
-        {pending ? '' : state.message}
+        {ok ? state.message : null}
       </p>
-    </form>
+      <p role="alert" className="font-label-sm text-label-sm text-error not-empty:mt-2">
+        {failed ? state.message : null}
+      </p>
+    </div>
   );
 }

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from './supabase-server';
 import { requireUser } from './auth';
 import { FormError, errorMessage, text, uuid } from './form-data';
+import { REPORT_REASONS } from './report-reasons';
 
 /**
  * Contact form. Anyone may submit (RLS: form_submissions_insert). The hidden
@@ -38,45 +39,93 @@ export async function submitContact(fd: FormData) {
 }
 
 /**
- * A signed-in visitor reviews a listing. Always inserted as 'pending' — RLS
- * rejects anything else — and only counts toward the rating once approved.
+ * A signed-in user claims a listing as theirs. RLS (claims_own_insert) only
+ * accepts status 'new' for the caller's own id; the unique (listing, claimant)
+ * key stops duplicate claims. Staff approve it in /admin/claims, which is what
+ * actually hands over ownership.
  */
-export async function submitReview(fd: FormData) {
+export async function submitClaim(fd: FormData) {
   const slug = (text(fd, 'slug', 120) ?? '').replace(/[^a-z0-9-]/g, '');
-  const page = `/listing/${slug}/review`;
+  const page = `/listing/${slug}/claim`;
   const user = await requireUser(page);
 
   let dest = `${page}?sent=1`;
   try {
     const listingId = uuid(fd, 'listing_id');
     if (!listingId) throw new FormError('Listing not found.');
-    const rating = Number(text(fd, 'rating', 1));
-    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      throw new FormError('Choose a rating from 1 to 5 stars.');
+    const role = text(fd, 'role', 80);
+    const phone = text(fd, 'phone', 40);
+    const details = text(fd, 'message', 2000);
+    if (!role) throw new FormError('Tell us your role at the business.');
+    if (!phone) throw new FormError('Add a phone number we can reach you on.');
+    const evidence = text(fd, 'evidence_url', 500);
+    if (evidence && !/^https?:\/\//i.test(evidence)) {
+      throw new FormError('The proof link must start with http:// or https://.');
     }
-    const body = text(fd, 'body', 3000);
-    if (!body || body.length < 10)
-      throw new FormError('Please write a few words about your visit.');
 
     const supabase = await createClient();
-    const { error } = await supabase.from('reviews').insert({
+    const { error } = await supabase.from('claims').insert({
       listing_id: listingId,
-      author_id: user.id,
-      author_name: user.displayName ?? user.email?.split('@')[0] ?? null,
-      rating,
-      title: text(fd, 'title', 120),
-      body,
-      status: 'pending',
+      claimant_id: user.id,
+      // No dedicated columns for these; staff read them together in admin.
+      message: [`Role: ${role}`, `Phone: ${phone}`, details].filter(Boolean).join('\n'),
+      evidence_url: evidence,
+      status: 'new',
     });
     if (error) {
       if ((error as { code?: string }).code === '23505') {
-        throw new FormError('You have already reviewed this business.');
+        throw new FormError('You have already claimed this business. We will be in touch.');
       }
       throw error;
     }
   } catch (e) {
     dest = `${page}?error=${encodeURIComponent(errorMessage(e))}`;
   }
-  revalidatePath('/admin/reviews');
+  revalidatePath('/admin/claims');
+  redirect(dest);
+}
+
+/**
+ * Anyone (signed in or not) reports a problem with a listing. Stored in the
+ * shared form_submissions inbox as form_type 'report', with the same honeypot
+ * as the contact form.
+ */
+export async function submitReport(fd: FormData) {
+  const slug = (text(fd, 'slug', 120) ?? '').replace(/[^a-z0-9-]/g, '');
+  const page = `/listing/${slug}/report`;
+
+  let dest = `${page}?sent=1`;
+  try {
+    const listingId = uuid(fd, 'listing_id');
+    if (!listingId) throw new FormError('Listing not found.');
+    const reason = text(fd, 'reason', 40);
+    if (!reason || !Object.hasOwn(REPORT_REASONS, reason))
+      throw new FormError('Choose what is wrong.');
+    const details = text(fd, 'details', 3000);
+    if (reason === 'other' && !details) throw new FormError('Please describe the problem.');
+    const email = text(fd, 'email', 200);
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new FormError('That email address does not look right.');
+    }
+    const isSpam = Boolean(text(fd, 'website', 200));
+
+    const supabase = await createClient();
+    const { error } = await supabase.from('form_submissions').insert({
+      form_type: 'report',
+      payload: {
+        listing_id: listingId,
+        listing_slug: slug,
+        listing_name: text(fd, 'listing_name', 200),
+        reason,
+        message: details,
+        email,
+      },
+      is_spam: isSpam,
+      status: isSpam ? 'spam' : 'new',
+    });
+    if (error) throw error;
+  } catch (e) {
+    dest = `${page}?error=${encodeURIComponent(errorMessage(e))}`;
+  }
   redirect(dest);
 }

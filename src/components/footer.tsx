@@ -1,151 +1,155 @@
-import type { ReactNode } from 'react';
-// Prefetch on intent, not on sight: see hover-prefetch-link.tsx.
-import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
-import type { ChromeVM, SocialNetwork } from '@/lib/home-types';
-import { Icon } from '@/components/icons';
-import { Logo } from '@/components/logo';
+import Link from 'next/link';
+import { Icon } from '@/components/icon';
 import { NewsletterForm } from '@/components/newsletter-form';
+import type { City, MenuItem } from '@/lib/queries';
 
-const NETWORK_NAMES: Record<SocialNetwork, string> = {
-  facebook: 'Facebook',
-  instagram: 'Instagram',
-  x: 'X',
-  linkedin: 'LinkedIn',
-  youtube: 'YouTube',
-};
+/** The design's five cities lead the Locations column; other featured cities follow. */
+const PREFERRED_CITIES = ['karachi', 'lahore', 'multan', 'rawalpindi', 'islamabad'];
 
-// Text links get a 44px row on phones, where they are tapped, and sit at their
-// natural height from `sm` up; the lists' smaller top margin on phones makes up
-// for the row's own padding.
-const linkCls = 'inline-flex min-h-11 items-center transition-colors hover:text-white sm:min-h-0';
+function footerCities(cities: City[]): City[] {
+  const rank = (slug: string) => {
+    const i = PREFERRED_CITIES.indexOf(slug);
+    return i === -1 ? PREFERRED_CITIES.length : i;
+  };
+  // sort is stable, so the rest keep the query's alphabetical order.
+  return [...cities].sort((a, b) => rank(a.slug) - rank(b.slug)).slice(0, 5);
+}
 
-/** Menu links are site paths as a rule; anything else is left as a plain link. */
-function FooterLink({ href, children }: { href: string; children: ReactNode }) {
-  return href.startsWith('/') && !href.startsWith('//') ? (
-    <Link href={href} className={linkCls}>
-      {children}
-    </Link>
-  ) : (
-    <a href={href} className={linkCls}>
-      {children}
-    </a>
+const FAQ_LINK: MenuItem = { label: 'FAQ', url: '/#faq', sort_order: 0 };
+
+/** The Company menu, plus Privacy and Terms whenever the menu leaves them out. */
+const LEGAL_LINKS: MenuItem[] = [
+  { label: 'Privacy Policy', url: '/privacy', sort_order: 0 },
+  { label: 'Terms of Service', url: '/terms', sort_order: 0 },
+];
+
+function legalLinks(company: MenuItem[]): MenuItem[] {
+  const urls = new Set(company.map((item) => item.url));
+  return [...company, ...LEGAL_LINKS.filter((item) => !urls.has(item.url))];
+}
+
+const linkClass =
+  'font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+/** Same split as the header: "RankYouSite" -> "RankYou" + accented "Site". */
+function Wordmark({ name }: { name: string }) {
+  const parts = /^(.+?)([A-Z][a-z0-9]*)$/.exec(name);
+  if (!parts) return <>{name}</>;
+  return (
+    <>
+      {parts[1]}
+      <span className="text-primary-container">{parts[2]}</span>
+    </>
   );
 }
 
-/** `tel:` wants digits only; a leading + (international format) is kept. */
-function telHref(phone: string): string | null {
-  const digits = phone.replace(/\D/g, '');
-  return digits ? `tel:${phone.trim().startsWith('+') ? '+' : ''}${digits}` : null;
-}
-
-export function Footer({ chrome }: { chrome: ChromeVM }) {
-  const { brand, footer } = chrome;
-  const { contact, newsletter } = footer;
-  const tel = telHref(contact.phone);
-  const hasContact = Boolean(contact.email || contact.phone || contact.address);
+export function Footer({
+  brand,
+  about,
+  copyright,
+  email,
+  cities,
+  explore,
+  company,
+}: {
+  brand: string;
+  about: string;
+  copyright: string;
+  email: string;
+  /** Featured cities. */
+  cities: City[];
+  /** Footer "Explore" menu, shown as Useful Links. */
+  explore: MenuItem[];
+  /** Footer "Company" menu, shown in the bottom bar. */
+  company: MenuItem[];
+}) {
+  const locations = footerCities(cities);
+  const usefulLinks = explore.some((item) => item.url === FAQ_LINK.url)
+    ? explore
+    : [...explore, FAQ_LINK];
 
   return (
-    // The global focus ring is brand blue, faint on navy. That rule is unlayered
-    // CSS, which beats any Tailwind utility, hence the important modifier.
-    <footer className="bg-navy-900 relative overflow-hidden text-white/70 [&_:focus-visible]:outline-white!">
-      <div className="container-page relative grid grid-cols-1 gap-10 py-16 md:grid-cols-2 lg:grid-cols-12">
-        <div className="lg:col-span-4">
-          <Link href="/" className="inline-flex rounded-md">
-            <Logo brand={brand} tone="dark" />
-          </Link>
-          {footer.tagline ? (
-            <p className="mt-5 text-lg leading-snug font-medium text-white">{footer.tagline}</p>
-          ) : null}
-          {footer.social.length > 0 ? (
-            <ul className="mt-6 flex flex-wrap gap-3">
-              {footer.social.map(({ network, href }) => (
-                <li key={network}>
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${brand.name} on ${NETWORK_NAMES[network]}`}
-                    className="hover:bg-brand-700 hover:ring-brand-700 grid size-11 place-items-center rounded-full text-white ring-1 ring-white/20 transition-colors sm:size-10"
-                  >
-                    <Icon name={network === 'x' ? 'x-logo' : network} size={18} />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </div>
+    <footer className="bg-surface-card w-full shadow-[0_-1px_8px_rgba(0,0,0,0.02)]">
+      <div className="mx-auto max-w-7xl px-6 pt-16 pb-12 lg:px-12">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-12">
+          <div className={`space-y-4 ${locations.length > 0 ? 'lg:col-span-4' : 'lg:col-span-6'}`}>
+            <div className="flex items-center gap-3">
+              <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-xl">
+                <Icon name="verified" size={20} className="text-on-primary" />
+              </div>
+              <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight">
+                <Wordmark name={brand} />
+              </span>
+            </div>
+            {about ? (
+              <p className="font-body-md text-body-md text-on-surface-variant max-w-sm">{about}</p>
+            ) : null}
+            {email ? (
+              <div className="text-secondary flex items-center gap-2 pt-2">
+                <Icon name="mail" size={18} />
+                <a
+                  href={`mailto:${email}`}
+                  className="font-label-md text-label-md hover:text-on-surface focus-visible:outline-primary-container rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
+                >
+                  {email}
+                </a>
+              </div>
+            ) : null}
+          </div>
 
-        {footer.columns.map((column, i) => (
-          <div key={`${i}:${column.title}`} className="lg:col-span-2">
-            <h2 className="text-base font-medium text-white">{column.title}</h2>
-            <ul className="mt-2 text-sm sm:mt-4 sm:space-y-3">
-              {column.links.map((link, j) => (
-                <li key={`${j}:${link.href}`}>
-                  <FooterLink href={link.href}>{link.label}</FooterLink>
+          {locations.length > 0 ? (
+            <div className="space-y-4 lg:col-span-2">
+              <h2 className="font-title-md text-title-md text-on-surface">Locations</h2>
+              <ul className="space-y-2.5">
+                {locations.map((city) => (
+                  <li key={city.id} className="flex items-center gap-2">
+                    <Link href={`/city/${city.slug}`} className={linkClass}>
+                      {city.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          <div className="space-y-4 lg:col-span-2">
+            <h2 className="font-title-md text-title-md text-on-surface">Useful Links</h2>
+            <ul className="space-y-2.5">
+              {usefulLinks.map((item) => (
+                <li key={`${item.url}|${item.label}`}>
+                  <Link href={item.url} className={linkClass}>
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
-        ))}
 
-        <div className="lg:col-span-4">
-          {newsletter.heading ? (
-            <h2 className="text-base font-medium text-white">{newsletter.heading}</h2>
-          ) : null}
-          {newsletter.text ? <p className="mt-3 text-sm">{newsletter.text}</p> : null}
-          <NewsletterForm placeholder={newsletter.placeholder} buttonLabel={newsletter.button} />
-
-          {hasContact ? (
-            <address className="mt-3 not-italic sm:mt-6">
-              <ul className="text-sm sm:space-y-3">
-                {contact.email ? (
-                  <li>
-                    <a href={`mailto:${contact.email}`} className={`${linkCls} gap-3 break-all`}>
-                      <Icon name="mail" size={18} className="shrink-0 text-white/50" />
-                      {contact.email}
-                    </a>
-                  </li>
-                ) : null}
-                {contact.phone ? (
-                  <li>
-                    {tel ? (
-                      <a href={tel} className={`${linkCls} gap-3`}>
-                        <Icon name="phone" size={18} className="shrink-0 text-white/50" />
-                        {contact.phone}
-                      </a>
-                    ) : (
-                      <span className="flex gap-3">
-                        <Icon name="phone" size={18} className="shrink-0 text-white/50" />
-                        {contact.phone}
-                      </span>
-                    )}
-                  </li>
-                ) : null}
-                {contact.address ? (
-                  <li className="flex gap-3 py-3 sm:py-0">
-                    <Icon name="map-pin" size={18} className="mt-px shrink-0 text-white/50" />
-                    <span className="whitespace-pre-line">{contact.address}</span>
-                  </li>
-                ) : null}
-              </ul>
-            </address>
-          ) : null}
+          <div className="space-y-4 lg:col-span-4">
+            <h2 className="font-title-md text-title-md text-on-surface">Newsletter</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Subscribe for updates on new businesses, cities and guides added to the directory
+              across Pakistan.
+            </p>
+            <NewsletterForm />
+            <p className="font-label-sm text-label-sm text-secondary">
+              No spam, just occasional local business updates.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="relative border-t border-white/10">
-        <div className="container-page flex flex-wrap items-center justify-between gap-3 py-6 text-sm text-white/60">
-          <p>
-            Copyright © {new Date().getFullYear()} {footer.copyright}
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 pt-8 sm:flex-row">
+          <p className="font-body-sm text-body-sm text-on-surface-variant text-center sm:text-left">
+            Copyright © {new Date().getFullYear()} {copyright.replace(/\.+$/, '')}. All rights
+            reserved.
           </p>
-          <p className="flex gap-4">
-            <Link href="/privacy" className="transition-colors hover:text-white">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="transition-colors hover:text-white">
-              Terms of Service
-            </Link>
-          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            {legalLinks(company).map((item) => (
+              <Link key={`${item.url}|${item.label}`} href={item.url} className={linkClass}>
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </footer>

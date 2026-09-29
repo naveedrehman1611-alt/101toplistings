@@ -1,353 +1,249 @@
 'use client';
 
-// Prefetch on intent, not on sight: see hover-prefetch-link.tsx.
-import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type ReactNode,
-} from 'react';
-import { createPortal } from 'react-dom';
-import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Icon } from '@/components/icon';
 import { drawer } from '@/lib/motion';
-import { Logo } from '@/components/logo';
-import { SvgIcon } from '@/components/svg-icon';
-import { menuIcon, plusIcon, userIcon, xIcon } from '@/components/icon-nodes';
-import type { ChromeVM, LinkVM } from '@/lib/home-types';
+import type { MenuItem } from '@/lib/queries';
+
+const ADD_LISTING = '/dashboard/listings/new';
+
+const focusRing =
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
+
+/** "Home" leads the menu unless the admin has already added a link to "/". */
+function withHome(items: MenuItem[]): MenuItem[] {
+  return items.some((item) => item.url === '/')
+    ? items
+    : [{ label: 'Home', url: '/', sort_order: 0 }, ...items];
+}
+
+/** "/" matches only the home page; any other path also covers the pages below it. */
+function isActive(pathname: string, url: string): boolean {
+  if (!url.startsWith('/') || url.startsWith('//') || /[?#]/.test(url)) return false;
+  if (url === '/') return pathname === '/';
+  const base = url.replace(/\/+$/, '');
+  return pathname === base || pathname.startsWith(`${base}/`);
+}
 
 /**
- * Site header. On the homepage it floats transparent over the hero photo and
- * scrolls away with it, as on the reference; everywhere else it is a white bar
- * that sticks to the top. Below lg the links move into an off-canvas dialog.
+ * "RankYouSite" -> "RankYou" + "Site" in the accent colour, as in the design. A
+ * name without a trailing capitalised word renders whole. Same split as the footer.
  */
-
-// Homepage sections are ordered by editors, so only float over the page while
-// the hero photo really is at the top; otherwise keep the solid bar, and white
-// text never lands on a white section.
-function watchMain(onChange: () => void) {
-  const main = document.getElementById('main');
-  if (!main) return () => {};
-  const observer = new MutationObserver(onChange);
-  observer.observe(main, { childList: true });
-  return () => observer.disconnect();
-}
-const heroLeads = () => document.querySelector('#main > [data-hero]:first-child') !== null;
-const heroLeadsOnServer = () => true;
-
-/** 'page' for the current route, 'true' for a page below it; both get the active style. */
-function currentState(pathname: string, href: string): 'page' | 'true' | undefined {
-  if (!href.startsWith('/') || href.startsWith('//') || href.includes('#')) return undefined;
-  const path = href.split('?')[0].replace(/(.)\/+$/, '$1');
-  if (pathname === path) return 'page';
-  return path !== '/' && pathname.startsWith(`${path}/`) ? 'true' : undefined;
-}
-
-const FOCUSABLE = 'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])';
-
-/**
- * The menu dialog renders at the end of <body>: inside the header it would
- * share the header's z-40 layer, under anything later in the page (the
- * back-to-top button sits on its bottom corner). Only mounted while open,
- * which is only ever on the client.
- */
-function BodyPortal({ children }: { children: ReactNode }) {
-  return createPortal(children, document.body);
-}
-
-export function Header({ chrome }: { chrome: ChromeVM }) {
-  const pathname = usePathname();
-  const heroOnTop = useSyncExternalStore(watchMain, heroLeads, heroLeadsOnServer);
-  const overlay = pathname === '/' && heroOnTop;
-
-  // The menu belongs to the page it was opened on, so any navigation closes it.
-  const [openOn, setOpenOn] = useState<string | null>(null);
-  const open = openOn === pathname;
-  const panelId = useId();
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  const { brand, login, register, addListing } = chrome;
-  // A login label that already names sign-up ("Login/Sign Up") stands alone.
-  const showRegister = !login.label.toLowerCase().includes(register.label.toLowerCase());
-
-  const close = useCallback(() => {
-    setOpenOn(null);
-    menuButtonRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    closeButtonRef.current?.focus();
-
-    // Lock the page behind the dialog, keeping its width where a scrollbar disappears.
-    const root = document.documentElement;
-    const { overflow, paddingRight } = root.style;
-    const scrollbar = window.innerWidth - root.clientWidth;
-    root.style.overflow = 'hidden';
-    if (scrollbar > 0) root.style.paddingRight = `${scrollbar}px`;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        close();
-        return;
-      }
-      const panel = panelRef.current;
-      if (event.key !== 'Tab' || !panel) return;
-      const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE));
-      if (!items.length) return;
-      const first = items[0];
-      const last = items[items.length - 1];
-      const inside = panel.contains(document.activeElement);
-      if (event.shiftKey && (!inside || document.activeElement === first)) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (!inside || document.activeElement === last)) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    // The dialog only exists below lg; widening the window past it closes the menu.
-    const desktop = window.matchMedia('(min-width: 64rem)');
-    const onResize = () => {
-      if (desktop.matches) setOpenOn(null);
-    };
-
-    document.addEventListener('keydown', onKeyDown);
-    desktop.addEventListener('change', onResize);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      desktop.removeEventListener('change', onResize);
-      root.style.overflow = overflow;
-      root.style.paddingRight = paddingRight;
-    };
-  }, [open, close]);
-
-  const tone = overlay
-    ? {
-        link: 'text-white/90 hover:text-white',
-        active: 'text-white after:bg-white',
-        icon: 'text-white hover:bg-white/10',
-      }
-    : {
-        link: 'text-ink-900 hover:text-brand-700',
-        active: 'text-brand-700 after:bg-brand-700',
-        icon: 'text-ink-900 hover:bg-[var(--surface-2)]',
-      };
-
+function Wordmark({ name }: { name: string }) {
+  const parts = /^(.+?)([A-Z][a-z0-9]*)$/.exec(name);
+  if (!parts) return <>{name}</>;
   return (
-    <header
-      className={
-        overlay
-          ? 'absolute inset-x-0 top-0 z-40 text-white'
-          : 'text-ink-900 sticky top-0 z-40 border-b border-[var(--border)] bg-white'
-      }
-    >
-      <div
-        className={`container-wide flex items-center gap-6 xl:gap-8 ${
-          // The default brand-blue focus ring is hard to see on the photo.
-          overlay ? 'h-16 lg:h-[90px] [&_:focus-visible]:outline-white!' : 'h-16 lg:h-[72px]'
-        }`}
-      >
-        <Link
-          href="/"
-          aria-label={`${brand.name} homepage`}
-          className="mr-auto shrink-0 rounded-md"
-        >
-          <Logo brand={brand} tone={overlay ? 'dark' : 'light'} priority />
-        </Link>
-
-        <nav aria-label="Primary" className="hidden lg:block">
-          <ul className="flex items-center gap-5 xl:gap-7">
-            {chrome.nav.map((item, i) => (
-              <li key={`${i}-${item.href}`}>
-                <NavLink item={item} pathname={pathname} tone={tone} />
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div className="hidden items-center gap-1.5 text-[0.9375rem] font-medium lg:flex">
-          <SvgIcon node={userIcon} size={18} className="shrink-0" />
-          <Link href={login.href} className={`rounded-sm transition-colors ${tone.link}`}>
-            {login.label}
-          </Link>
-          {showRegister ? (
-            <>
-              <span aria-hidden="true">/</span>
-              <Link href={register.href} className={`rounded-sm transition-colors ${tone.link}`}>
-                {register.label}
-              </Link>
-            </>
-          ) : null}
-        </div>
-
-        <Link
-          href={addListing.href}
-          className="bg-brand-700 hover:bg-brand-800 hidden h-11 shrink-0 items-center gap-1.5 rounded-lg px-5 text-[0.9375rem] font-medium text-white transition-colors lg:inline-flex"
-        >
-          <SvgIcon node={plusIcon} size={18} strokeWidth={2} />
-          {addListing.label}
-        </Link>
-
-        <div className="-mr-2 flex items-center lg:hidden">
-          <Link
-            href={login.href}
-            aria-label={login.label}
-            className={`grid size-11 place-items-center rounded-lg transition-colors ${tone.icon}`}
-          >
-            <SvgIcon node={userIcon} size={22} />
-          </Link>
-          <button
-            ref={menuButtonRef}
-            type="button"
-            aria-label="Open menu"
-            aria-expanded={open}
-            aria-controls={panelId}
-            onClick={() => setOpenOn(pathname)}
-            className={`grid size-11 place-items-center rounded-lg transition-colors ${tone.icon}`}
-          >
-            <SvgIcon node={menuIcon} size={24} />
-          </button>
-        </div>
-      </div>
-
-      <MotionConfig reducedMotion="user">
-        <AnimatePresence>
-          {open ? (
-            <BodyPortal key="menu">
-              <motion.div
-                className="fixed inset-0 z-50 lg:hidden"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <div
-                  aria-hidden="true"
-                  className="bg-navy-950/50 absolute inset-0"
-                  onClick={close}
-                />
-                <motion.div
-                  ref={panelRef}
-                  id={panelId}
-                  role="dialog"
-                  aria-modal="true"
-                  aria-label="Menu"
-                  variants={drawer}
-                  initial="hidden"
-                  animate="show"
-                  exit="exit"
-                  className="text-ink-900 absolute inset-y-0 right-0 flex w-80 max-w-[85vw] flex-col bg-white shadow-2xl"
-                >
-                  <div className="flex h-16 shrink-0 items-center justify-between border-b border-[var(--border)] pr-3 pl-5">
-                    <Logo brand={brand} tone="light" />
-                    <button
-                      ref={closeButtonRef}
-                      type="button"
-                      aria-label="Close menu"
-                      onClick={close}
-                      className="grid size-11 place-items-center rounded-lg transition-colors hover:bg-[var(--surface-2)]"
-                    >
-                      <SvgIcon node={xIcon} size={22} />
-                    </button>
-                  </div>
-
-                  <nav
-                    aria-label="Primary"
-                    className="flex-1 overflow-y-auto overscroll-contain px-3 py-4"
-                  >
-                    <ul className="space-y-1">
-                      {chrome.mobileNav.map((item, i) => {
-                        const state = currentState(pathname, item.href);
-                        return (
-                          <li key={`${i}-${item.href}`}>
-                            <Link
-                              href={item.href}
-                              aria-current={state}
-                              onClick={close}
-                              className={`flex min-h-12 items-center rounded-lg px-3 text-base font-medium transition-colors ${
-                                state
-                                  ? 'bg-brand-50 text-brand-700'
-                                  : 'hover:text-brand-700 hover:bg-[var(--surface-2)]'
-                              }`}
-                            >
-                              {item.label}
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    <div className="mt-4 flex items-center gap-2 border-t border-[var(--border)] px-3 pt-4 text-base font-medium">
-                      <SvgIcon node={userIcon} size={20} className="text-ink-500 shrink-0" />
-                      <Link
-                        href={login.href}
-                        onClick={close}
-                        className="hover:text-brand-700 inline-flex min-h-11 items-center"
-                      >
-                        {login.label}
-                      </Link>
-                      {showRegister ? (
-                        <>
-                          <span aria-hidden="true" className="text-ink-500">
-                            /
-                          </span>
-                          <Link
-                            href={register.href}
-                            onClick={close}
-                            className="hover:text-brand-700 inline-flex min-h-11 items-center"
-                          >
-                            {register.label}
-                          </Link>
-                        </>
-                      ) : null}
-                    </div>
-                  </nav>
-
-                  <div className="shrink-0 border-t border-[var(--border)] p-4">
-                    <Link
-                      href={addListing.href}
-                      onClick={close}
-                      className="bg-brand-700 hover:bg-brand-800 flex h-12 w-full items-center justify-center gap-2 rounded-lg font-medium text-white transition-colors"
-                    >
-                      <SvgIcon node={plusIcon} size={18} strokeWidth={2} />
-                      {addListing.label}
-                    </Link>
-                  </div>
-                </motion.div>
-              </motion.div>
-            </BodyPortal>
-          ) : null}
-        </AnimatePresence>
-      </MotionConfig>
-    </header>
+    <>
+      {parts[1]}
+      <span className="text-primary-container">{parts[2]}</span>
+    </>
   );
 }
 
-function NavLink({
-  item,
-  pathname,
-  tone,
+export function Header({
+  brand,
+  subtitle,
+  nav,
+  mobileNav,
 }: {
-  item: LinkVM;
-  pathname: string;
-  tone: { link: string; active: string };
+  brand: string;
+  subtitle: string;
+  nav: MenuItem[];
+  mobileNav: MenuItem[];
 }) {
-  const state = currentState(pathname, item.href);
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const closeButton = useRef<HTMLButtonElement>(null);
+
+  // While the drawer is open, focus starts on its close button and Escape
+  // closes it; focus then goes back to the menu button.
+  useEffect(() => {
+    if (!open) return;
+    const trigger = menuButton.current;
+    closeButton.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      trigger?.focus();
+    };
+  }, [open]);
+
+  const close = () => setOpen(false);
+  const primary = withHome(nav);
+  // Login and Add Listing have their own buttons at the foot of the drawer.
+  const drawerItems = withHome(mobileNav).filter(
+    (item) => item.url !== '/login' && item.url !== ADD_LISTING,
+  );
+
   return (
-    <Link
-      href={item.href}
-      aria-current={state}
-      className={`relative block rounded-sm py-2 text-[0.9375rem] font-medium transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full ${
-        state ? tone.active : `${tone.link} after:bg-transparent`
-      }`}
-    >
-      {item.label}
-    </Link>
+    <>
+      <header className="bg-surface-card/90 sticky top-0 z-40 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
+        <div className="mx-auto max-w-7xl px-6 lg:px-12">
+          <div className="flex h-20 items-center justify-between gap-3 sm:gap-6">
+            <Link href="/" className={`flex min-w-0 items-center gap-3 rounded-xl ${focusRing}`}>
+              <span className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-xs">
+                <Icon name="verified" className="text-on-primary" />
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="font-headline-sm text-headline-sm text-on-surface leading-none tracking-tight">
+                  <Wordmark name={brand} />
+                </span>
+                {subtitle ? (
+                  <span className="font-label-sm text-label-sm text-secondary mt-1 truncate leading-none tracking-wider uppercase">
+                    {subtitle}
+                  </span>
+                ) : null}
+              </span>
+            </Link>
+
+            {/* gap-6 until xl: with gap-8 the row is ~2px too wide at 1024px. */}
+            <nav aria-label="Primary" className="hidden items-center gap-6 lg:flex xl:gap-8">
+              {primary.map((item) => {
+                const active = isActive(pathname, item.url);
+                return (
+                  <Link
+                    key={`${item.url}|${item.label}`}
+                    href={item.url}
+                    aria-current={active ? 'page' : undefined}
+                    className={`rounded-sm transition-colors ${focusRing} ${
+                      active
+                        ? 'text-primary-container font-semibold'
+                        : 'font-label-md text-label-md text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+              <Link
+                href="/login"
+                className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm transition-colors sm:inline-flex ${focusRing}`}
+              >
+                Login / Sign Up
+              </Link>
+              {/* Icon only below sm, so the bar fits a 360px screen. */}
+              <Link
+                href={ADD_LISTING}
+                className={`bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary inline-flex size-10 items-center justify-center gap-2 rounded-lg shadow-xs transition-all hover:shadow-sm sm:size-auto sm:px-5 sm:py-2.5 ${focusRing}`}
+              >
+                <Icon name="add_circle" size={18} />
+                <span className="sr-only sm:not-sr-only">Add Listing</span>
+              </Link>
+              <Link
+                href="/dashboard"
+                aria-label="Your account"
+                className={`bg-primary hidden h-8 w-8 shrink-0 items-center justify-center rounded-full sm:flex ${focusRing}`}
+              >
+                <Icon name="person" size={18} className="text-on-primary" />
+              </Link>
+              <button
+                ref={menuButton}
+                type="button"
+                onClick={() => setOpen(true)}
+                aria-label="Open menu"
+                aria-expanded={open}
+                className={`border-border-subtle text-on-surface hover:bg-surface-container-low grid size-10 place-items-center rounded-lg border transition-colors lg:hidden ${focusRing}`}
+              >
+                <Icon name="menu" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Outside <header> on purpose: its backdrop-filter would make it the
+          containing block of this fixed overlay, clipping it to the bar. */}
+      <AnimatePresence>
+        {open ? (
+          <motion.div
+            className="fixed inset-0 z-50 lg:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <button
+              type="button"
+              aria-label="Close menu"
+              tabIndex={-1}
+              className="bg-on-background/50 absolute inset-0 backdrop-blur-xs"
+              onClick={close}
+            />
+            <motion.nav
+              aria-label="Mobile"
+              variants={drawer}
+              initial="hidden"
+              animate="show"
+              exit="exit"
+              className="bg-surface-card absolute top-0 right-0 flex h-full w-80 max-w-[85vw] flex-col overflow-y-auto p-6 shadow-2xl"
+            >
+              <div className="mb-6 flex items-center justify-between gap-4">
+                <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight">
+                  <Wordmark name={brand} />
+                </span>
+                <button
+                  ref={closeButton}
+                  type="button"
+                  onClick={close}
+                  aria-label="Close menu"
+                  className={`text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface grid size-10 shrink-0 place-items-center rounded-lg transition-colors ${focusRing}`}
+                >
+                  <Icon name="close" />
+                </button>
+              </div>
+
+              <ul className="flex flex-col gap-1">
+                {drawerItems.map((item) => {
+                  const active = isActive(pathname, item.url);
+                  return (
+                    <li key={`${item.url}|${item.label}`}>
+                      <Link
+                        href={item.url}
+                        onClick={close}
+                        aria-current={active ? 'page' : undefined}
+                        className={`font-label-md text-label-md block rounded-lg px-3 py-3 transition-colors ${focusRing} ${
+                          active
+                            ? 'bg-surface-container-low text-primary-container font-semibold'
+                            : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="border-border-subtle mt-6 flex flex-col gap-3 border-t pt-6">
+                <Link
+                  href="/login"
+                  onClick={close}
+                  className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low inline-flex h-11 items-center justify-center rounded-lg border transition-colors ${focusRing}`}
+                >
+                  Login / Sign Up
+                </Link>
+                <Link
+                  href={ADD_LISTING}
+                  onClick={close}
+                  className={`bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary inline-flex h-11 items-center justify-center gap-2 rounded-lg shadow-xs transition-all hover:shadow-sm ${focusRing}`}
+                >
+                  <Icon name="add_circle" size={18} />
+                  Add Listing
+                </Link>
+              </div>
+            </motion.nav>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </>
   );
 }

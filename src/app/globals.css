@@ -1,75 +1,200 @@
 @import 'tailwindcss';
 
-/* Tailwind v4 is CSS-first: this @theme block IS the Tailwind config.
+/* Tailwind v4 is CSS-first: this @theme block IS the Tailwind config that §8 of
+   PROMPT.md refers to.
 
-   Tokens follow the reference layout: primary #234DD4 (brand-700, every
-   button, link and active state), headings #222, body text #717171, light
-   surface #F4F4F4, 1px #EAEAEA card borders with 8px radii. Poppins throughout. */
+   Brand: the Stitch "Pakistani Directory Excellence" design system: emerald
+   primary, deep navy ink, cobalt tertiary, gold ratings. The named tokens below
+   mirror the Stitch export one-to-one, so markup ported from the design keeps its
+   class names (bg-primary-container, text-on-surface-variant,
+   font-headline-lg text-headline-lg, ...). The older brand-/ink-/accent- ramps
+   are remapped onto the same palette, so every page that uses them follows the
+   brand without edits: brand-700 is the CTA emerald, brand-800 its hover. */
 @theme {
-  --color-ink-50: #f7f7f8;
-  --color-ink-100: #f4f4f4;
-  --color-ink-200: #eaeaea;
-  --color-ink-300: #d4d4d8;
-  --color-ink-400: #a1a1aa;
-  --color-ink-500: #717171;
-  --color-ink-600: #52525b;
-  --color-ink-700: #3f3f46;
-  --color-ink-800: #2d2d2d;
-  --color-ink-900: #222222;
+  /* Stitch colour tokens */
+  --color-primary: #005d42;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #047857;
+  --color-on-primary-container: #9ffdd3;
+  --color-primary-fixed: #97f5cc;
+  --color-primary-fixed-dim: #7bd8b1;
+  --color-on-primary-fixed: #002115;
+  --color-on-primary-fixed-variant: #00513a;
+  --color-inverse-primary: #7bd8b1;
+  --color-surface-tint: #006c4e;
 
-  --color-brand-50: #eef2fd;
-  --color-brand-100: #dce4fa;
-  --color-brand-200: #b9c8f5;
-  --color-brand-300: #8ea6ee;
-  --color-brand-400: #5f80e4;
-  --color-brand-500: #3d63dc;
-  --color-brand-600: #2c55d8;
-  --color-brand-700: #234dd4; /* primary / CTA */
-  --color-brand-800: #1c3fb0; /* hover */
-  --color-brand-900: #17348c;
+  --color-secondary: #565e74;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #dae2fd;
+  --color-on-secondary-container: #5c647a;
+  --color-secondary-fixed: #dae2fd;
+  --color-secondary-fixed-dim: #bec6e0;
+  --color-on-secondary-fixed: #131b2e;
+  --color-on-secondary-fixed-variant: #3f465c;
 
-  /* Footer and hero overlay. */
+  --color-tertiary: #0141cd;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #325de6;
+  --color-on-tertiary-container: #e7e9ff;
+  --color-tertiary-fixed: #dce1ff;
+  --color-tertiary-fixed-dim: #b7c4ff;
+  --color-on-tertiary-fixed: #001551;
+  --color-on-tertiary-fixed-variant: #0039b5;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --color-background: #f8f9ff;
+  --color-on-background: #0b1c30;
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  --color-surface-variant: #d3e4fe;
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #3e4943;
+  --color-inverse-surface: #213145;
+  --color-inverse-on-surface: #eaf1ff;
+  --color-outline: #6e7a73;
+  --color-outline-variant: #bdc9c1;
+
+  --color-surface-bg: #f8fafc;
+  --color-surface-card: #ffffff;
+  --color-border-subtle: #e2e8f0;
+  --color-verified-teal: #0d9488;
+  --color-badge-gold: #f59e0b;
+  --color-badge-ruby: #e11d48;
+
+  /* Legacy ramps on the Stitch palette */
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #7bd8b1;
+  --color-brand-400: #10b981;
+  --color-brand-500: #059669;
+  --color-brand-600: #058760;
+  --color-brand-700: #047857; /* CTA = primary-container */
+  --color-brand-800: #005d42; /* CTA hover = primary */
+  --color-brand-900: #00513a;
+  --color-brand-950: #002115;
+
+  --color-ink-50: #f8fafc;
+  --color-ink-100: #eff4ff;
+  --color-ink-200: #e2e8f0;
+  --color-ink-300: #bec6e0;
+  --color-ink-400: #7c8499;
+  --color-ink-500: #565e74;
+  --color-ink-600: #3f465c;
+  --color-ink-700: #213145;
+  --color-ink-800: #131b2e;
+  --color-ink-900: #0b1c30;
+
+  --color-accent-400: #fbbf24;
+  --color-accent-500: #f59e0b;
+  --color-accent-600: #d97706;
+
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Stitch type scale: font-<role> sets the family, text-<role> sets size,
+     line height and weight. */
+  --font-display-hero: var(--font-display);
+  --font-display-hero-mobile: var(--font-display);
+  --font-headline-lg: var(--font-display);
+  --font-headline-lg-mobile: var(--font-display);
+  --font-headline-md: var(--font-display);
+  --font-headline-sm: var(--font-display);
+  --font-title-md: var(--font-display);
+  --font-body-lg: var(--font-sans);
+  --font-body-md: var(--font-sans);
+  --font-body-sm: var(--font-sans);
+  --font-label-md: var(--font-sans);
+  --font-label-sm: var(--font-sans);
+  --font-badge: var(--font-sans);
+
+  --text-display-hero: 48px;
+  --text-display-hero--line-height: 56px;
+  --text-display-hero--font-weight: 800;
+  --text-display-hero-mobile: 32px;
+  --text-display-hero-mobile--line-height: 40px;
+  --text-display-hero-mobile--font-weight: 800;
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--font-weight: 700;
+  --text-headline-lg-mobile: 24px;
+  --text-headline-lg-mobile--line-height: 32px;
+  --text-headline-lg-mobile--font-weight: 700;
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--font-weight: 600;
+  --text-headline-sm: 20px;
+  --text-headline-sm--line-height: 28px;
+  --text-headline-sm--font-weight: 600;
+  --text-title-md: 16px;
+  --text-title-md--line-height: 24px;
+  --text-title-md--font-weight: 600;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-body-lg--font-weight: 400;
+  --text-body-md: 15px;
+  --text-body-md--line-height: 24px;
+  --text-body-md--font-weight: 400;
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 20px;
+  --text-body-sm--font-weight: 400;
+  --text-label-md: 14px;
+  --text-label-md--line-height: 20px;
+  --text-label-md--font-weight: 500;
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--font-weight: 600;
+  --text-badge: 11px;
+  --text-badge--line-height: 14px;
+  --text-badge--font-weight: 700;
+
+  --container-page: 1280px;
+
+  /* Used by the homepage section builder and admin screens from main. */
+  --container-wide: 1320px;
   --color-navy-700: #1e2d5c;
   --color-navy-800: #16224a;
   --color-navy-900: #0f1834;
   --color-navy-950: #0a1026;
-
-  /* Logo accent. */
   --color-orange-500: #f58a1f;
-
-  /* Star ratings. */
-  --color-accent-400: #f7bb3c;
-  --color-accent-500: #e09000;
-  --color-accent-600: #b87400;
-
-  --font-display: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
-
-  --container-page: 1200px;
-  --container-wide: 1320px;
-  --radius-card: 0.5rem;
-
   --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04);
   --shadow-card-hover: 0 12px 28px -8px rgb(16 24 40 / 0.14);
   --shadow-raised: 0 8px 24px -6px rgb(16 24 40 / 0.18);
+  --radius-card: 1rem;
 }
 
-/* Light only, deliberately: the site renders on white regardless of the
-   visitor's system setting, and color-scheme keeps form controls light too. */
+/* Light only, deliberately. There is no dark palette and no
+   prefers-color-scheme block: the site must render on a light background
+   regardless of the visitor's system setting. color-scheme is pinned to light so
+   form controls and scrollbars stay light too. */
 :root {
-  --surface: #ffffff;
-  --surface-2: #f4f4f4;
-  --border: #eaeaea;
-  --text: #222222;
-  --text-muted: #717171;
+  --surface: #ffffff; /* surface-card */
+  --surface-2: #eff4ff; /* surface-container-low */
+  --border: #e2e8f0; /* border-subtle */
+  --text: #0b1c30; /* on-surface */
+  --text-muted: #565e74; /* secondary */
   color-scheme: light;
 }
 
-/* Element defaults live in the base layer so any utility on an element wins
-   (unlayered CSS would beat every Tailwind utility regardless of specificity). */
+/* Base styles sit in the base layer so utility classes can override them. */
 @layer base {
+  html {
+    /* Keeps in-page anchors (e.g. /#faq) clear of the sticky header. */
+    scroll-padding-top: 6rem;
+  }
+
   body {
-    background: var(--surface);
+    background: var(--color-surface-bg);
     color: var(--text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -80,17 +205,17 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
 
-  /* One visible focus style for every interactive element that lacks its own. */
-  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-    outline: 2px solid var(--color-brand-500);
-    outline-offset: 2px;
+  /* Tailwind v4 dropped the pointer cursor on buttons. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
   }
 }
 
-/* Honour reduced motion everywhere, Framer Motion and smooth scrolling included. */
+/* §8 / criterion 38 — honour reduced motion everywhere, Framer Motion included. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -102,40 +227,38 @@
   }
 }
 
+/* Same frame as the design's `max-w-7xl mx-auto px-6 lg:px-12`, so every page
+   lines up with the header and footer. */
 @utility container-page {
   margin-inline: auto;
   width: 100%;
   max-width: var(--container-page);
-  padding-inline: 1rem;
-  @media (width >= 40rem) {
-    padding-inline: 1.5rem;
-  }
+  padding-inline: 1.5rem;
   @media (width >= 64rem) {
-    padding-inline: 2rem;
+    padding-inline: 3rem;
   }
 }
 
-/* The header runs wider than the content, as on the reference. */
-@utility container-wide {
-  margin-inline: auto;
-  width: 100%;
-  max-width: var(--container-wide);
-  padding-inline: 1rem;
-  @media (width >= 40rem) {
-    padding-inline: 1.5rem;
-  }
-  @media (width >= 64rem) {
-    padding-inline: 2rem;
-  }
-}
-
+/* Stitch "Level 1" card: white, subtle border, ambient slate shadow. */
 @utility surface-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
+  box-shadow:
+    0 1px 3px 0 rgb(15 23 42 / 0.05),
+    0 1px 2px -1px rgb(15 23 42 / 0.05);
 }
 
-/* Horizontal scrollers (carousels) scroll by touch, wheel and keys, without a bar. */
+@utility container-wide {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-wide);
+  padding-inline: 1.5rem;
+  @media (width >= 64rem) {
+    padding-inline: 3rem;
+  }
+}
+
 @utility no-scrollbar {
   scrollbar-width: none;
   &::-webkit-scrollbar {
