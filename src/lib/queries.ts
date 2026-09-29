@@ -9,7 +9,7 @@ import { mediaUrl, type MediaItem } from './media';
  * nothing. Routing every read through here keeps the graceful fallback but
  * makes the failure visible in the server logs.
  */
-function reportError(what: string, error: { message: string; code?: string } | null): void {
+export function reportError(what: string, error: { message: string; code?: string } | null): void {
   if (!error) return;
   console.error(
     `[supabase] ${what} failed: ${error.message}${error.code ? ` (${error.code})` : ''}`,
@@ -196,20 +196,27 @@ export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
  */
 async function attachCovers(cards: ListingCard[]): Promise<ListingCard[]> {
   if (cards.length === 0) return cards;
+  const covers = await coverUrls(cards.map((c) => c.id));
+  return cards.map((c) => ({ ...c, cover_url: covers.get(c.id) ?? null }));
+}
+
+/**
+ * Cover image URL by listing id, in one query for a whole page of results.
+ * Empty on any failure: a listing without a cover falls back to the gradient,
+ * so losing the covers must never cost the results they decorate.
+ */
+export async function coverUrls(listingIds: string[]): Promise<Map<string, string>> {
+  if (listingIds.length === 0) return new Map();
   const { data, error } = await supabase
     .from('listing_images')
     .select('listing_id, media(path)')
     .eq('kind', 'cover')
-    .in(
-      'listing_id',
-      cards.map((c) => c.id),
-    );
-  if (error || !data) return cards;
+    .in('listing_id', listingIds);
+  if (error || !data) return new Map();
   const rows = data as unknown as { listing_id: string; media: { path: string } | null }[];
-  const covers = new Map(
+  return new Map(
     rows.flatMap((r) => (r.media ? [[r.listing_id, mediaUrl(r.media.path)] as const] : [])),
   );
-  return cards.map((c) => ({ ...c, cover_url: covers.get(c.id) ?? null }));
 }
 
 export type ListingImage = MediaItem & { url: string };

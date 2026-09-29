@@ -15,6 +15,7 @@ export function ListingFilters({
   category,
   city,
   sort,
+  defaultSort = 'newest',
   categories,
   cities,
   nearMe,
@@ -25,6 +26,8 @@ export function ListingFilters({
   category?: string;
   city?: string;
   sort?: string;
+  /** The page's own default order, which is left out of the URL. */
+  defaultSort?: string;
   categories?: Option[];
   cities?: Option[];
   /** Show the "Near me" button (it searches from /search). */
@@ -78,7 +81,7 @@ export function ListingFilters({
           </select>
         </label>
       ) : null}
-      {sort && sort !== 'newest' ? <input type="hidden" name="sort" value={sort} /> : null}
+      {sort && sort !== defaultSort ? <input type="hidden" name="sort" value={sort} /> : null}
       {near ? (
         <>
           <input type="hidden" name="lat" value={near.lat} />
