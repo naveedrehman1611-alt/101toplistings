@@ -21,12 +21,14 @@ export default async function Dashboard({
   const user = await requireUser('/dashboard');
   const sp = await searchParams;
   const supabase = await createClient();
+  const savedRequest = getSavedListings(supabase, user.id);
   const { data } = await supabase
     .from('listings')
     .select('id, slug, name, status, rejection_note, created_at')
     .eq('owner_user_id', user.id)
     .order('created_at', { ascending: false });
   const listings = data ?? [];
+  const saved = await savedRequest;
 
   return (
     <div>
@@ -77,6 +79,69 @@ export default async function Dashboard({
           ))}
         </ul>
       )}
+
+      <section className="mt-12">
+        <h2 className="text-xl font-semibold">Saved listings</h2>
+        {saved.length === 0 ? (
+          <p className="mt-6 rounded-lg border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--text-muted)]">
+            Listings you save appear here.
+          </p>
+        ) : (
+          <ul className="mt-6 space-y-3">
+            {saved.map((l) => (
+              <li
+                key={l.id}
+                className="surface-card flex flex-wrap items-center justify-between gap-3 p-4"
+              >
+                <div>
+                  <p className="font-medium">{l.name}</p>
+                  {l.tagline ? (
+                    <p className="text-sm text-[var(--text-muted)]">{l.tagline}</p>
+                  ) : null}
+                </div>
+                <Link
+                  href={`/listing/${l.slug}`}
+                  className="text-brand-700 text-sm hover:underline"
+                >
+                  View<span className="sr-only"> {l.name}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
+}
+
+type SavedListing = { id: string; slug: string; name: string; tagline: string | null };
+
+/**
+ * The visitor's favourites, newest first. RLS (favourites_own) returns only
+ * their own rows; public_listings drops any listing that is no longer live, so
+ * a saved listing that was suspended or removed simply stops showing here.
+ */
+async function getSavedListings(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+): Promise<SavedListing[]> {
+  const { data: favourites, error } = await supabase
+    .from('favourites')
+    .select('listing_id')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) console.error(`[supabase] favourites.byUser failed: ${error.message}`);
+  const ids = (favourites ?? []).map((f) => f.listing_id as string);
+  if (ids.length === 0) return [];
+
+  const { data: rows, error: listingsError } = await supabase
+    .from('public_listings')
+    .select('id, slug, name, tagline')
+    .in('id', ids);
+  if (listingsError) {
+    console.error(`[supabase] public_listings.saved failed: ${listingsError.message}`);
+  }
+  const byId = new Map(((rows ?? []) as SavedListing[]).map((l) => [l.id, l]));
+  return ids.flatMap((id) => byId.get(id) ?? []);
 }

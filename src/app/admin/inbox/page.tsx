@@ -16,6 +16,8 @@ type Payload = {
   email?: string;
   subject?: string;
   message?: string;
+  // Contact Author on a listing page (form_type 'contact') also sends these.
+  phone?: string;
   // Report form (form_type 'report').
   reason?: string;
   listing_slug?: string;
@@ -86,6 +88,11 @@ export default async function AdminInbox({
       <ul className="mt-6 space-y-4">
         {(data ?? []).map((m) => {
           const p = (m.payload ?? {}) as Payload;
+          const listingLink = p.listing_slug ? (
+            <Link href={`/listing/${p.listing_slug}`} className="text-brand-700 hover:underline">
+              {p.listing_name ?? p.listing_slug}
+            </Link>
+          ) : null;
           return (
             <li key={m.id} className="surface-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -93,18 +100,15 @@ export default async function AdminInbox({
                   {m.form_type === 'report' ? (
                     <>
                       {REPORT_REASONS[p.reason as keyof typeof REPORT_REASONS] ?? 'Report'}
-                      {p.listing_slug ? (
+                      {listingLink ? (
                         <>
                           {' — '}
-                          <Link
-                            href={`/listing/${p.listing_slug}`}
-                            className="text-brand-700 hover:underline"
-                          >
-                            {p.listing_name ?? p.listing_slug}
-                          </Link>
+                          {listingLink}
                         </>
                       ) : null}
                     </>
+                  ) : listingLink ? (
+                    <>Message for {listingLink}</>
                   ) : (
                     p.subject || 'No subject'
                   )}{' '}
@@ -124,6 +128,18 @@ export default async function AdminInbox({
                     ·{' '}
                     <a href={`mailto:${p.email}`} className="text-brand-700 hover:underline">
                       {p.email}
+                    </a>
+                  </>
+                ) : null}
+                {p.phone ? (
+                  <>
+                    {' '}
+                    ·{' '}
+                    <a
+                      href={`tel:${p.phone.replace(/\s+/g, '')}`}
+                      className="text-brand-700 hover:underline"
+                    >
+                      {p.phone}
                     </a>
                   </>
                 ) : null}
