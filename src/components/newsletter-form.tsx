@@ -1,19 +1,31 @@
 'use client';
 
 import { useActionState, useId, useState } from 'react';
-import { subscribeNewsletter } from '@/lib/public-actions';
+import { subscribeNewsletter, type NewsletterState } from '@/lib/newsletter-actions';
 
-type State = Awaited<ReturnType<typeof subscribeNewsletter>>;
+const initialState: NewsletterState = { status: 'idle', message: '' };
 
-const initialState: State = { ok: false, message: '' };
+// A request that never reaches the server (offline, or a deploy that retired
+// the action's ID) rejects here. useActionState would rethrow that while
+// rendering, and from the root layout it would replace the whole page with
+// the global error screen, so it is answered like any other failure.
+async function subscribe(prev: NewsletterState, fd: FormData): Promise<NewsletterState> {
+  try {
+    return await subscribeNewsletter(prev, fd);
+  } catch {
+    return { status: 'error', message: 'Subscription failed. Please try again.' };
+  }
+}
 
 /** Footer newsletter sign-up. Stays on the page and reports the result inline. */
 export function NewsletterForm() {
   const id = useId();
-  const [state, formAction, pending] = useActionState(subscribeNewsletter, initialState);
+  const [state, formAction, pending] = useActionState(subscribe, initialState);
   // React resets the form whenever the action returns, errors included. Using
   // the last address as the default value keeps a rejected one there to fix.
   const [lastEmail, setLastEmail] = useState('');
+  const ok = state.status === 'ok';
+  const failed = state.status === 'error';
 
   return (
     <div>
@@ -34,14 +46,14 @@ export function NewsletterForm() {
           required
           autoComplete="email"
           placeholder="Enter your email"
-          defaultValue={state.ok ? '' : lastEmail}
+          defaultValue={ok ? '' : lastEmail}
           className="bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:ring-primary-container min-w-0 flex-1 rounded-lg px-4 py-2.5 focus:ring-2 focus:outline-hidden"
         />
-        {/* Honeypot, as on the contact form: people never see it, bots fill it in. */}
+        {/* Honeypot: people never see it, bots fill it in. */}
         <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
           <label>
-            Website
-            <input name="website" tabIndex={-1} autoComplete="off" />
+            Company
+            <input name="company" tabIndex={-1} autoComplete="off" />
           </label>
         </div>
         <button
@@ -57,10 +69,10 @@ export function NewsletterForm() {
         role="status"
         className="font-label-sm text-label-sm text-primary-container not-empty:mt-2"
       >
-        {state.ok ? state.message : null}
+        {ok ? state.message : null}
       </p>
       <p role="alert" className="font-label-sm text-label-sm text-error not-empty:mt-2">
-        {state.ok ? null : state.message}
+        {failed ? state.message : null}
       </p>
     </div>
   );

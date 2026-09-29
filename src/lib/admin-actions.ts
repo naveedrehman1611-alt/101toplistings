@@ -2,11 +2,15 @@
 
 import { revalidatePath, updateTag } from 'next/cache';
 import { createClient } from './supabase-server';
-import { tableTag } from './supabase';
+import { SEARCH_TAG, tableTag } from './supabase';
 import { requireRole, type Role } from './auth';
 import { writeAudit } from './audit';
+import { FormError, errorMessage } from './form-data';
+import { checkLink } from './link-rules';
 
 export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Moderates a listing. The role check runs here as well as in RLS — a Server
@@ -57,6 +61,7 @@ export async function setListingStatus(
   // Cache, so a moderation decision needs both cleared or it would not surface
   // until the revalidate window elapsed.
   updateTag(tableTag('public_listings'));
+  updateTag(SEARCH_TAG);
   revalidatePath('/');
   revalidatePath('/listings');
   revalidatePath('/listing/[slug]', 'page');
@@ -78,10 +83,12 @@ export async function updateSetting(key: string, value: string): Promise<ActionR
 
   if (!before) return { ok: false, error: `Unknown setting: ${key}` };
 
-  // settings.value is jsonb. Numbers stay numbers so thresholds keep comparing
-  // correctly; everything else is stored as a JSON string.
-  const trimmed = value.trim();
-  const jsonValue: unknown = /^-?\d+(\.\d+)?$/.test(trimmed) ? Number(trimmed) : trimmed;
+  let jsonValue: unknown;
+  try {
+    jsonValue = await settingValue(supabase, key, value.trim());
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
 
   const { data: after, error } = await supabase
     .from('settings')
@@ -102,82 +109,43 @@ export async function updateSetting(key: string, value: string): Promise<ActionR
   return { ok: true, message: `Saved ${key}.` };
 }
 
-/** Enables or disables one page section — §9.5.3's per-section on/off control. */
-export async function setSectionEnabled(
-  sectionId: string,
-  enabled: boolean,
-  pagePath: string,
-): Promise<ActionResult> {
-  const user = await requireRole('editor');
-  const supabase = await createClient();
-
-  const { data: before } = await supabase
-    .from('page_sections')
-    .select('id, section_key, is_enabled')
-    .eq('id', sectionId)
-    .maybeSingle();
-
-  if (!before) return { ok: false, error: 'Section not found.' };
-
-  const { data: after, error } = await supabase
-    .from('page_sections')
-    .update({ is_enabled: enabled })
-    .eq('id', sectionId)
-    .select('id, section_key, is_enabled')
-    .maybeSingle();
-
-  if (error) return { ok: false, error: error.message };
-
-  await writeAudit(user.id, 'update', 'page_section', sectionId, before, after);
-  updateTag(tableTag('page_sections'));
-  revalidatePath(pagePath);
-  revalidatePath('/admin/pages');
-
-  return { ok: true, message: `${before.section_key} ${enabled ? 'enabled' : 'disabled'}.` };
-}
-
-/** Edits a section's copy and CTA — the rest of §9.5.3. */
-export async function updateSection(
-  sectionId: string,
-  patch: { heading?: string; subheading?: string; ctaLabel?: string; ctaUrl?: string },
-  pagePath: string,
-): Promise<ActionResult> {
-  const user = await requireRole('editor');
-  const supabase = await createClient();
-
-  const { data: before } = await supabase
-    .from('page_sections')
-    .select('id, section_key, heading, subheading, cta_label, cta_url')
-    .eq('id', sectionId)
-    .maybeSingle();
-
-  if (!before) return { ok: false, error: 'Section not found.' };
-
-  // Empty string means "clear this field", which is different from "leave it
-  // alone" — so map blanks to null rather than storing an empty heading.
-  const blankToNull = (v: string | undefined) =>
-    v === undefined ? undefined : v.trim() === '' ? null : v.trim();
-
-  const { data: after, error } = await supabase
-    .from('page_sections')
-    .update({
-      heading: blankToNull(patch.heading),
-      subheading: blankToNull(patch.subheading),
-      cta_label: blankToNull(patch.ctaLabel),
-      cta_url: blankToNull(patch.ctaUrl),
-    })
-    .eq('id', sectionId)
-    .select('id, section_key, heading, subheading, cta_label, cta_url')
-    .maybeSingle();
-
-  if (error) return { ok: false, error: error.message };
-
-  await writeAudit(user.id, 'update', 'page_section', sectionId, before, after);
-  updateTag(tableTag('page_sections'));
-  revalidatePath(pagePath);
-  revalidatePath('/admin/pages');
-
-  return { ok: true, message: `Saved ${before.section_key}.` };
+/**
+ * The value to store for a setting, checked against how the site uses it
+ * (src/lib/chrome.ts): logo ids must name a media row, social links are
+ * external https links, and header links are paths on this site, which is all
+ * the header renders. Anything else is stored as before: numbers stay numbers so
+ * thresholds keep comparing correctly, everything else is a JSON string.
+ *
+ * Not exported: every export of a 'use server' file is a public endpoint.
+ */
+async function settingValue(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  key: string,
+  value: string,
+): Promise<unknown> {
+  if (key.endsWith('_media_id')) {
+    if (value === '') return '';
+    if (!UUID.test(value)) throw new FormError('Choose an image from the list.');
+    const { data, error } = await supabase.from('media').select('id').eq('id', value).maybeSingle();
+    if (error) throw error;
+    if (!data) throw new FormError('That image no longer exists. Choose another one.');
+    return value;
+  }
+  if (key.startsWith('social.')) {
+    if (value === '') return '';
+    const link = checkLink(value, key);
+    if (!link.url.startsWith('https://')) {
+      throw new FormError(`${key} must be a full https:// address, or blank to hide the icon.`);
+    }
+    return link.url;
+  }
+  if (key.startsWith('header.') && key.endsWith('_url')) {
+    if (!value.startsWith('/') || value.startsWith('//')) {
+      throw new FormError(`${key} must be a path on this site starting with /, such as /login.`);
+    }
+    return checkLink(value, key).url;
+  }
+  return /^-?\d+(\.\d+)?$/.test(value) ? Number(value) : value;
 }
 
 export async function signOut() {

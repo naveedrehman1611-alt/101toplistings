@@ -159,6 +159,17 @@
   --text-badge--font-weight: 700;
 
   --container-page: 1280px;
+
+  /* Used by the homepage section builder and admin screens from main. */
+  --container-wide: 1320px;
+  --color-navy-700: #1e2d5c;
+  --color-navy-800: #16224a;
+  --color-navy-900: #0f1834;
+  --color-navy-950: #0a1026;
+  --color-orange-500: #f58a1f;
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04);
+  --shadow-card-hover: 0 12px 28px -8px rgb(16 24 40 / 0.14);
+  --shadow-raised: 0 8px 24px -6px rgb(16 24 40 / 0.18);
   --radius-card: 1rem;
 }
 
@@ -236,4 +247,21 @@
   box-shadow:
     0 1px 3px 0 rgb(15 23 42 / 0.05),
     0 1px 2px -1px rgb(15 23 42 / 0.05);
+}
+
+@utility container-wide {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-wide);
+  padding-inline: 1.5rem;
+  @media (width >= 64rem) {
+    padding-inline: 3rem;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

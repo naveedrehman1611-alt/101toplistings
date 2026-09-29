@@ -33,6 +33,7 @@ export default async function PrivacyPage() {
           heading: 'What we collect',
           body: [
             'Account details: your email address and password when you register. Passwords are handled by our authentication provider and are never visible to us.',
+            'Google sign-in: if you continue with Google, Google shares your name, email address and profile picture with us. We never receive your Google password or access to anything else in your Google account.',
             'Business listings: the details you submit for a business, such as its name, address, phone number, opening hours, photos and website. Once approved, these are shown publicly.',
             'Reviews, reports and claims: what you write, and the name you choose to show with a review.',
             'Messages: what you send through the contact form or newsletter sign-up, including your name and email address.',

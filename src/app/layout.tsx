@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
+import { BackToTop } from '@/components/back-to-top';
 import { getCities, getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
 
@@ -58,13 +59,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body className="flex min-h-screen flex-col">
+        <a
+          href="#main"
+          className="focus:bg-brand-700 sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:px-4 focus:py-2 focus:text-white"
+        >
+          Skip to content
+        </a>
         <Header
           brand={brand}
           subtitle={settingText(settings, 'brand.subtitle', 'Pakistan Directory')}
           nav={nav}
           mobileNav={mobileNav}
         />
-        <main className="flex-1">{children}</main>
+        <main id="main" className="flex-1">
+          {children}
+        </main>
         <Footer
           brand={brand}
           about={settingText(
@@ -78,6 +87,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           explore={explore}
           company={company}
         />
+        <BackToTop />
       </body>
     </html>
   );

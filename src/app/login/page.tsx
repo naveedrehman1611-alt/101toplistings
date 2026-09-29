@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase-server';
 import { getCurrentUser, roleAtLeast } from '@/lib/auth';
 import { Breadcrumbs } from '@/components/ui';
+import { GoogleSignIn } from '@/components/google-sign-in';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,6 +77,8 @@ export default async function LoginPage({
             {sp.error}
           </p>
         ) : null}
+
+        <GoogleSignIn next={sp.next} from="login" />
 
         <form action={signIn} className="mt-6 space-y-4">
           <input type="hidden" name="next" value={sp.next ?? ''} />
