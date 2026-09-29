@@ -6,7 +6,7 @@ export function Notice({ ok, error }: { ok?: string; error?: string }) {
     return (
       <p
         role="alert"
-        className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+        className="border-error/30 bg-error-container/40 text-on-error-container mt-4 rounded-lg border px-4 py-3 text-sm"
       >
         {error}
       </p>
@@ -26,7 +26,7 @@ export function Notice({ ok, error }: { ok?: string; error?: string }) {
 }
 
 const inputCls =
-  'mt-1 h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none focus:border-brand-500';
+  'mt-1 h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-hidden focus:border-primary-container focus:ring-2 focus:ring-primary-container/20';
 
 export function Field({
   label,
@@ -51,7 +51,7 @@ export function Field({
     <label className="block text-sm">
       <span className="font-medium">
         {label}
-        {required ? <span className="text-red-700"> *</span> : null}
+        {required ? <span className="text-error"> *</span> : null}
       </span>
       <input
         name={name}
@@ -84,14 +84,14 @@ export function TextArea({
     <label className="block text-sm">
       <span className="font-medium">
         {label}
-        {required ? <span className="text-red-700"> *</span> : null}
+        {required ? <span className="text-error"> *</span> : null}
       </span>
       <textarea
         name={name}
         rows={rows}
         required={required}
         defaultValue={defaultValue ?? ''}
-        className="focus:border-brand-500 mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-none"
+        className="focus:border-primary-container focus:ring-primary-container/20 mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm outline-hidden focus:ring-2"
       />
     </label>
   );
@@ -116,7 +116,7 @@ export function Select({
     <label className="block text-sm">
       <span className="font-medium">
         {label}
-        {required ? <span className="text-red-700"> *</span> : null}
+        {required ? <span className="text-error"> *</span> : null}
       </span>
       <select
         name={name}
@@ -146,7 +146,12 @@ export function Check({
 }) {
   return (
     <label className="flex items-center gap-2 text-sm">
-      <input type="checkbox" name={name} defaultChecked={defaultChecked} className="size-4" />
+      <input
+        type="checkbox"
+        name={name}
+        defaultChecked={defaultChecked}
+        className="accent-primary-container size-4"
+      />
       {label}
     </label>
   );
@@ -156,7 +161,7 @@ export function SubmitButton({ children }: { children: ReactNode }) {
   return (
     <button
       type="submit"
-      className="bg-brand-700 hover:bg-brand-800 h-10 rounded-lg px-4 text-sm font-medium text-white"
+      className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-10 rounded-lg px-4 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
     >
       {children}
     </button>
@@ -167,7 +172,7 @@ export function DangerButton({ children }: { children: ReactNode }) {
   return (
     <button
       type="submit"
-      className="rounded-lg border border-red-300 px-2.5 py-1 text-xs text-red-800 hover:bg-red-50"
+      className="border-error/30 text-on-error-container hover:bg-error-container/40 rounded-lg border px-2.5 py-1 text-xs"
     >
       {children}
     </button>

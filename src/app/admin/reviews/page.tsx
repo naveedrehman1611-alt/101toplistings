@@ -61,7 +61,7 @@ export default async function AdminReviews({
             <li key={r.id} className="surface-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm">
-                  <span className="text-accent-500">{'★'.repeat(r.rating as number)}</span>{' '}
+                  <span className="text-badge-gold">{'★'.repeat(r.rating as number)}</span>{' '}
                   {listing ? (
                     <Link
                       href={`/listing/${listing.slug}`}
@@ -95,9 +95,9 @@ export default async function AdminReviews({
                         type="submit"
                         className={
                           d === 'approve'
-                            ? 'bg-brand-700 rounded-lg px-2.5 py-1 text-xs font-medium text-white'
+                            ? 'bg-primary-container text-on-primary rounded-lg px-2.5 py-1 text-xs font-medium'
                             : d === 'delete'
-                              ? 'rounded-lg border border-red-300 px-2.5 py-1 text-xs text-red-800'
+                              ? 'border-error/30 text-on-error-container rounded-lg border px-2.5 py-1 text-xs'
                               : 'rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs'
                         }
                       >

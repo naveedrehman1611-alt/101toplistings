@@ -34,7 +34,7 @@ export function ListingFilters({
 }) {
   const active = Boolean(q || category || city || near);
   const selectCls =
-    'focus:border-brand-500 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none';
+    'focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-hidden';
 
   return (
     <form
@@ -89,7 +89,7 @@ export function ListingFilters({
       <div className="flex items-center gap-3">
         <button
           type="submit"
-          className="bg-brand-700 hover:bg-brand-800 h-11 rounded-lg px-5 text-sm font-medium text-white"
+          className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 rounded-lg px-5 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
         >
           Filter
         </button>

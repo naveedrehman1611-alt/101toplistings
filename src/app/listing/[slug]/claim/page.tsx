@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 const inputCls =
-  'focus:border-brand-500 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-none';
+  'focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-hidden';
 
 export default async function ClaimPage({
   params,
@@ -65,7 +65,7 @@ export default async function ClaimPage({
         ]}
       />
       <div className="max-w-xl">
-        <h1 className="text-3xl font-bold">Claim {listing.name}</h1>
+        <h1 className="font-headline-lg text-headline-lg">Claim {listing.name}</h1>
         <p className="mt-3 text-[var(--text-muted)]">
           Own or manage this business? Claim it to update its details, photos and opening hours and
           reply to reviews. It&apos;s free. We check every claim before handing over control.
@@ -118,7 +118,7 @@ export default async function ClaimPage({
             {sp.error ? (
               <p
                 role="alert"
-                className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+                className="border-error/30 bg-error-container/40 text-on-error-container rounded-lg border px-4 py-3 text-sm"
               >
                 {sp.error}
               </p>
@@ -170,12 +170,12 @@ export default async function ClaimPage({
                 name="message"
                 maxLength={2000}
                 rows={4}
-                className="focus:border-brand-500 mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 outline-none"
+                className="focus:border-primary-container focus:ring-primary-container/20 mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 outline-hidden focus:ring-2"
               />
             </label>
             <button
               type="submit"
-              className="bg-brand-700 hover:bg-brand-800 h-11 rounded-lg px-6 font-medium text-white"
+              className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 rounded-lg px-6 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
             >
               Submit claim
             </button>

@@ -129,3 +129,44 @@ export async function submitReport(fd: FormData) {
   }
   redirect(dest);
 }
+
+/**
+ * Footer newsletter sign-up, via useActionState: it returns a message instead
+ * of redirecting, because the form sits on every page. There is no newsletter
+ * table and form_type has no 'newsletter' value, so a sign-up lands in the admin
+ * Inbox as a contact message that says what it is. Same email check and
+ * honeypot as the contact form.
+ */
+export async function subscribeNewsletter(
+  _prev: { ok: boolean; message: string },
+  fd: FormData,
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    const email = text(fd, 'email', 200);
+    if (!email) throw new FormError('Please enter your email address.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new FormError('That email address does not look right.');
+    }
+    const isSpam = Boolean(text(fd, 'website', 200));
+
+    const supabase = await createClient();
+    const { error } = await supabase.from('form_submissions').insert({
+      form_type: 'contact',
+      payload: {
+        name: 'Newsletter signup',
+        email,
+        subject: 'Newsletter subscription',
+        message: 'Please add this address to the newsletter.',
+      },
+      is_spam: isSpam,
+      status: isSpam ? 'spam' : 'new',
+    });
+    if (error) throw error;
+    return { ok: true, message: "Thanks, you're on the list." };
+  } catch (e) {
+    if (e instanceof FormError) return { ok: false, message: e.message };
+    // Database and network errors are logged, not shown to the visitor.
+    console.error(`[newsletter] sign-up failed: ${errorMessage(e)}`);
+    return { ok: false, message: 'Sorry, that did not go through. Please try again later.' };
+  }
+}

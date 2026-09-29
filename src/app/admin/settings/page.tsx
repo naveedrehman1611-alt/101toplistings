@@ -55,8 +55,7 @@ export default async function AdminSettings() {
           <h2 className="text-lg font-semibold">{GROUP_LABELS[group] ?? group}</h2>
           <div className="mt-4 space-y-4">
             {rows.map((row) => {
-              const raw =
-                typeof row.value === 'string' ? row.value : JSON.stringify(row.value);
+              const raw = typeof row.value === 'string' ? row.value : JSON.stringify(row.value);
               const isJsonBlob = typeof row.value === 'object' && row.value !== null;
               return (
                 <form
@@ -79,12 +78,12 @@ export default async function AdminSettings() {
                       name="value"
                       defaultValue={raw}
                       readOnly={isJsonBlob}
-                      className="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm outline-none focus:border-brand-500 read-only:bg-[var(--surface-2)] read-only:text-[var(--text-muted)]"
+                      className="focus:border-primary-container focus:ring-primary-container/20 h-10 min-w-0 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm outline-hidden read-only:bg-[var(--surface-2)] read-only:text-[var(--text-muted)] focus:ring-2"
                     />
                     <button
                       type="submit"
                       disabled={isJsonBlob}
-                      className="h-10 rounded-lg bg-brand-700 px-4 text-sm font-medium text-white disabled:opacity-40"
+                      className="bg-primary-container text-on-primary h-10 rounded-lg px-4 text-sm font-medium disabled:opacity-40"
                     >
                       Save
                     </button>

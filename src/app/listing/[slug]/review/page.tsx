@@ -32,7 +32,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
         ]}
       />
       <div className="max-w-xl">
-        <h1 className="text-3xl font-bold">Review {listing.name}</h1>
+        <h1 className="font-headline-lg text-headline-lg">Review {listing.name}</h1>
 
         {!user ? (
           <p className="mt-6 text-[var(--text-muted)]">
