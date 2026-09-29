@@ -1,31 +1,15 @@
 'use client';
 
 import Image from 'next/image';
-import { useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
+import { useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import type { ListingImage } from '@/lib/queries';
+import { Icon } from '@/components/icon';
 
 /** Viewport height left for the lightbox photo once the close bar and caption are placed. */
 const PHOTO_MAX_HEIGHT = '100dvh - 10rem';
 
 const CONTROL =
   'pointer-events-auto inline-flex size-11 items-center justify-center rounded-full text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
-
-function Icon({ children }: { children: ReactNode }) {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="size-5"
-    >
-      {children}
-    </svg>
-  );
-}
 
 const altFor = (img: ListingImage, i: number, name: string) =>
   img.alt?.trim() || `${name} photo ${i + 1}`;
@@ -103,9 +87,9 @@ export function ListingGallery({ images, name }: { images: ListingImage[]; name:
 
   return (
     <section className="mt-10">
-      <h2 className="text-xl font-semibold">
+      <h2 className="font-headline-sm text-headline-sm text-on-surface">
         Gallery{' '}
-        <span className="text-base font-normal text-[var(--text-muted)]">
+        <span className="font-body-md text-body-md text-secondary">
           ({n} {n === 1 ? 'photo' : 'photos'})
         </span>
       </h2>
@@ -117,7 +101,7 @@ export function ListingGallery({ images, name }: { images: ListingImage[]; name:
             aria-haspopup="dialog"
             aria-label={`Open photo ${i + 1} of ${n}`}
             onClick={() => open(i)}
-            className="group focus-visible:outline-brand-700 relative aspect-[4/3] cursor-zoom-in overflow-hidden rounded-lg bg-[var(--surface-2)] focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="group focus-visible:outline-primary-container bg-surface-container-low relative aspect-[4/3] cursor-zoom-in overflow-hidden rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2"
           >
             <Image
               src={img.url}
@@ -146,9 +130,7 @@ export function ListingGallery({ images, name }: { images: ListingImage[]; name:
               onClick={close}
               className={`${CONTROL} bg-white/10 hover:bg-white/20`}
             >
-              <Icon>
-                <path d="M18 6 6 18M6 6l12 12" />
-              </Icon>
+              <Icon name="close" size={20} />
             </button>
           </div>
 
@@ -168,9 +150,8 @@ export function ListingGallery({ images, name }: { images: ListingImage[]; name:
                   onClick={() => step(-1)}
                   className={`${CONTROL} absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 hover:bg-black/70`}
                 >
-                  <Icon>
-                    <path d="m15 18-6-6 6-6" />
-                  </Icon>
+                  {/* chevron_right mirrored: the set has no chevron_left, and a pair must match. */}
+                  <Icon name="chevron_right" size={20} className="rotate-180" />
                 </button>
                 <button
                   type="button"
@@ -178,15 +159,16 @@ export function ListingGallery({ images, name }: { images: ListingImage[]; name:
                   onClick={() => step(1)}
                   className={`${CONTROL} absolute top-1/2 right-2 -translate-y-1/2 bg-black/50 hover:bg-black/70`}
                 >
-                  <Icon>
-                    <path d="m9 18 6-6-6-6" />
-                  </Icon>
+                  <Icon name="chevron_right" size={20} />
                 </button>
               </>
             ) : null}
           </div>
 
-          <p aria-live="polite" className="mt-3 text-center text-sm text-white/80">
+          <p
+            aria-live="polite"
+            className="font-body-sm text-body-sm mt-3 text-center text-white/80"
+          >
             {current ? (
               <>
                 <span className="font-medium text-white tabular-nums">{`${current.i + 1} / ${n}`}</span>

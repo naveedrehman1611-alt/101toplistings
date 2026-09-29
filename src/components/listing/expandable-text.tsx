@@ -2,7 +2,7 @@
 
 import { useId, useState } from 'react';
 
-const BASE = 'leading-relaxed whitespace-pre-line text-[var(--text-muted)]';
+const BASE = 'font-body-md text-body-md whitespace-pre-line text-on-surface-variant';
 
 /**
  * Long text that starts clamped to six lines. The full text is always in the
@@ -26,7 +26,7 @@ export function ExpandableText({ text, collapsible }: { text: string; collapsibl
           aria-expanded={expanded}
           aria-controls={id}
           onClick={() => setExpanded((v) => !v)}
-          className="text-brand-700 mt-2 text-sm font-medium hover:underline"
+          className="font-label-md text-label-md text-primary-container mt-2 hover:underline"
         >
           {expanded ? 'Show less' : 'Show more'}
         </button>

@@ -9,7 +9,7 @@ export function ListingDescription({ text }: { text: string | null }) {
 
   return (
     <section className="mt-10">
-      <h2 className="text-xl font-semibold">Description</h2>
+      <h2 className="font-headline-sm text-headline-sm text-on-surface">Description</h2>
       <div className="mt-3">
         <ExpandableText text={body} collapsible={body.length > COLLAPSE_AFTER_CHARS} />
       </div>

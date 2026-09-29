@@ -14,9 +14,9 @@ import { useRouter } from 'next/navigation';
 import { getSavedState, toggleSavedListing } from '@/lib/saved-listing-actions';
 
 const ACTION =
-  'inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--border)] px-4 text-sm font-medium hover:bg-[var(--surface-2)] disabled:opacity-60';
+  'border border-border-subtle bg-surface-card text-on-surface hover:bg-[#f1f5f9] inline-flex h-10 items-center justify-center gap-2 rounded-lg px-5 font-label-md text-label-md transition focus-visible:ring-2 focus-visible:ring-primary-container focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:opacity-60';
 const MENU_ITEM =
-  'block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)] focus-visible:bg-[var(--surface-2)]';
+  'block w-full rounded-md px-3 py-2 text-left font-label-md text-label-md text-on-surface transition-colors hover:bg-surface-container-low hover:text-primary-container focus-visible:bg-surface-container-low focus-visible:text-primary-container';
 
 // The Web Share API never changes during a visit, so there is nothing to
 // subscribe to. The server snapshot is false: the menu is the markup every
@@ -286,16 +286,16 @@ export function ListingActions({
         </a>
       </div>
 
-      <p role="status" className="text-sm text-emerald-700 [&:not(:empty)]:mt-2">
+      <p role="status" className="font-body-sm text-body-sm text-primary-container not-empty:mt-2">
         {copyNote === 'copied' ? 'Link copied' : ''}
       </p>
       {copyNote === 'failed' ? (
-        <p role="alert" className="mt-2 text-xs text-red-700">
+        <p role="alert" className="font-body-sm text-body-sm text-error mt-2">
           Could not copy the link. Copy it from the address bar instead.
         </p>
       ) : null}
       {saveError ? (
-        <p role="alert" className="mt-2 text-xs text-red-700">
+        <p role="alert" className="font-body-sm text-body-sm text-error mt-2">
           {saveError}
         </p>
       ) : null}
