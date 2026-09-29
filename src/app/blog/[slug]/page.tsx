@@ -67,7 +67,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         ]}
       />
       <article className="mx-auto max-w-2xl">
-        <h1 className="text-3xl font-bold sm:text-4xl">{post.title}</h1>
+        <h1 className="font-headline-lg text-headline-lg">{post.title}</h1>
         {post.standfirst ? (
           <p className="mt-4 text-lg text-[var(--text-muted)]">{post.standfirst}</p>
         ) : null}
@@ -79,7 +79,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
       {related.length > 0 ? (
         <section className="mx-auto mt-16 max-w-2xl">
-          <h2 className="text-xl font-semibold">Related articles</h2>
+          <h2 className="font-headline-sm text-headline-sm">Related articles</h2>
           <ul className="mt-4 space-y-2">
             {related.map((p) => (
               <li key={p.id}>

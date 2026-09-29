@@ -32,8 +32,8 @@ export default async function AdminPages() {
     <div>
       <h1 className="text-2xl font-semibold">Pages &amp; sections</h1>
       <p className="mt-3 max-w-2xl text-sm text-[var(--text-muted)]">
-        Every heading and CTA on the public site is a row here. Disabling a section removes it
-        from the page entirely; the page keeps rendering without it.
+        Every heading and CTA on the public site is a row here. Disabling a section removes it from
+        the page entirely; the page keeps rendering without it.
       </p>
 
       {(pages ?? []).map((page) => {
@@ -60,9 +60,7 @@ export default async function AdminPages() {
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <p className="font-medium">{s.section_key}</p>
-                        <code className="text-xs text-[var(--text-muted)]">
-                          {s.section_type}
-                        </code>
+                        <code className="text-xs text-[var(--text-muted)]">{s.section_type}</code>
                       </div>
                       <form
                         action={async () => {
@@ -104,7 +102,7 @@ export default async function AdminPages() {
                         <input
                           name="heading"
                           defaultValue={(s.heading as string) ?? ''}
-                          className="mt-1 h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm outline-none focus:border-brand-500"
+                          className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm outline-hidden focus:ring-2"
                         />
                       </label>
                       <label className="block text-sm">
@@ -112,7 +110,7 @@ export default async function AdminPages() {
                         <input
                           name="subheading"
                           defaultValue={(s.subheading as string) ?? ''}
-                          className="mt-1 h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm outline-none focus:border-brand-500"
+                          className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm outline-hidden focus:ring-2"
                         />
                       </label>
                       <label className="block text-sm">
@@ -120,7 +118,7 @@ export default async function AdminPages() {
                         <input
                           name="ctaLabel"
                           defaultValue={(s.cta_label as string) ?? ''}
-                          className="mt-1 h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm outline-none focus:border-brand-500"
+                          className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm outline-hidden focus:ring-2"
                         />
                       </label>
                       <label className="block text-sm">
@@ -128,13 +126,13 @@ export default async function AdminPages() {
                         <input
                           name="ctaUrl"
                           defaultValue={(s.cta_url as string) ?? ''}
-                          className="mt-1 h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm outline-none focus:border-brand-500"
+                          className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-10 w-full rounded-lg border border-[var(--border)] px-3 text-sm outline-hidden focus:ring-2"
                         />
                       </label>
                       <div className="sm:col-span-2">
                         <button
                           type="submit"
-                          className="h-10 rounded-lg bg-brand-700 px-4 text-sm font-medium text-white"
+                          className="bg-primary-container text-on-primary h-10 rounded-lg px-4 text-sm font-medium"
                         >
                           Save section
                         </button>

@@ -68,7 +68,7 @@ export default async function CityPage({
   return (
     <div className="container-page py-12">
       <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: city.name }]} />
-      <h1 className="text-3xl font-bold sm:text-4xl">Businesses in {city.name}</h1>
+      <h1 className="font-headline-lg text-headline-lg">Businesses in {city.name}</h1>
       {city.intro_copy ? (
         <p className="mt-3 max-w-2xl text-[var(--text-muted)]">{city.intro_copy}</p>
       ) : null}

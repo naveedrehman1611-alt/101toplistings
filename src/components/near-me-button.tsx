@@ -16,10 +16,13 @@ export function NearMeButton({
   radius = 10,
   className,
   label = 'Near me',
+  messageClassName = 'mt-1 max-w-xs text-xs text-on-error-container',
 }: {
   radius?: number;
   className?: string;
   label?: string;
+  /** Classes for the error line under the button, e.g. a light colour on a dark background. */
+  messageClassName?: string;
 }) {
   const router = useRouter();
   const [state, setState] = useState<'idle' | 'locating' | 'error'>('idle');
@@ -82,7 +85,7 @@ export function NearMeButton({
         {state === 'locating' ? 'Finding you…' : label}
       </button>
       {message ? (
-        <span role="alert" className="mt-1 max-w-xs text-xs text-red-800">
+        <span role="alert" className={messageClassName}>
           {message}
         </span>
       ) : null}

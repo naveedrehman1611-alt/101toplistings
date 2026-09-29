@@ -47,7 +47,7 @@ export default async function AdminBlog({
           </Link>
           <Link
             href="/admin/blog/new"
-            className="bg-brand-700 hover:bg-brand-800 inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium text-white"
+            className="bg-primary-container hover:bg-primary text-on-primary inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium"
           >
             New post
           </Link>
@@ -56,7 +56,7 @@ export default async function AdminBlog({
       <Notice ok={sp.ok} error={sp.error} />
 
       {error ? (
-        <p role="alert" className="mt-6 text-sm text-red-700">
+        <p role="alert" className="text-error mt-6 text-sm">
           Could not load posts: {error.message}
         </p>
       ) : null}

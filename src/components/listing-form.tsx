@@ -162,7 +162,7 @@ export function ListingForm({
                   name={`h${d}_mode`}
                   defaultValue={mode}
                   aria-label={`${DAYS[d]} hours`}
-                  className="h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-sm"
+                  className="focus:border-primary-container focus:ring-primary-container/20 h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-sm outline-hidden focus:ring-2"
                 >
                   <option value="">Not set</option>
                   <option value="hours">Open</option>
@@ -174,14 +174,14 @@ export function ListingForm({
                   name={`h${d}_open`}
                   aria-label={`${DAYS[d]} opens`}
                   defaultValue={h?.opens_at?.slice(0, 5) ?? ''}
-                  className="col-start-2 h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-sm sm:col-start-auto"
+                  className="focus:border-primary-container focus:ring-primary-container/20 col-start-2 h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-sm outline-hidden focus:ring-2 sm:col-start-auto"
                 />
                 <input
                   type="time"
                   name={`h${d}_close`}
                   aria-label={`${DAYS[d]} closes`}
                   defaultValue={h?.closes_at?.slice(0, 5) ?? ''}
-                  className="col-start-2 h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-sm sm:col-start-auto"
+                  className="focus:border-primary-container focus:ring-primary-container/20 col-start-2 h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-sm outline-hidden focus:ring-2 sm:col-start-auto"
                 />
               </div>
             );

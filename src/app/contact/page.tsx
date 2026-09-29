@@ -50,13 +50,13 @@ const FAQ: { q: string; a: string; link?: { label: string; href: string } }[] = 
 // Floating label: the label sits inside the field as a placeholder and moves up
 // once the field has focus or a value (placeholder=" " drives :placeholder-shown).
 const field =
-  'peer block w-full rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 pt-5 pb-2 text-sm outline-none transition-colors placeholder-transparent hover:border-brand-300 focus:border-brand-500 focus:bg-[var(--surface)] focus:ring-4 focus:ring-brand-500/10';
+  'peer block w-full rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 pt-5 pb-2 text-sm outline-hidden transition-colors placeholder-transparent hover:border-brand-300 focus:border-primary-container focus:bg-[var(--surface)] focus:ring-4 focus:ring-primary-container/20';
 const floatLabel =
   'pointer-events-none absolute left-4 top-2 text-xs text-[var(--text-muted)] transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:text-xs peer-focus:text-brand-700';
 
 function Required() {
   return (
-    <span aria-hidden className="text-red-600">
+    <span aria-hidden className="text-error">
       {' '}
       *
     </span>
@@ -156,7 +156,7 @@ export default async function ContactPage({
               <span aria-hidden className="bg-accent-500 size-1.5 rounded-full" />
               {label}
             </span>
-            <h1 className="mt-5 text-4xl font-bold sm:text-5xl">
+            <h1 className="font-display-hero text-display-hero-mobile sm:text-display-hero mt-5">
               Get in <span className="text-brand-700">touch</span>
             </h1>
             <p className="mt-4 text-lg leading-relaxed text-[var(--text-muted)]">
@@ -167,10 +167,10 @@ export default async function ContactPage({
         </div>
       </section>
 
-      <div className="container-page grid items-start gap-8 py-12 sm:py-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,11fr)]">
+      <div className="container-page grid grid-cols-1 items-start gap-8 py-12 sm:py-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,11fr)]">
         <aside className="space-y-8 lg:sticky lg:top-24">
           <div className="surface-card p-6 shadow-sm sm:p-7">
-            <h2 className="flex items-center gap-2.5 text-xl font-semibold">
+            <h2 className="font-headline-sm text-headline-sm flex items-center gap-2.5">
               <ChatIcon className="text-brand-700 size-5" />
               Contact information
             </h2>
@@ -183,7 +183,7 @@ export default async function ContactPage({
                 href={`mailto:${email}`}
                 className="hover:border-brand-300 hover:bg-brand-50 mt-5 flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 transition-colors"
               >
-                <span className="bg-brand-700 grid size-11 shrink-0 place-items-center rounded-full text-white">
+                <span className="bg-primary-container text-on-primary grid size-11 shrink-0 place-items-center rounded-full">
                   <MailIcon className="size-5" />
                 </span>
                 <span className="min-w-0">
@@ -193,7 +193,7 @@ export default async function ContactPage({
               </a>
             ) : null}
             <div className="mt-6 border-t border-[var(--border)] pt-6">
-              <p className="font-display font-semibold">Ready to get listed?</p>
+              <p className="font-title-md text-title-md">Ready to get listed?</p>
               <p className="mt-1 text-sm text-[var(--text-muted)]">
                 It only takes a couple of minutes, and it&apos;s free.
               </p>
@@ -202,7 +202,7 @@ export default async function ContactPage({
           </div>
 
           <div className="surface-card p-6 shadow-sm sm:p-7">
-            <h2 className="flex items-center gap-2.5 text-xl font-semibold">
+            <h2 className="font-headline-sm text-headline-sm flex items-center gap-2.5">
               <HelpIcon className="text-brand-700 size-5" />
               Quick help
             </h2>
@@ -227,7 +227,10 @@ export default async function ContactPage({
           className="surface-card order-first p-6 shadow-sm sm:p-10 lg:order-none"
           aria-labelledby="contact-form-heading"
         >
-          <h2 id="contact-form-heading" className="flex items-center gap-2.5 text-xl font-semibold">
+          <h2
+            id="contact-form-heading"
+            className="font-headline-sm text-headline-sm flex items-center gap-2.5"
+          >
             <MailIcon className="text-brand-700 size-5" />
             Send us a message
           </h2>
@@ -254,7 +257,7 @@ export default async function ContactPage({
               {sp.error ? (
                 <p
                   role="alert"
-                  className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+                  className="border-error/30 bg-error-container/40 text-on-error-container rounded-xl border px-4 py-3 text-sm"
                 >
                   {sp.error}
                 </p>
@@ -342,7 +345,7 @@ export default async function ContactPage({
               </div>
               <button
                 type="submit"
-                className="from-brand-600 to-brand-800 shadow-brand-700/20 hover:shadow-brand-700/30 focus-visible:ring-brand-500/30 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-7 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:ring-4 focus-visible:outline-none"
+                className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex h-12 items-center justify-center gap-2 rounded-xl px-7 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
               >
                 Send message
                 <SendIcon className="size-4" />

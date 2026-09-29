@@ -85,7 +85,7 @@ export default async function ListingsPage({
   return (
     <div className="container-page py-12">
       <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: heading }]} />
-      <h1 className="text-3xl font-bold sm:text-4xl">{heading}</h1>
+      <h1 className="font-headline-lg text-headline-lg">{heading}</h1>
       {header?.subheading ? (
         <p className="mt-3 max-w-2xl text-[var(--text-muted)]">{header.subheading}</p>
       ) : null}

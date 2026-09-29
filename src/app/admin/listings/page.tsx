@@ -43,7 +43,7 @@ export default async function AdminListings({
         <h1 className="text-2xl font-semibold">Listings</h1>
         <Link
           href="/admin/listings/new"
-          className="inline-flex h-10 items-center rounded-lg bg-brand-700 px-4 text-sm font-medium text-white hover:bg-brand-800"
+          className="bg-primary-container text-on-primary hover:bg-primary inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium"
         >
           Add listing
         </Link>
@@ -57,12 +57,12 @@ export default async function AdminListings({
           defaultValue={q}
           placeholder="Search by name"
           aria-label="Search listings"
-          className="h-10 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm outline-none focus:border-brand-500"
+          className="focus:border-primary-container focus:ring-primary-container/20 h-10 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm outline-hidden focus:ring-2"
         />
         <input type="hidden" name="status" value={status} />
         <button
           type="submit"
-          className="h-10 rounded-lg bg-brand-700 px-4 text-sm font-medium text-white"
+          className="bg-primary-container text-on-primary h-10 rounded-lg px-4 text-sm font-medium"
         >
           Search
         </button>
@@ -85,7 +85,7 @@ export default async function AdminListings({
       </div>
 
       {error ? (
-        <p role="alert" className="mt-6 text-sm text-red-700">
+        <p role="alert" className="text-error mt-6 text-sm">
           Could not load listings: {error.message}
         </p>
       ) : null}
@@ -104,11 +104,14 @@ export default async function AdminListings({
             {(listings ?? []).map((l) => (
               <tr key={l.id} className="border-b border-[var(--border)] last:border-0">
                 <td className="py-3">
-                  <Link href={`/admin/listings/${l.id}`} className="font-medium hover:text-brand-700">
+                  <Link
+                    href={`/admin/listings/${l.id}`}
+                    className="hover:text-brand-700 font-medium"
+                  >
                     {l.name}
                   </Link>
                   {l.verification === 'verified' ? (
-                    <span className="ml-2 text-xs text-brand-700">verified</span>
+                    <span className="text-brand-700 ml-2 text-xs">verified</span>
                   ) : null}
                 </td>
                 <td className="py-3 text-[var(--text-muted)]">
@@ -126,7 +129,7 @@ export default async function AdminListings({
                       >
                         <button
                           type="submit"
-                          className="rounded-lg bg-brand-700 px-2.5 py-1 text-xs font-medium text-white"
+                          className="bg-primary-container text-on-primary rounded-lg px-2.5 py-1 text-xs font-medium"
                         >
                           Approve
                         </button>
@@ -169,9 +172,7 @@ export default async function AdminListings({
           </tbody>
         </table>
         {(listings ?? []).length === 0 ? (
-          <p className="mt-6 text-sm text-[var(--text-muted)]">
-            Nothing matches this filter.
-          </p>
+          <p className="mt-6 text-sm text-[var(--text-muted)]">Nothing matches this filter.</p>
         ) : null}
       </div>
     </div>

@@ -459,3 +459,98 @@ export async function getApprovedReviews(listingId: string): Promise<PublicRevie
       .limit(50),
   );
 }
+
+// ---------------------------------------------------------------------------
+// Home page
+// ---------------------------------------------------------------------------
+
+/** The card extras search_listings does not return. */
+export type ListingHighlight = {
+  description: string | null;
+  phone: string | null;
+  verified: boolean;
+};
+
+/**
+ * Description, phone and verification for a handful of cards, in one request.
+ * Not wrapped in cache(): it memoises on argument identity, and every caller
+ * builds a fresh array.
+ */
+export async function getListingHighlights(ids: string[]): Promise<Map<string, ListingHighlight>> {
+  const out = new Map<string, ListingHighlight>();
+  if (ids.length === 0) return out;
+  const rows = (await readList(
+    'public_listings.highlights',
+    supabase
+      .from('public_listings')
+      .select('id, description, phone_primary, verification')
+      .in('id', ids),
+  )) as {
+    id: string;
+    description: string | null;
+    phone_primary: string | null;
+    verification: string | null;
+  }[];
+  for (const row of rows) {
+    out.set(row.id, {
+      description: row.description,
+      phone: row.phone_primary,
+      verified: row.verification === 'verified',
+    });
+  }
+  return out;
+}
+
+type CountResult = { count: number | null; error: { message: string; code?: string } | null };
+
+/** read() for head-only count queries: the number, or null when the request failed. */
+async function readCount(what: string, q: PromiseLike<CountResult>): Promise<number | null> {
+  const { count, error } = await q;
+  reportError(what, error);
+  return error ? null : count;
+}
+
+/** Row count only: a HEAD request, so no rows cross the wire. */
+const HEAD_COUNT = { count: 'exact', head: true } as const;
+
+/** Each figure is null when its count failed, so the page hides it instead of printing 0. */
+export type DirectoryStats = {
+  listings: number | null;
+  verified: number | null;
+  cities: number | null;
+  categories: number | null;
+};
+
+export const getDirectoryStats = cache(async function getDirectoryStats(): Promise<DirectoryStats> {
+  const [listings, verified, cities, categories] = await Promise.all([
+    readCount('public_listings.count', supabase.from('public_listings').select('id', HEAD_COUNT)),
+    readCount(
+      'public_listings.countVerified',
+      supabase.from('public_listings').select('id', HEAD_COUNT).eq('verification', 'verified'),
+    ),
+    readCount('cities.count', supabase.from('cities').select('id', HEAD_COUNT)),
+    readCount('categories.count', supabase.from('categories').select('id', HEAD_COUNT)),
+  ]);
+  return { listings, verified, cities, categories };
+});
+
+/** Per id, so cache() can deduplicate it within a render. */
+const countCityListings = cache(async function countCityListings(
+  cityId: string,
+): Promise<number | null> {
+  return readCount(
+    'public_listings.countByCity',
+    supabase.from('public_listings').select('id', HEAD_COUNT).eq('city_id', cityId),
+  );
+});
+
+/** Published listings per city. A city whose count failed is left out of the map. */
+export async function getCityListingCounts(cityIds: string[]): Promise<Map<string, number>> {
+  const counts = await Promise.all(cityIds.map((id) => countCityListings(id)));
+  const out = new Map<string, number>();
+  cityIds.forEach((id, i) => {
+    const n = counts[i];
+    if (n !== null) out.set(id, n);
+  });
+  return out;
+}
