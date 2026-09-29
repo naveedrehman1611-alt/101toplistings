@@ -24,16 +24,16 @@ export function DirectorySummary({
 
   return (
     <section aria-labelledby="directory-summary-heading">
-      <h2 id="directory-summary-heading" className="font-display text-xl font-semibold">
+      <h2 id="directory-summary-heading" className="font-headline-sm text-headline-sm">
         Directory at a glance
       </h2>
       <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((s) => (
-          <div key={s.label} className="surface-card flex flex-col p-4">
+          <div key={s.label} className="bg-surface-card flex flex-col rounded-2xl p-4 shadow-md">
             {/* dt must come first inside the group; order-first puts the
                 number on top visually. */}
-            <dt className="mt-1 text-sm text-[var(--text-muted)]">{s.label}</dt>
-            <dd className="font-display text-brand-700 order-first text-2xl font-bold tabular-nums">
+            <dt className="font-body-sm text-body-sm text-secondary mt-1">{s.label}</dt>
+            <dd className="font-headline-md text-headline-md text-primary-container order-first tabular-nums">
               {NUMBER.format(s.value)}
             </dd>
           </div>
@@ -75,7 +75,7 @@ function FacetChips({
   if (items.length === 0) return null;
   return (
     <div>
-      <h3 className="text-base font-semibold">{heading}</h3>
+      <h3 className="font-title-md text-title-md">{heading}</h3>
       <ul className="mt-3 flex flex-wrap gap-2">
         {items.map((f) => {
           const current = f.slug === active;

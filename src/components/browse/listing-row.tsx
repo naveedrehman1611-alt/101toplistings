@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { SITE_TIME_ZONE, type BrowseRow, type OpenState } from '@/lib/browse';
+import { Icon } from '@/components/icon';
 import { Stars } from '@/components/ui';
 
 // Only the numbers come from Intl. Month names do not: en-GB prints "Sep" or
@@ -20,10 +21,10 @@ function formatDate(date: Date): string {
   return `${parts.day} ${MONTHS[Number(parts.month) - 1]} ${parts.year}`;
 }
 
-const PILL = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium';
-const META_LINK = 'hover:text-brand-700 hover:underline';
+const PILL = 'font-badge text-badge inline-flex items-center gap-1 rounded-full px-2.5 py-1';
+const META_LINK = 'hover:text-primary-container hover:underline';
 const ACTION =
-  'inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-medium whitespace-nowrap transition-colors sm:flex-none';
+  'font-label-md text-label-md inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-4 whitespace-nowrap transition-colors sm:flex-none';
 
 // Only characters that appear in written phone numbers. Counting digits alone
 // would dial an address that has a house number and a postcode in it.
@@ -52,7 +53,7 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
   return (
     <article
       aria-labelledby={headingId}
-      className="surface-card flex flex-wrap gap-4 p-4 sm:flex-nowrap sm:p-5"
+      className="bg-surface-card flex flex-wrap gap-4 rounded-2xl p-4 shadow-md transition-shadow duration-300 hover:shadow-xl sm:flex-nowrap sm:p-5"
     >
       <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-[var(--surface-2)] sm:size-20">
         {row.coverUrl ? (
@@ -60,7 +61,7 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
         ) : (
           <div
             aria-hidden
-            className="from-brand-600 to-brand-800 font-display grid size-full place-items-center bg-gradient-to-br text-2xl font-semibold text-white"
+            className="from-primary-container to-on-background font-display grid size-full place-items-center bg-linear-to-br text-2xl font-semibold text-white"
           >
             {initial(row.name)}
           </div>
@@ -77,19 +78,16 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <h3
               id={headingId}
-              className="font-display min-w-0 text-lg leading-snug font-semibold wrap-break-word"
+              className="font-headline-sm text-headline-sm text-on-surface min-w-0 wrap-break-word"
             >
-              <Link href={href} className="hover:text-brand-700">
+              <Link href={href} className="hover:text-primary-container transition-colors">
                 {row.name}
               </Link>
             </h3>
             {row.isFeatured ? (
-              // accent-600 text on this tint is about 3.5:1, short of AA at
-              // this size, so only the star carries the accent colour.
-              <span className={`${PILL} bg-accent-400/15 text-ink-800`}>
-                <span aria-hidden className="text-accent-500">
-                  ★
-                </span>
+              // The listing card's gold badge; its dark text keeps AA contrast.
+              <span className={`${PILL} bg-badge-gold text-on-secondary-fixed`}>
+                <Icon name="star" size={14} />
                 Featured
               </span>
             ) : null}
@@ -98,9 +96,12 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
         </div>
 
         {row.category || row.city ? (
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
+          <p className="font-body-sm text-body-sm text-secondary mt-1">
             {row.category ? (
-              <Link href={`/category/${row.category.slug}`} className={META_LINK}>
+              <Link
+                href={`/category/${row.category.slug}`}
+                className={`${META_LINK} text-primary-container font-semibold`}
+              >
                 {row.category.name}
               </Link>
             ) : null}
@@ -114,7 +115,7 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
         ) : null}
 
         {row.excerpt ? (
-          <p className="mt-2 line-clamp-2 text-sm wrap-break-word text-[var(--text-muted)]">
+          <p className="font-body-sm text-body-sm text-on-surface-variant mt-2 line-clamp-2 wrap-break-word">
             {row.excerpt}
           </p>
         ) : null}
@@ -122,10 +123,13 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm empty:hidden">
           {row.phone ? (
             <span className="flex min-w-0 items-start gap-1.5">
-              <PhoneIcon className="mt-0.5 size-4 shrink-0 text-[var(--text-muted)]" />
+              <Icon name="call" size={16} className="text-primary-container mt-0.5" />
               <span className="sr-only">Phone: </span>
               {tel ? (
-                <a href={`tel:${tel}`} className="text-brand-700 hover:underline">
+                <a
+                  href={`tel:${tel}`}
+                  className="text-on-surface hover:text-primary-container font-semibold"
+                >
                   {row.phone}
                 </a>
               ) : (
@@ -148,9 +152,10 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
         <Link
           href={href}
           aria-label={`View details for ${row.name}`}
-          className={`${ACTION} bg-brand-700 hover:bg-brand-800 text-white`}
+          className={`${ACTION} bg-primary-container text-on-primary hover:bg-primary`}
         >
           View details
+          <Icon name="arrow_forward" size={16} />
         </Link>
         {tel ? (
           <a
@@ -158,7 +163,7 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
             aria-label={`Call ${row.name}`}
             className={`${ACTION} border border-[var(--border)] hover:bg-[var(--surface-2)]`}
           >
-            <PhoneIcon className="size-4" />
+            <Icon name="call" size={16} />
             Call
           </a>
         ) : null}
@@ -175,16 +180,4 @@ function OpenBadge({ state }: { state: OpenState }) {
     return <span className={`${PILL} bg-red-50 text-red-700`}>Closed</span>;
   }
   return null;
-}
-
-function PhoneIcon({ className }: { className: string }) {
-  return (
-    <svg aria-hidden viewBox="0 0 20 20" fill="currentColor" className={className}>
-      <path
-        fillRule="evenodd"
-        d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.513 2.307a1.5 1.5 0 0 1-.425 1.426l-.933.861a.75.75 0 0 0-.174.868 11.042 11.042 0 0 0 5.968 5.968.75.75 0 0 0 .868-.174l.861-.933a1.5 1.5 0 0 1 1.426-.425l2.307.513A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
 }

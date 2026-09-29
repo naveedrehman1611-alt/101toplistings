@@ -64,7 +64,7 @@ export function Pager({
               aria-current={p === page ? 'page' : undefined}
               className={`grid h-10 min-w-10 place-items-center rounded-lg border px-3 text-sm ${
                 p === page
-                  ? 'border-brand-500 bg-brand-700 text-white'
+                  ? 'border-primary-container bg-primary-container text-on-primary'
                   : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
               }`}
             >
