@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import type { ListingCard as Card, ListingHighlight } from '@/lib/queries';
 import { Icon } from './icon';
 import { Distance } from './ui';
@@ -19,12 +20,15 @@ export function ListingCard({
   cityName,
   categoryName,
   highlight,
+  status,
   variant = 'compact',
 }: {
   listing: Card;
   cityName?: string;
   categoryName?: string;
   highlight?: ListingHighlight;
+  /** Extra badge in the top-left corner, e.g. the listing page's live open/closed status. */
+  status?: ReactNode;
   variant?: 'featured' | 'compact';
 }) {
   const featured = variant === 'featured';
@@ -60,12 +64,15 @@ export function ListingCard({
             <Icon name="storefront" size={48} className="text-white/60" />
           </div>
         )}
-        {highlight?.verified ? (
-          <div className="absolute top-4 left-4 flex gap-2">
-            <span className="bg-verified-teal font-badge text-badge inline-flex items-center gap-1 rounded-full px-3 py-1 tracking-wider text-white uppercase shadow-xs">
-              <Icon name="verified" size={14} />
-              <span>Verified Business</span>
-            </span>
+        {highlight?.verified || status ? (
+          <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+            {status}
+            {highlight?.verified ? (
+              <span className="bg-verified-teal font-badge text-badge inline-flex items-center gap-1 rounded-full px-3 py-1 tracking-wider text-white uppercase shadow-xs">
+                <Icon name="verified" size={14} />
+                <span>Verified Business</span>
+              </span>
+            ) : null}
           </div>
         ) : null}
         {rated ? (
