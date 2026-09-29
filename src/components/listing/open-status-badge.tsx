@@ -38,18 +38,20 @@ export function OpenStatusBadge({
   return (
     <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
       <span
-        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-          status.open ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+        className={`font-label-sm text-label-sm inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-semibold ${
+          status.open
+            ? 'bg-brand-50 text-primary-container'
+            : 'bg-error-container/40 text-on-error-container'
         }`}
       >
         <span
           aria-hidden
-          className={`size-1.5 rounded-full ${status.open ? 'bg-emerald-500' : 'bg-red-500'}`}
+          className={`size-1.5 rounded-full ${status.open ? 'bg-brand-500' : 'bg-error'}`}
         />
         {status.open ? 'Open now' : 'Closed now'}
       </span>
       {showDetail && status.detail ? (
-        <span className="text-xs text-[var(--text-muted)]">{status.detail}</span>
+        <span className="font-body-sm text-body-sm text-secondary">{status.detail}</span>
       ) : null}
     </span>
   );

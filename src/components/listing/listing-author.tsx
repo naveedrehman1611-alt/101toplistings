@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { Icon } from '@/components/icon';
 import type { ListingDetail, ListingImage } from '@/lib/queries';
 
 /**
@@ -18,7 +19,7 @@ export function ListingAuthor({
 
   return (
     <section className="surface-card p-5">
-      <h2 className="font-display text-lg font-semibold">Author</h2>
+      <h2 className="font-title-md text-title-md text-on-surface">Author</h2>
 
       <div className="mt-4 flex items-center gap-3">
         {logo ? (
@@ -27,22 +28,22 @@ export function ListingAuthor({
             alt={`${listing.name} logo`}
             width={48}
             height={48}
-            className="size-12 shrink-0 rounded-full border border-[var(--border)] bg-[var(--surface)] object-contain"
+            className="border-border-subtle bg-surface-card size-12 shrink-0 rounded-full border object-contain"
           />
         ) : (
           <span
             aria-hidden
-            className="bg-brand-700 flex size-12 shrink-0 items-center justify-center rounded-full text-lg font-semibold text-white"
+            className="bg-primary-container text-on-primary font-headline-sm text-headline-sm flex size-12 shrink-0 items-center justify-center rounded-full"
           >
             {initial}
           </span>
         )}
         <div className="min-w-0">
-          <h3 className="font-semibold">{listing.name}</h3>
+          <h3 className="font-title-md text-title-md text-on-surface">{listing.name}</h3>
           {phone ? (
             <a
               href={`tel:${phone.replace(/\s+/g, '')}`}
-              className="text-brand-700 text-sm hover:underline"
+              className="font-body-sm text-body-sm text-primary-container hover:underline"
             >
               {phone}
             </a>
@@ -51,28 +52,16 @@ export function ListingAuthor({
       </div>
 
       {listing.verification === 'verified' ? (
-        <p className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700">
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="size-4"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="m9 12 2 2 4-4" />
-          </svg>
+        <p className="font-label-md text-label-md text-primary-container mt-4 inline-flex items-center gap-1.5">
+          <Icon name="verified" size={16} />
           Verified business
         </p>
       ) : (
-        <p className="mt-4 text-sm">
-          <span className="text-[var(--text-muted)]">Own this business? </span>
+        <p className="font-body-sm text-body-sm mt-4">
+          <span className="text-secondary">Own this business? </span>
           <Link
             href={`/listing/${listing.slug}/claim`}
-            className="text-brand-700 font-medium hover:underline"
+            className="text-primary-container font-medium hover:underline"
           >
             Claim it for free
           </Link>
@@ -81,15 +70,12 @@ export function ListingAuthor({
 
       <a
         href="#contact-author"
-        className="bg-brand-700 hover:bg-brand-800 mt-4 flex h-11 w-full items-center justify-center rounded-lg px-5 text-sm font-medium text-white"
+        className="bg-primary-container text-on-primary hover:bg-primary font-label-md text-label-md focus-visible:ring-primary-container mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-lg px-5 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
       >
         Contact Author
       </a>
-      <p className="mt-3 text-center text-xs">
-        <Link
-          href={`/listing/${listing.slug}/report`}
-          className="text-[var(--text-muted)] hover:underline"
-        >
+      <p className="font-body-sm text-body-sm mt-3 text-center">
+        <Link href={`/listing/${listing.slug}/report`} className="text-secondary hover:underline">
           Report a problem with this listing
         </Link>
       </p>

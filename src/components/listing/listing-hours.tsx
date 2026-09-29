@@ -18,20 +18,18 @@ export function ListingHours({ hours }: { hours: OpeningHour[] }) {
   return (
     <section className="surface-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-lg font-semibold">Hours</h2>
+        <h2 className="font-title-md text-title-md text-on-surface">Hours</h2>
         <OpenStatusBadge hours={rows} showDetail />
       </div>
-      <table className="mt-4 w-full text-sm">
+      <table className="font-body-md text-body-md text-on-surface mt-4 w-full">
         <caption className="sr-only">Opening hours</caption>
         <tbody>
           {rows.map((h) => (
             <tr
               key={h.day_of_week}
-              className={`border-b border-[var(--border)] last:border-0 ${
-                h.is_closed ? 'text-[var(--text-muted)]' : ''
-              }`}
+              className={`border-border-subtle border-b last:border-0 ${h.is_closed ? 'text-secondary' : ''}`}
             >
-              <th scope="row" className="py-2 pr-4 text-left font-medium">
+              <th scope="row" className="font-label-md text-label-md py-2 pr-4 text-left">
                 {DAYS[h.day_of_week]}
               </th>
               <td className="py-2 text-right">{hoursLabel(h)}</td>
@@ -39,7 +37,9 @@ export function ListingHours({ hours }: { hours: OpeningHour[] }) {
           ))}
         </tbody>
       </table>
-      <p className="mt-3 text-xs text-[var(--text-muted)]">Times are local (Pakistan time).</p>
+      <p className="font-body-sm text-body-sm text-secondary mt-3">
+        Times are local (Pakistan time).
+      </p>
     </section>
   );
 }

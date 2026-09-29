@@ -1,70 +1,24 @@
 import type { ReactNode } from 'react';
+import { Icon } from '@/components/icon';
 import type { ListingDetail } from '@/lib/queries';
 
-function Icon({ children }: { children: ReactNode }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="size-4"
-    >
-      {children}
-    </svg>
-  );
-}
-
-const pinIcon = (
-  <Icon>
-    <path d="M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0" />
-    <circle cx="12" cy="10" r="3" />
-  </Icon>
-);
-const phoneIcon = (
-  <Icon>
-    <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z" />
-  </Icon>
-);
-const mailIcon = (
-  <Icon>
-    <rect width="20" height="16" x="2" y="4" rx="2" />
-    <path d="m22 7-9 5.7a2 2 0 0 1-2 0L2 7" />
-  </Icon>
-);
-const globeIcon = (
-  <Icon>
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20" />
-  </Icon>
-);
-const shareIcon = (
-  <Icon>
-    <circle cx="18" cy="5" r="3" />
-    <circle cx="6" cy="12" r="3" />
-    <circle cx="18" cy="19" r="3" />
-    <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
-  </Icon>
-);
-const directionIcon = (
-  <Icon>
-    <path d="M3 11 22 2l-9 19-2-8z" />
-  </Icon>
-);
+const pinIcon = <Icon name="location_on" size={18} />;
+const phoneIcon = <Icon name="call" size={18} />;
+const mailIcon = <Icon name="mail" size={18} />;
+const globeIcon = <Icon name="language" size={18} />;
+const shareIcon = <Icon name="hub" size={18} />;
+const directionIcon = <Icon name="near_me" size={16} />;
 
 const newTab = <span className="sr-only"> (opens in a new tab)</span>;
 
 function Row({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
   return (
     <div className="flex gap-3">
-      <dt className="text-brand-700 mt-0.5 shrink-0">
+      <dt className="bg-surface-container text-primary-container flex size-8 shrink-0 items-center justify-center rounded-lg">
         {icon}
         <span className="sr-only">{label}</span>
       </dt>
-      <dd className="min-w-0 flex-1">{children}</dd>
+      <dd className="min-w-0 flex-1 pt-1">{children}</dd>
     </div>
   );
 }
@@ -98,7 +52,7 @@ function externalLink(raw: string): { href: string; host: string } {
   }
 }
 
-const linkClass = 'text-brand-700 hover:underline';
+const linkClass = 'text-primary-container hover:underline';
 
 export function ListingInformation({
   listing,
@@ -137,17 +91,21 @@ export function ListingInformation({
         .map((n) => n.toFixed(6))
         .join(',')
     : '';
+  // Without coordinates, route to the written address as shown above (street and
+  // city, never the city twice) plus the country, so a bare street name is not
+  // matched somewhere else.
+  const place = address ? (/pakistan/i.test(address) ? address : `${address}, Pakistan`) : null;
   const directions = coords
     ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
-    : address
-      ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`
+    : place
+      ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place)}`
       : null;
   const directionsLink = directions ? (
     <a
       href={directions}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-brand-700 inline-flex items-center gap-1 font-medium hover:underline"
+      className="text-primary-container inline-flex items-center gap-1 font-medium hover:underline"
     >
       {directionIcon}
       Get Direction
@@ -157,7 +115,7 @@ export function ListingInformation({
 
   return (
     <section className="surface-card p-5">
-      <h2 className="font-display text-lg font-semibold">Information</h2>
+      <h2 className="font-title-md text-title-md text-on-surface">Information</h2>
 
       {coords ? (
         <>
@@ -166,9 +124,9 @@ export function ListingInformation({
             src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            className="mt-4 aspect-[4/3] w-full rounded-lg border border-[var(--border)]"
+            className="border-border-subtle mt-4 aspect-[4/3] w-full rounded-lg border"
           />
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs">
+          <div className="font-body-sm text-body-sm mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
             <a
               href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`}
               target="_blank"
@@ -185,7 +143,7 @@ export function ListingInformation({
       ) : null}
 
       {hasRows ? (
-        <dl className="mt-4 space-y-3 text-sm">
+        <dl className="font-body-md text-body-md text-on-surface mt-4 space-y-3">
           {address ? (
             <Row label="Address" icon={pinIcon}>
               <p>{address}</p>
@@ -234,7 +192,7 @@ export function ListingInformation({
                       href={s.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center rounded-full border border-[var(--border)] px-2.5 py-1 text-xs font-medium hover:bg-[var(--surface-2)]"
+                      className="border-border-subtle bg-surface-card text-on-surface hover:border-primary-container hover:text-primary-container font-label-sm text-label-sm inline-flex items-center rounded-full border px-3 py-1 transition-colors"
                     >
                       {s.label}
                       {newTab}
