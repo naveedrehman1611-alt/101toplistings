@@ -148,14 +148,21 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
   // A retired slug may have a stored redirect; otherwise this renders the 404.
   if (!listing) return redirectOrNotFound(`/listing/${encodeURIComponent(slug)}`);
 
-  const [{ categories, cities, category, subcategory, city }, hours, reviews, images, similar] =
-    await Promise.all([
-      taxonomyFor(listing),
-      getOpeningHours(listing.id),
-      getApprovedReviews(listing.id),
-      getListingImages(listing.id),
-      getSimilarListings(listing),
-    ]);
+  const [
+    { categories, cities, category, subcategory, city },
+    hours,
+    reviews,
+    images,
+    similar,
+    settings,
+  ] = await Promise.all([
+    taxonomyFor(listing),
+    getOpeningHours(listing.id),
+    getApprovedReviews(listing.id),
+    getListingImages(listing.id),
+    getSimilarListings(listing),
+    getSettings(),
+  ]);
 
   const url = `${SITE_URL}/listing/${listing.slug}`;
   const cityNames = new Map(cities.map((c) => [c.id, c.name]));
@@ -284,7 +291,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
       </div>
 
       <SimilarListings listings={similar} cityNames={cityNames} categories={categoryLinks} />
-      <SubmitListingCta />
+      <SubmitListingCta brand={settingText(settings, 'brand.name', 'RankYouSite')} />
     </div>
   );
 }

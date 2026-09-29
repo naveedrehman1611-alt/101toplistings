@@ -1,25 +1,32 @@
 import Link from 'next/link';
+import { Icon } from '@/components/icon';
 
-export function SubmitListingCta() {
+/** "Submit Your Listing Today!" band at the foot of a listing page (Stitch banner style). */
+export function SubmitListingCta({ brand }: { brand: string }) {
   return (
-    <section className="from-brand-700 to-brand-900 mt-16 rounded-2xl bg-gradient-to-br px-6 py-10 text-white sm:px-10">
-      <h2 className="text-2xl font-semibold sm:text-3xl">Submit Your Listing Today!</h2>
-      <p className="text-brand-100 mt-3 max-w-2xl">
-        Covering all of Pakistan — add your business to RankYouSite and get found by customers
-        searching near you.
+    <section className="relative mt-16 overflow-hidden rounded-3xl bg-linear-to-r from-[#071328] via-[#0b1c30] to-[#047857] p-10 text-white shadow-xl sm:p-14">
+      <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-white">
+        Submit Your Listing Today!
+      </h2>
+      <p className="font-body-lg text-body-lg text-surface-container-high/90 mt-2 max-w-2xl">
+        Covering all of Pakistan — add your business to {brand} and get found by customers searching
+        near you.
       </p>
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-8 flex flex-wrap gap-3">
+        {/* Same label and icon as the header's call to action. */}
         <Link
           href="/dashboard/listings/new"
-          className="text-brand-800 hover:bg-brand-50 inline-flex h-11 items-center justify-center rounded-lg bg-white px-5 text-sm font-medium transition-colors"
+          className="bg-surface-card font-title-md text-title-md text-on-background hover:bg-surface-bright inline-flex items-center gap-2 rounded-xl px-6 py-3 shadow-lg transition-all hover:shadow-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
-          Add your business
+          <Icon name="add_circle" size={20} className="text-primary-container" />
+          Add Listing
         </Link>
         <Link
           href="/listings"
-          className="inline-flex h-11 items-center justify-center rounded-lg border border-white/40 px-5 text-sm font-medium text-white transition-colors hover:bg-white/10"
+          className="font-title-md text-title-md inline-flex items-center gap-2 rounded-xl border border-white/40 px-6 py-3 text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
           Browse listings
+          <Icon name="arrow_forward" size={20} />
         </Link>
       </div>
     </section>

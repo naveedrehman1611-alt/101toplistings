@@ -469,18 +469,13 @@ export async function getApprovedReviews(listingId: string): Promise<PublicRevie
   return (data ?? []) as unknown as PublicReview[];
 }
 
-export type SimilarListing = {
-  id: string;
-  slug: string;
-  name: string;
-  tagline: string | null;
+/**
+ * A search-result card (so the shared ListingCard renders it) plus what the
+ * listing page's Similar Listings adds: the phone, verification and hours.
+ */
+export type SimilarListing = ListingCard & {
   phone_primary: string | null;
-  category_id: string | null;
-  city_id: string | null;
-  rating_average: number | null;
-  review_count: number;
-  is_featured: boolean;
-  cover_url?: string | null;
+  verification: string;
   hours: OpeningHour[];
 };
 
@@ -500,14 +495,14 @@ export async function getSimilarListings(
     supabase
       .from('public_listings')
       .select(
-        'id, slug, name, tagline, phone_primary, category_id, city_id, rating_average, review_count, is_featured',
+        'id, slug, name, tagline, phone_primary, category_id, city_id, latitude, longitude, rating_average, review_count, is_featured, verification, published_at',
       )
       .eq('category_id', listing.category_id)
       .neq('id', listing.id)
       .order('published_at', { ascending: false })
       .order('id')
       .limit(12),
-  )) as Omit<SimilarListing, 'hours' | 'cover_url'>[];
+  )) as Omit<SimilarListing, 'hours' | 'cover_url' | 'distance_km' | 'total_count'>[];
 
   const picked = rows
     .map((row, index) => ({ row, index }))
@@ -537,6 +532,9 @@ export async function getSimilarListings(
   ]);
   return withCovers.map((card) => ({
     ...card,
+    // Not a search: there is no origin to measure from and no result total.
+    distance_km: null,
+    total_count: 0,
     hours: hours
       .filter((h) => h.listing_id === card.id)
       .map(({ listing_id, ...h }) => {
