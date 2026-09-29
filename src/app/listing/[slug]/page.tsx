@@ -16,6 +16,7 @@ import {
 } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
 import { SITE_URL } from '@/lib/supabase';
+import { SHARE_IMAGE } from '@/lib/seo';
 import { redirectOrNotFound } from '@/lib/redirects';
 import { DAYS } from '@/lib/hours';
 import { ListingHero } from '@/components/listing/listing-hero';
@@ -126,13 +127,14 @@ export async function generateMetadata({
       url,
       siteName: settingText(settings, 'brand.name', 'RankYouSite'),
       locale: 'en_US',
-      ...(ogImage ? { images: [ogImage] } : {}),
+      // No listing photo: fall back to the site-wide share image.
+      images: [ogImage ?? SHARE_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      ...(ogImage ? { images: [ogImage.url] } : {}),
+      images: [ogImage?.url ?? SHARE_IMAGE.url],
     },
   };
 }
