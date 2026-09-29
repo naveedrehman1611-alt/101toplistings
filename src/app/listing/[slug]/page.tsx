@@ -29,6 +29,7 @@ import { ListingAuthor } from '@/components/listing/listing-author';
 import { ContactAuthorForm } from '@/components/listing/contact-author-form';
 import { SimilarListings } from '@/components/listing/similar-listings';
 import { SubmitListingCta } from '@/components/listing/submit-listing-cta';
+import { jsonLdHtml } from '@/lib/json-ld';
 
 export const revalidate = 600;
 
@@ -135,11 +136,6 @@ export async function generateMetadata({
       ...(ogImage ? { images: [ogImage.url] } : {}),
     },
   };
-}
-
-/** Owner- and visitor-written text goes inside a script tag; "<" must not close it. */
-function jsonLdHtml(data: unknown) {
-  return { __html: JSON.stringify(data).replace(/</g, '\\u003c') };
 }
 
 export default async function ListingPage({ params }: { params: Promise<{ slug: string }> }) {

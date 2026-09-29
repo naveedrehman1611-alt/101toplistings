@@ -5,6 +5,7 @@ import { Breadcrumbs } from '@/components/ui';
 import { SITE_URL } from '@/lib/supabase';
 import { Markdown } from '@/components/markdown';
 import { redirectOrNotFound } from '@/lib/redirects';
+import { jsonLdHtml } from '@/lib/json-ld';
 
 export const revalidate = 600;
 
@@ -55,10 +56,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   return (
     <div className="container-page py-12">
       {/* The title is editor-written: escape "<" so a "</script>" in it cannot close the tag. */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(jsonLd)} />
       <Breadcrumbs
         trail={[
           { label: 'Home', href: '/' },

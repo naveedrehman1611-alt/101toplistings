@@ -1,4 +1,5 @@
 import { Icon } from '@/components/icon';
+import { jsonLdHtml } from '@/lib/json-ld';
 
 type FaqItem = { question: string; answer: string };
 
@@ -80,10 +81,7 @@ export function Faq({ brand }: { brand: string }) {
   return (
     <section id="faq" className="mx-auto w-full max-w-4xl px-6 py-16 lg:px-12">
       {/* The brand name comes from editable settings: escape "<" so it cannot close the tag. */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(jsonLd)} />
       <div className="mb-12 text-center">
         <span className="font-label-sm text-label-sm text-primary-container font-semibold uppercase">
           Everything You Need To Know
