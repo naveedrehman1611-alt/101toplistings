@@ -36,12 +36,7 @@ export default async function AdminDashboard() {
     .limit(8);
 
   const stats = [
-    {
-      label: 'Pending approval',
-      value: pending,
-      href: '/admin/listings?status=pending',
-      urgent: pending > 0,
-    },
+    { label: 'Pending approval', value: pending, href: '/admin/listings?status=pending', urgent: pending > 0 },
     { label: 'Approved', value: approved, href: '/admin/listings?status=approved' },
     { label: 'Rejected', value: rejected, href: '/admin/listings?status=rejected' },
     { label: 'All listings', value: total, href: '/admin/listings' },
@@ -58,7 +53,9 @@ export default async function AdminDashboard() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => {
           const card = (
-            <div className={`surface-card p-4 ${s.urgent ? 'border-brand-500 bg-brand-50' : ''}`}>
+            <div
+              className={`surface-card p-4 ${s.urgent ? 'border-brand-500 bg-brand-50' : ''}`}
+            >
               <p className="text-2xl font-semibold">{s.value}</p>
               <p className="mt-1 text-sm text-[var(--text-muted)]">{s.label}</p>
             </div>
