@@ -9,7 +9,7 @@ export default function NoAccessPage() {
       <p className="mt-3 text-[var(--text-muted)]">
         Your role does not include this area. Ask an administrator if you need access.
       </p>
-      <Link href="/admin" className="mt-6 inline-block text-sm text-brand-700 hover:underline">
+      <Link href="/admin" className="text-brand-700 mt-6 inline-block text-sm hover:underline">
         Back to the dashboard
       </Link>
     </div>

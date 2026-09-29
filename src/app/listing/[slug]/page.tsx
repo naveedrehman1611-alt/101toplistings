@@ -15,6 +15,7 @@ import { Badge, Breadcrumbs, Stars } from '@/components/ui';
 import { Icon } from '@/components/icon';
 import { ListingCard } from '@/components/listing-card';
 import { SITE_URL } from '@/lib/supabase';
+import { SHARE_IMAGE } from '@/lib/seo';
 import { redirectOrNotFound } from '@/lib/redirects';
 
 export const revalidate = 600;
@@ -56,8 +57,8 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: url },
-    openGraph: { title, description, url, type: 'profile' },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { title, description, url, type: 'profile', images: [SHARE_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [SHARE_IMAGE] },
   };
 }
 

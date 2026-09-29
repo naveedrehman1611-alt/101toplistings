@@ -8,7 +8,33 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL)
   : null;
 
+// Once NEXT_PUBLIC_SITE_URL points at the custom domain, production requests
+// that arrive on a *.vercel.app host get a 301 redirect there, so search
+// engines consolidate on one domain. Preview deployments keep their own
+// vercel.app URLs, and nothing changes while SITE_URL is still a vercel.app
+// address.
+const siteHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SITE_URL ?? '').host;
+  } catch {
+    return '';
+  }
+})();
+const redirectVercelHost =
+  process.env.VERCEL_ENV === 'production' && siteHost !== '' && !siteHost.endsWith('.vercel.app');
+
 const nextConfig: NextConfig = {
+  async redirects() {
+    if (!redirectVercelHost) return [];
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: '.*\\.vercel\\.app' }],
+        destination: `https://${siteHost}/:path*`,
+        statusCode: 301,
+      },
+    ];
+  },
   images: {
     remotePatterns: supabaseUrl
       ? [

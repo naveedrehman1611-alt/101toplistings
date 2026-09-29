@@ -4,12 +4,12 @@ import { Results, parsePage, parseSort } from '@/components/results';
 import { Breadcrumbs } from '@/components/ui';
 import { ListingFilters } from '@/components/listing-filters';
 import { SITE_URL } from '@/lib/supabase';
+import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { redirectOrNotFound } from '@/lib/redirects';
+import { MIN_CITY_LISTINGS_TO_INDEX, SHARE_IMAGE } from '@/lib/seo';
 
 export const revalidate = 600;
 const PER_PAGE = 12;
-// §7.5.7 / criterion 47 — below this density the page is noindex rather than thin.
-const MIN_LISTINGS_TO_INDEX = 3;
 
 export async function generateStaticParams() {
   const cities = await getCities();
@@ -32,9 +32,9 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `${SITE_URL}/city/${city.slug}` },
-    robots: count < MIN_LISTINGS_TO_INDEX ? { index: false, follow: true } : undefined,
-    openGraph: { title, description, url: `${SITE_URL}/city/${city.slug}` },
-    twitter: { card: 'summary_large_image', title, description },
+    robots: count < MIN_CITY_LISTINGS_TO_INDEX ? { index: false, follow: true } : undefined,
+    openGraph: { title, description, url: `${SITE_URL}/city/${city.slug}`, images: [SHARE_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [SHARE_IMAGE] },
   };
 }
 
@@ -64,10 +64,18 @@ export default async function CityPage({
     offset: (page - 1) * PER_PAGE,
   });
   const filtered = Boolean(q || cat);
+  const trail = [{ label: 'Home', href: '/' }, { label: city.name }];
+  const path = `/city/${city.slug}`;
 
   return (
     <div className="container-page py-12">
-      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: city.name }]} />
+      <JsonLd data={breadcrumbSchema(trail, path)} />
+      {listings.length > 0 ? (
+        <JsonLd
+          data={itemListSchema(`Businesses in ${city.name}`, listings, (page - 1) * PER_PAGE)}
+        />
+      ) : null}
+      <Breadcrumbs trail={trail} />
       <h1 className="font-headline-lg text-headline-lg">Businesses in {city.name}</h1>
       {city.intro_copy ? (
         <p className="mt-3 max-w-2xl text-[var(--text-muted)]">{city.intro_copy}</p>
