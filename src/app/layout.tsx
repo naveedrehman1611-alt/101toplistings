@@ -5,6 +5,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { getCities, getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
+import { jsonLdHtml } from '@/lib/json-ld';
 
 // Criterion 36: critical fonts preloaded.
 const inter = Inter({
@@ -54,10 +55,44 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   ]);
 
   const brand = settingText(settings, 'brand.name', 'RankYouSite');
+  const email = settingText(settings, 'contact.email');
+
+  // Site-wide Organization + WebSite schema; the SearchAction lets Google
+  // offer a sitelinks search box that lands on /search.
+  const siteJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${SITE_URL}/#organization`,
+        name: brand,
+        url: SITE_URL,
+        ...(email ? { email } : {}),
+        areaServed: { '@type': 'Country', name: 'Pakistan' },
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
+        name: brand,
+        url: SITE_URL,
+        inLanguage: 'en',
+        publisher: { '@id': `${SITE_URL}/#organization` },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  };
 
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body className="flex min-h-screen flex-col">
+        <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(siteJsonLd)} />
         <Header
           brand={brand}
           subtitle={settingText(settings, 'brand.subtitle', 'Pakistan Directory')}
