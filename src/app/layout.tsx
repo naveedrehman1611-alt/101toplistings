@@ -6,6 +6,7 @@ import { Footer } from '@/components/footer';
 import { BackToTop } from '@/components/back-to-top';
 import { getCities, getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
+import { jsonLdHtml } from '@/lib/json-ld';
 
 // Criterion 36: critical fonts preloaded.
 const inter = Inter({
@@ -55,10 +56,44 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   ]);
 
   const brand = settingText(settings, 'brand.name', 'RankYouSite');
+  const email = settingText(settings, 'contact.email');
+
+  // Site-wide Organization + WebSite schema; the SearchAction lets Google
+  // offer a sitelinks search box that lands on /search.
+  const siteJsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${SITE_URL}/#organization`,
+        name: brand,
+        url: SITE_URL,
+        ...(email ? { email } : {}),
+        areaServed: { '@type': 'Country', name: 'Pakistan' },
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
+        name: brand,
+        url: SITE_URL,
+        inLanguage: 'en',
+        publisher: { '@id': `${SITE_URL}/#organization` },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
+        },
+      },
+    ],
+  };
 
   return (
     <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body className="flex min-h-screen flex-col">
+        <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(siteJsonLd)} />
         <a
           href="#main"
           className="focus:bg-brand-700 sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-lg focus:px-4 focus:py-2 focus:text-white"
