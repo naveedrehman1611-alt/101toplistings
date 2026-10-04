@@ -22,8 +22,22 @@ const SUBJECTS = [
   'Help with my account',
   'Partnership or advertising',
   'Report a problem',
+  'SEO services',
+  'Digital marketing',
+  'Guest posting',
+  'Link building',
   'Other',
 ];
+
+/**
+ * ?subject=SEO%20services (the home hero's service links) preselects that
+ * subject. Matched case-insensitively against SUBJECTS; anything else keeps the
+ * "Select a subject" placeholder.
+ */
+function presetSubject(param: string | string[] | undefined): string {
+  const wanted = (Array.isArray(param) ? param[0] : param)?.trim().toLowerCase();
+  return SUBJECTS.find((s) => s.toLowerCase() === wanted) ?? '';
+}
 
 const FAQ: { q: string; a: string; link?: { label: string; href: string } }[] = [
   {
@@ -133,10 +147,11 @@ function ArrowLink({ href, children }: { href: string; children: ReactNode }) {
 export default async function ContactPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; subject?: string | string[] }>;
 }) {
-  // Reading ?sent / ?error makes this page render per request.
+  // Reading ?sent / ?error / ?subject makes this page render per request.
   const sp = await searchParams;
+  const subject = presetSubject(sp.subject);
   const [sections, settings] = await Promise.all([getPageSections('contact'), getSettings()]);
   const header = findSection(sections, 'header');
   const email = settingText(settings, 'contact.email');
@@ -297,10 +312,13 @@ export default async function ContactPage({
               </div>
               <div className="relative">
                 <select
+                  // A ?subject change on this same route keeps the page mounted, and an
+                  // uncontrolled select ignores a new defaultValue; the key remounts it.
+                  key={subject}
                   id="contact-subject"
                   name="subject"
                   required
-                  defaultValue=""
+                  defaultValue={subject}
                   className={`${field} h-14 cursor-pointer appearance-none pr-10`}
                 >
                   <option value="" disabled>

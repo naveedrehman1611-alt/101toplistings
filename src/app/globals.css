@@ -71,6 +71,14 @@
   --color-badge-gold: #f59e0b;
   --color-badge-ruby: #e11d48;
 
+  /* Home hero (sampled from the hero reference design) */
+  --color-hero-navy: #032041;
+  --color-hero-green: #01b853; /* search button */
+  --color-hero-green-hover: #019a46;
+  --color-hero-green-light: #4ade80; /* "Grow Online.", trust pill */
+  --color-hero-strip: #f4f7fd; /* stats strip */
+  --color-hero-star: #fec80d;
+
   /* Legacy ramps on the Stitch palette */
   --color-brand-50: #ecfdf5;
   --color-brand-100: #d1fae5;

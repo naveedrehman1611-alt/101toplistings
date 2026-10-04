@@ -916,3 +916,41 @@ export async function getPostCards({
     return r ? [r] : [];
   });
 }
+
+/** Site-wide rating: the review-weighted average over every rated listing. */
+export type ReviewSummary = { average: number; count: number };
+
+/**
+ * sum(rating_average × review_count) / sum(review_count) over rated listings.
+ * Each rating_average is already rounded to one decimal (numeric(2,1)), so the
+ * result can be off by at most 0.05. Null when nothing is rated or the read
+ * fails, so the page hides the rating instead of printing one.
+ */
+export const getReviewSummary = cache(
+  async function getReviewSummary(): Promise<ReviewSummary | null> {
+    const rows = (await readList(
+      'public_listings.reviewSummary',
+      supabase
+        .from('public_listings')
+        .select('rating_average, review_count')
+        .gt('review_count', 0)
+        .order('review_count', { ascending: false })
+        .order('id')
+        // 1000 is Supabase's default max rows per request (PostgREST max-rows);
+        // asking for more is silently capped there. Most-reviewed first, so past
+        // the cap the listings left out are the ones that weigh least.
+        .limit(1000),
+    )) as { rating_average: number | string | null; review_count: number | string }[];
+    let weighted = 0;
+    let count = 0;
+    for (const row of rows) {
+      // numeric columns can arrive as strings; Number(null) would be 0, not missing.
+      const average = row.rating_average === null ? NaN : Number(row.rating_average);
+      const reviews = Number(row.review_count);
+      if (!Number.isFinite(average) || !Number.isFinite(reviews) || reviews <= 0) continue;
+      weighted += average * reviews;
+      count += reviews;
+    }
+    return count > 0 ? { average: weighted / count, count } : null;
+  },
+);
