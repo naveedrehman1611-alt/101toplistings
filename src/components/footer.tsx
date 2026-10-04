@@ -17,6 +17,17 @@ function footerCities(cities: City[]): City[] {
 
 const FAQ_LINK: MenuItem = { label: 'FAQ', url: '/#faq', sort_order: 0 };
 
+/** The Company menu, plus Privacy and Terms whenever the menu leaves them out. */
+const LEGAL_LINKS: MenuItem[] = [
+  { label: 'Privacy Policy', url: '/privacy', sort_order: 0 },
+  { label: 'Terms of Service', url: '/terms', sort_order: 0 },
+];
+
+function legalLinks(company: MenuItem[]): MenuItem[] {
+  const urls = new Set(company.map((item) => item.url));
+  return [...company, ...LEGAL_LINKS.filter((item) => !urls.has(item.url))];
+}
+
 const linkClass =
   'font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
 
@@ -132,15 +143,13 @@ export function Footer({
             Copyright © {new Date().getFullYear()} {copyright.replace(/\.+$/, '')}. All rights
             reserved.
           </p>
-          {company.length > 0 ? (
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-              {company.map((item) => (
-                <Link key={`${item.url}|${item.label}`} href={item.url} className={linkClass}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          ) : null}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            {legalLinks(company).map((item) => (
+              <Link key={`${item.url}|${item.label}`} href={item.url} className={linkClass}>
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </footer>

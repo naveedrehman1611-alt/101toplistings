@@ -1,6 +1,8 @@
 import { cache } from 'react';
-import { supabase } from './supabase';
+import { unstable_cache } from 'next/cache';
+import { READ_REVALIDATE_SECONDS, SEARCH_TAG, supabase } from './supabase';
 import { mediaUrl, type MediaItem } from './media';
+import { isMissingColumnError } from './review-criteria';
 
 /**
  * Every read below used to end in `data ?? []`, which makes a failed request
@@ -9,7 +11,7 @@ import { mediaUrl, type MediaItem } from './media';
  * nothing. Routing every read through here keeps the graceful fallback but
  * makes the failure visible in the server logs.
  */
-function reportError(what: string, error: { message: string; code?: string } | null): void {
+export function reportError(what: string, error: { message: string; code?: string } | null): void {
   if (!error) return;
   console.error(
     `[supabase] ${what} failed: ${error.message}${error.code ? ` (${error.code})` : ''}`,
@@ -51,6 +53,7 @@ export type ListingCard = {
 
 export type Category = {
   id: string;
+  parent_id: string | null;
   slug: string;
   name: string;
   description: string | null;
@@ -160,6 +163,13 @@ export type SearchArgs = {
  * no distance is ever computed in the browser (§7.5.4).
  */
 export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
+  return (await searchListingsResult(args)).listings;
+}
+
+type SearchRow = Omit<ListingCard, 'cover_url'>;
+
+/** One search_listings call, retried once on a network failure. Throws on error. */
+async function rpcSearch(args: SearchArgs): Promise<SearchRow[]> {
   const call = () =>
     supabase.rpc('search_listings', {
       p_query: args.query ?? null,
@@ -176,17 +186,54 @@ export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
   // "fetch failed" is a network-level failure (DNS, TLS, cold connection), not
   // a query error, and is often transient on serverless. One retry is cheap.
   if (error && /fetch failed/i.test(error.message)) ({ data, error } = await call());
-  // Logs and degrades instead of throwing. Throwing took down every page that
-  // lists businesses (home, listings, search, category, city and even listing
-  // detail via "related") with Next's bare "This page couldn't load" whenever
-  // Supabase was unreachable, and most of those routes render per request, so
-  // there was no cached page to fall back to. The failure stays visible in the
-  // runtime logs via reportError.
-  if (error) {
-    reportError('search_listings', error);
-    return [];
+  if (error) throw error;
+  return (data ?? []) as SearchRow[];
+}
+
+/**
+ * Browse views — a category, a city, a sort order and a page, with no keyword
+ * and no location — are a small, finite set that every visitor, link prefetch
+ * and crawler repeats. PostgREST RPC is a POST, which the fetch-level Data
+ * Cache never stores, so without this every render of a category, city or
+ * listings page, and the homepage carousel, was a database call. Results are
+ * kept for READ_REVALIDATE_SECONDS under SEARCH_TAG, which writes expire.
+ * rpcSearch throws on failure, so an outage is never cached.
+ */
+const cachedRpcSearch = unstable_cache(rpcSearch, ['search_listings'], {
+  revalidate: READ_REVALIDATE_SECONDS,
+  tags: [SEARCH_TAG],
+});
+
+/**
+ * searchListings, but also saying whether the read failed, for callers that
+ * render a distinct error state (the homepage carousel) instead of "no results".
+ */
+export async function searchListingsResult(
+  args: SearchArgs,
+): Promise<{ listings: ListingCard[]; failed: boolean }> {
+  const browse = !args.query && args.lat === undefined && args.lng === undefined;
+  try {
+    const rows = browse
+      ? // Normalised so equivalent calls share one cache entry.
+        await cachedRpcSearch({
+          categoryId: args.categoryId,
+          cityId: args.cityId,
+          sort: args.sort ?? 'newest',
+          limit: args.limit ?? 12,
+          offset: args.offset ?? 0,
+        })
+      : await rpcSearch(args);
+    return { listings: await attachCovers(rows), failed: false };
+  } catch (e) {
+    // Logs and degrades instead of throwing. Throwing took down every page that
+    // lists businesses (home, listings, search, category, city and even listing
+    // detail via "related") with Next's bare "This page couldn't load" whenever
+    // Supabase was unreachable, and most of those routes render per request, so
+    // there was no cached page to fall back to. The failure stays visible in the
+    // runtime logs via reportError.
+    reportError('search_listings', e as { message: string; code?: string });
+    return { listings: [], failed: true };
   }
-  return attachCovers((data ?? []) as ListingCard[]);
 }
 
 /**
@@ -194,22 +241,31 @@ export async function searchListings(args: SearchArgs): Promise<ListingCard[]> {
  * results, which keeps search_listings itself untouched. A failure here only
  * costs the covers, never the search, so cards fall back to the gradient.
  */
-async function attachCovers(cards: ListingCard[]): Promise<ListingCard[]> {
+async function attachCovers<T extends { id: string }>(
+  cards: T[],
+): Promise<(T & { cover_url?: string | null })[]> {
   if (cards.length === 0) return cards;
+  const covers = await coverUrls(cards.map((c) => c.id));
+  return cards.map((c) => ({ ...c, cover_url: covers.get(c.id) ?? null }));
+}
+
+/**
+ * Cover image URL by listing id, in one query for a whole page of results.
+ * Empty on any failure: a listing without a cover falls back to the gradient,
+ * so losing the covers must never cost the results they decorate.
+ */
+export async function coverUrls(listingIds: string[]): Promise<Map<string, string>> {
+  if (listingIds.length === 0) return new Map();
   const { data, error } = await supabase
     .from('listing_images')
     .select('listing_id, media(path)')
     .eq('kind', 'cover')
-    .in(
-      'listing_id',
-      cards.map((c) => c.id),
-    );
-  if (error || !data) return cards;
+    .in('listing_id', listingIds);
+  if (error || !data) return new Map();
   const rows = data as unknown as { listing_id: string; media: { path: string } | null }[];
-  const covers = new Map(
+  return new Map(
     rows.flatMap((r) => (r.media ? [[r.listing_id, mediaUrl(r.media.path)] as const] : [])),
   );
-  return cards.map((c) => ({ ...c, cover_url: covers.get(c.id) ?? null }));
 }
 
 export type ListingImage = MediaItem & { url: string };
@@ -245,11 +301,32 @@ export const getCategories = cache(async function getCategories(
 ): Promise<Category[]> {
   let q = supabase
     .from('categories')
-    .select('id, slug, name, description, icon, is_featured')
-    .order('sort_order');
+    .select('id, parent_id, slug, name, description, icon, is_featured')
+    .order('sort_order')
+    .order('name');
   if (featuredOnly) q = q.eq('is_featured', true);
-  return (await readList('categories.select', q)) as Category[];
+  return treeOrder((await readList('categories.select', q)) as Category[]);
 });
+
+/**
+ * Parents in their sort order, each followed by its own children, so every
+ * dropdown and index reads as a tree. Children whose parent is missing from
+ * the list are kept, after the tree.
+ */
+function treeOrder(rows: Category[]): Category[] {
+  const ids = new Set(rows.map((c) => c.id));
+  const kids = new Map<string, Category[]>();
+  for (const c of rows) {
+    if (c.parent_id && ids.has(c.parent_id))
+      kids.set(c.parent_id, [...(kids.get(c.parent_id) ?? []), c]);
+  }
+  const out: Category[] = [];
+  for (const c of rows) {
+    if (c.parent_id && ids.has(c.parent_id)) continue;
+    out.push(c, ...(kids.get(c.id) ?? []));
+  }
+  return out;
+}
 
 export const getCategoryBySlug = cache(async function getCategoryBySlug(
   slug: string,
@@ -258,7 +335,7 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
     'categories.bySlug',
     supabase
       .from('categories')
-      .select('id, slug, name, description, icon, is_featured')
+      .select('id, parent_id, slug, name, description, icon, is_featured')
       .eq('slug', slug)
       .maybeSingle(),
   );
@@ -295,6 +372,7 @@ export type ListingDetail = {
   tagline: string | null;
   description: string | null;
   category_id: string | null;
+  subcategory_id: string | null;
   city_id: string | null;
   phone_primary: string | null;
   phone_secondary: string | null;
@@ -307,6 +385,7 @@ export type ListingDetail = {
   social_links: { label: string; url: string }[];
   rating_average: number | null;
   review_count: number;
+  is_featured: boolean;
   verification: string;
   published_at: string | null;
   seo_title: string | null;
@@ -330,7 +409,7 @@ export const getListing = cache(async function getListing(
     supabase
       .from('public_listings')
       .select(
-        'id, slug, name, tagline, description, category_id, city_id, phone_primary, phone_secondary, email, website, address, postal_code, latitude, longitude, social_links, rating_average, review_count, verification, published_at, seo_title, seo_description',
+        'id, slug, name, tagline, description, category_id, subcategory_id, city_id, phone_primary, phone_secondary, email, website, address, postal_code, latitude, longitude, social_links, rating_average, review_count, is_featured, verification, published_at, seo_title, seo_description',
       )
       .eq('slug', slug)
       .maybeSingle(),
@@ -437,20 +516,106 @@ export type PublicReview = {
   author_name: string | null;
   reply_body: string | null;
   created_at: string;
+  /** Per-aspect ratings (migration 0018). Absent before it is applied, null when skipped. */
+  rating_service?: number | null;
+  rating_hospitality?: number | null;
+  rating_pricing?: number | null;
 };
+
+const REVIEW_COLUMNS = 'id, rating, title, body, author_name, reply_body, created_at';
+const REVIEW_CRITERIA_COLUMNS = 'rating_service, rating_hospitality, rating_pricing';
 
 /** Approved reviews only — RLS hides pending ones from the public client anyway. */
 export async function getApprovedReviews(listingId: string): Promise<PublicReview[]> {
-  return readList<PublicReview>(
-    'reviews.select',
+  const run = (columns: string) =>
     supabase
       .from('reviews')
-      .select('id, rating, title, body, author_name, reply_body, created_at')
+      .select(columns)
       .eq('listing_id', listingId)
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
-      .limit(50),
-  );
+      .limit(50);
+  let { data, error } = await run(`${REVIEW_COLUMNS}, ${REVIEW_CRITERIA_COLUMNS}`);
+  // Before migration 0018 the aspect columns do not exist; read the old shape
+  // rather than losing every review on the page.
+  if (isMissingColumnError(error)) ({ data, error } = await run(REVIEW_COLUMNS));
+  reportError('reviews.select', error);
+  return (data ?? []) as unknown as PublicReview[];
+}
+
+/**
+ * A search-result card (so the shared ListingCard renders it) plus what the
+ * listing page's Similar Listings adds: the phone, verification and hours.
+ */
+export type SimilarListing = ListingCard & {
+  phone_primary: string | null;
+  verification: string;
+  hours: OpeningHour[];
+};
+
+/**
+ * Up to `limit` other listings in the same category: same city first, then
+ * featured, then newest. The order is fully determined by the data, so the same
+ * listing always shows the same neighbours. Three small reads in total — the
+ * candidates, then their hours and covers together.
+ */
+export async function getSimilarListings(
+  listing: Pick<ListingDetail, 'id' | 'category_id' | 'city_id'>,
+  limit = 3,
+): Promise<SimilarListing[]> {
+  if (!listing.category_id) return [];
+  const rows = (await readList(
+    'public_listings.similar',
+    supabase
+      .from('public_listings')
+      .select(
+        'id, slug, name, tagline, phone_primary, category_id, city_id, latitude, longitude, rating_average, review_count, is_featured, verification, published_at',
+      )
+      .eq('category_id', listing.category_id)
+      .neq('id', listing.id)
+      .order('published_at', { ascending: false })
+      .order('id')
+      .limit(12),
+  )) as Omit<SimilarListing, 'hours' | 'cover_url' | 'distance_km' | 'total_count'>[];
+
+  const picked = rows
+    .map((row, index) => ({ row, index }))
+    .sort(
+      (a, b) =>
+        Number(b.row.city_id === listing.city_id) - Number(a.row.city_id === listing.city_id) ||
+        Number(b.row.is_featured) - Number(a.row.is_featured) ||
+        a.index - b.index,
+    )
+    .slice(0, limit)
+    .map(({ row }) => row);
+  if (picked.length === 0) return [];
+
+  const [hours, withCovers] = await Promise.all([
+    readList(
+      'opening_hours.similar',
+      supabase
+        .from('opening_hours')
+        .select('listing_id, day_of_week, opens_at, closes_at, is_closed, is_24h')
+        .in(
+          'listing_id',
+          picked.map((p) => p.id),
+        )
+        .order('day_of_week'),
+    ) as Promise<(OpeningHour & { listing_id: string })[]>,
+    attachCovers(picked),
+  ]);
+  return withCovers.map((card) => ({
+    ...card,
+    // Not a search: there is no origin to measure from and no result total.
+    distance_km: null,
+    total_count: 0,
+    hours: hours
+      .filter((h) => h.listing_id === card.id)
+      .map(({ listing_id, ...h }) => {
+        void listing_id;
+        return h;
+      }),
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -546,6 +711,210 @@ export async function getCityListingCounts(cityIds: string[]): Promise<Map<strin
     if (n !== null) out.set(id, n);
   });
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Homepage and site chrome
+// ---------------------------------------------------------------------------
+// Each read below is one bounded GET on the tag-cached anon client, so the
+// homepage costs a fixed handful of PostgREST requests per regeneration no
+// matter how many sections an editor adds. src/lib/home.ts and
+// src/lib/chrome.ts turn these rows into view models.
+
+export type MediaRow = {
+  path: string;
+  alt: string | null;
+  width: number | null;
+  height: number | null;
+};
+
+export type SectionItemRow = {
+  id: string;
+  sort_order: number;
+  ref_type: string | null;
+  ref_id: string | null;
+  title: string | null;
+  subtitle: string | null;
+  body: string | null;
+  icon: string | null;
+  url: string | null;
+  is_enabled: boolean;
+  image: MediaRow | null;
+};
+
+export type SectionRow = {
+  id: string;
+  section_key: string;
+  section_type: string;
+  sort_order: number;
+  heading: string | null;
+  subheading: string | null;
+  body: string | null;
+  cta_label: string | null;
+  cta_url: string | null;
+  background_variant: string | null;
+  item_limit: number | null;
+  settings: Record<string, unknown> | null;
+  image: MediaRow | null;
+  items: SectionItemRow[];
+};
+
+// The FK names disambiguate media: section_items also joins page_sections to
+// media, which PostgREST could otherwise read as a second relationship.
+const SECTION_ROW_COLUMNS =
+  'id, section_key, section_type, sort_order, heading, subheading, body, cta_label, cta_url, ' +
+  'background_variant, item_limit, settings, ' +
+  'image:media!page_sections_image_id_fkey(path, alt, width, height), ' +
+  'items:section_items(id, sort_order, ref_type, ref_id, title, subtitle, body, icon, url, is_enabled, ' +
+  'image:media!section_items_image_id_fkey(path, alt, width, height)), ' +
+  'pages!inner(slug)';
+
+/**
+ * Every enabled section of a page with its image and items, in one request.
+ * Cached under pg:page_sections, so section and item edits must update that tag.
+ */
+export const getSectionRows = cache(async function getSectionRows(
+  slug: string,
+): Promise<SectionRow[]> {
+  const rows = await readList(
+    'page_sections.withItems',
+    supabase
+      .from('page_sections')
+      .select(SECTION_ROW_COLUMNS)
+      .eq('pages.slug', slug)
+      .eq('is_enabled', true)
+      .order('sort_order')
+      .order('sort_order', { referencedTable: 'section_items' })
+      .limit(40),
+  );
+  return rows.map((row) => {
+    const { pages, items, ...rest } = row as unknown as SectionRow & { pages: unknown };
+    void pages;
+    return {
+      ...rest,
+      items: (items ?? []).filter((i) => i.is_enabled).sort((a, b) => a.sort_order - b.sort_order),
+    };
+  });
+});
+
+/** Media rows by id — the header and footer logos. */
+export const getMediaByIds = cache(async function getMediaByIds(
+  ids: string[],
+): Promise<(MediaRow & { id: string })[]> {
+  if (ids.length === 0) return [];
+  return readList(
+    'media.byIds',
+    supabase.from('media').select('id, path, alt, width, height').in('id', ids).limit(ids.length),
+  );
+});
+
+/** Approved listings by id, in the same shape search_listings returns (for pinned cards). */
+export async function getListingCardsByIds(ids: string[]): Promise<ListingCard[]> {
+  if (ids.length === 0) return [];
+  const rows = await readList<Omit<ListingCard, 'distance_km' | 'total_count'>>(
+    'public_listings.byIds',
+    supabase
+      .from('public_listings')
+      .select(
+        'id, slug, name, tagline, category_id, city_id, latitude, longitude, rating_average, review_count, is_featured, published_at',
+      )
+      .in('id', ids)
+      .limit(ids.length),
+  );
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const ordered = ids.flatMap((id) => {
+    const r = byId.get(id);
+    return r ? [{ ...r, distance_km: null, total_count: rows.length }] : [];
+  });
+  return attachCovers(ordered);
+}
+
+export type CardExtras = { id: string; phone_primary: string | null; excerpt: string | null };
+
+/** Phone and a 200-character excerpt per card, from the public_listing_cards view (0021). */
+export async function getCardExtras(ids: string[]): Promise<CardExtras[]> {
+  if (ids.length === 0) return [];
+  return readList(
+    'public_listing_cards.select',
+    supabase
+      .from('public_listing_cards')
+      .select('id, phone_primary, excerpt')
+      .in('id', ids)
+      .limit(ids.length),
+  );
+}
+
+/** Logo per listing, for the round badge on a card. Covers come from attachCovers. */
+export async function getCardLogos(ids: string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  // PostgREST's inferred type calls the embedded media an array; it is a single
+  // row (listing_images.media_id is a many-to-one foreign key).
+  const rows = (await readList(
+    'listing_images.logos',
+    supabase
+      .from('listing_images')
+      .select('listing_id, media(path)')
+      .eq('kind', 'logo')
+      .in('listing_id', ids)
+      .limit(ids.length),
+  )) as unknown as { listing_id: string; media: { path: string } | null }[];
+  return new Map(rows.flatMap((r) => (r.media ? [[r.listing_id, mediaUrl(r.media.path)]] : [])));
+}
+
+/** Opening hours for several listings at once (7 rows each at most). */
+export async function getHoursFor(
+  ids: string[],
+): Promise<(OpeningHour & { listing_id: string })[]> {
+  if (ids.length === 0) return [];
+  return readList(
+    'opening_hours.forCards',
+    supabase
+      .from('opening_hours')
+      .select('listing_id, day_of_week, opens_at, closes_at, is_closed, is_24h')
+      .in('listing_id', ids)
+      .order('day_of_week')
+      .limit(ids.length * 7),
+  );
+}
+
+export type PostCardRow = {
+  id: string;
+  slug: string;
+  title: string;
+  standfirst: string | null;
+  read_minutes: number | null;
+  published_at: string | null;
+  category: { name: string } | null;
+  cover: MediaRow | null;
+};
+
+/** Latest published posts, or the given posts in the given order, with cover and category. */
+export async function getPostCards({
+  limit,
+  ids,
+}: {
+  limit: number;
+  ids?: string[];
+}): Promise<PostCardRow[]> {
+  let q = supabase
+    .from('blog_posts')
+    .select(
+      'id, slug, title, standfirst, read_minutes, published_at, ' +
+        'category:blog_categories!blog_posts_category_id_fkey(name), ' +
+        'cover:media!blog_posts_cover_fk(path, alt, width, height)',
+    )
+    .eq('is_published', true);
+  q = ids?.length ? q.in('id', ids) : q.order('published_at', { ascending: false });
+  const rows = await readList<PostCardRow>(
+    'blog_posts.cards',
+    q.limit(ids?.length ? ids.length : limit) as unknown as PromiseLike<Result<PostCardRow[]>>,
+  );
+  if (!ids?.length) return rows;
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return ids.flatMap((id) => {
+    const r = byId.get(id);
+    return r ? [r] : [];
+  });
 }
 
 /** Site-wide rating: the review-weighted average over every rated listing. */

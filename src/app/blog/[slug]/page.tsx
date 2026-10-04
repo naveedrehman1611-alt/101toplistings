@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getBlogPost, getBlogPosts } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
 import { SITE_URL } from '@/lib/supabase';
+import { SHARE_IMAGE } from '@/lib/seo';
 import { Markdown } from '@/components/markdown';
 import { redirectOrNotFound } from '@/lib/redirects';
 
@@ -29,8 +30,8 @@ export async function generateMetadata({
     description,
     // Self-canonical unless the editor set an override (validated as http(s) on save).
     alternates: { canonical: post.canonical_url ?? url },
-    openGraph: { title, description, url, type: 'article' },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { title, description, url, type: 'article', images: [SHARE_IMAGE] },
+    twitter: { card: 'summary_large_image', title, description, images: [SHARE_IMAGE] },
   };
 }
 

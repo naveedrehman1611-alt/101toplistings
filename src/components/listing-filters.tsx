@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { NearMeButton } from './near-me-button';
 
-type Option = { slug: string; name: string };
+type Option = { slug: string; name: string; parent_id?: string | null };
 
 /**
  * Keyword + category + city filters (§7.5.6, criterion 46). A plain GET form,
@@ -15,6 +15,7 @@ export function ListingFilters({
   category,
   city,
   sort,
+  defaultSort = 'newest',
   categories,
   cities,
   nearMe,
@@ -25,6 +26,8 @@ export function ListingFilters({
   category?: string;
   city?: string;
   sort?: string;
+  /** The page's own default order, which is left out of the URL. */
+  defaultSort?: string;
   categories?: Option[];
   cities?: Option[];
   /** Show the "Near me" button (it searches from /search). */
@@ -59,7 +62,8 @@ export function ListingFilters({
             <option value="">All categories</option>
             {categories.map((c) => (
               <option key={c.slug} value={c.slug}>
-                {c.name}
+                {/* Subcategories follow their parent (getCategories is tree-ordered). */}
+                {c.parent_id ? `\u00a0\u00a0\u00a0${c.name}` : c.name}
               </option>
             ))}
           </select>
@@ -78,7 +82,7 @@ export function ListingFilters({
           </select>
         </label>
       ) : null}
-      {sort && sort !== 'newest' ? <input type="hidden" name="sort" value={sort} /> : null}
+      {sort && sort !== defaultSort ? <input type="hidden" name="sort" value={sort} /> : null}
       {near ? (
         <>
           <input type="hidden" name="lat" value={near.lat} />

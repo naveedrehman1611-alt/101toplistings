@@ -82,8 +82,8 @@ export default async function AdminLocations({
           <p className="text-sm">
             <span className="font-medium">Starting from empty?</span>{' '}
             <span className="text-[var(--text-muted)]">
-              Load Pakistan&apos;s provinces, 27 larger cities and 22 common categories. Existing
-              rows are kept.
+              Load the United Kingdom, United States and United Arab Emirates with 21 regions, 32
+              major cities and 22 common categories. Existing rows are kept.
             </span>
           </p>
           <SubmitButton>Load starter data</SubmitButton>
@@ -102,7 +102,7 @@ export default async function AdminLocations({
             defaultValue={editCountry?.slug}
             hint="Blank = from name."
           />
-          <Field label="ISO code" name="iso2" defaultValue={editCountry?.iso2} placeholder="PK" />
+          <Field label="ISO code" name="iso2" defaultValue={editCountry?.iso2} placeholder="GB" />
           <CoordFields loc={editCountry} />
           <FormActions editing={!!editCountry} />
         </form>

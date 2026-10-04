@@ -3,7 +3,8 @@
 Living status file. Updated after every phase. Do not delete criteria — mark them
 `[x]` only with evidence, or annotate them `BLOCKED` with the reason.
 
-**Last updated:** 2026-09-27. Live at https://rankyousite.vercel.app on Supabase `cwnqvngpjxvodbvdhpzf`. Admin can now manage categories, locations, listings, reviews and the contact inbox; owners can register and submit listings; visitors can review and use the contact form.
+**Last updated:** 2026-09-27. **Homepage rebuilt as SmartBizDir** (see `docs/HOMEPAGE.md`): 14 admin-editable sections, migration 0021 (run `supabase/update_0020_to_0021.sql`), verified on a local PostgreSQL 16 + PostGIS + PostgREST stack — 40 public and 12 admin end-to-end checks at 1440/1280/768/390/320.
+Previously: Live at https://rankyousite.vercel.app on Supabase `cwnqvngpjxvodbvdhpzf`. Admin can now manage categories, locations, listings, reviews and the contact inbox; owners can register and submit listings; visitors can review and use the contact form.
 
 ---
 
@@ -76,9 +77,9 @@ Numbering matches the master prompt exactly.
 | 7 | Desktop layouts tested | `[ ]` | |
 | 8 | Mobile layouts tested | `[ ]` | |
 | 9 | Search implemented | `[x]` | `/search?q=`, SSR, zero-result state |
-| 10 | Filters implemented | `[x]` | Keyword, category and city on `/listings` and `/search`; city on category pages, category on city pages. GET form, state in the URL, carried through sort and paging |
-| 11 | Sorting implemented | `[x]` | Newest / oldest / rating / A–Z, state in the URL |
-| 12 | Pagination implemented | `[x]` | Server-side offset paging, page number in the URL |
+| 10 | Filters implemented | `[x]` | Keyword, category and city on `/listings` and `/search`; city on category pages, category on city pages. GET form, state in the URL, carried through sort and paging. `/listings` also filters from its top-category and top-city chips |
+| 11 | Sorting implemented | `[x]` | Newest / oldest / rating / A–Z, state in the URL. `/listings` defaults to featured first, then newest |
+| 12 | Pagination implemented | `[x]` | Server-side offset paging, page number in the URL. `/listings` shows 15 per page with previous/next |
 | 13 | All forms implemented | `[x]` | Contact (honeypot, stored in `form_submissions`), register, sign in, listing submit/edit, review, claim (`/listing/[slug]/claim` → `/admin/claims`), report (`/listing/[slug]/report` → Inbox) |
 | 14 | Authentication implemented | `[x]` | `/login`, `/register` (Supabase Auth, email confirmation aware), role-based redirect; `requireUser`/`requireRole` in every action |
 | 15 | Listing submission implemented | `[x]` | Owners submit at `/dashboard/listings/new` as `pending`; staff approve in admin. RLS blocks self-approval (tested) |
