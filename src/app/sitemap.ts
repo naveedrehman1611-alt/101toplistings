@@ -7,6 +7,7 @@ import {
   getCityListingCounts,
 } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
+import { LIVE_TOOLS, TOOLS_BASE, toolHref } from '@/lib/free-tools';
 import { MIN_CITY_LISTINGS_TO_INDEX, getSitemapExclusions } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -29,6 +30,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/blog',
     '/about',
     '/contact',
+    TOOLS_BASE,
+    ...LIVE_TOOLS.map(toolHref),
     '/privacy',
     '/terms',
   ].filter((p) => !excluded.has(p || '/'));

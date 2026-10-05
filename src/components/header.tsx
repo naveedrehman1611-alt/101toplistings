@@ -6,9 +6,13 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@/components/icon';
 import { drawer } from '@/lib/motion';
+import { TOOLS_BASE, toolHref, toolsByCategory } from '@/lib/free-tools';
+import { NewPill, SoonPill, ToolsMegaMenu } from '@/components/tools/tools-mega-menu';
 import type { MenuItem } from '@/lib/queries';
 
 const ADD_LISTING = '/dashboard/listings/new';
+
+const TOOL_CATEGORIES = toolsByCategory();
 
 const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
@@ -56,6 +60,7 @@ export function Header({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
 
@@ -103,8 +108,9 @@ export function Header({
               </span>
             </Link>
 
-            {/* gap-6 until xl: with gap-8 the row is ~2px too wide at 1024px. */}
-            <nav aria-label="Primary" className="hidden items-center gap-6 lg:flex xl:gap-8">
+            {/* gap-5 until xl and gap-6 from xl: with the tools trigger, anything wider squeezes
+                the logo once the admin adds a fifth or sixth menu link. */}
+            <nav aria-label="Primary" className="hidden items-center gap-5 lg:flex xl:gap-6">
               {primary.map((item) => {
                 const active = isActive(pathname, item.url);
                 return (
@@ -112,7 +118,7 @@ export function Header({
                     key={`${item.url}|${item.label}`}
                     href={item.url}
                     aria-current={active ? 'page' : undefined}
-                    className={`rounded-sm transition-colors ${focusRing} ${
+                    className={`rounded-sm whitespace-nowrap transition-colors ${focusRing} ${
                       active
                         ? 'text-primary-container font-semibold'
                         : 'font-label-md text-label-md text-on-surface-variant hover:text-on-surface'
@@ -122,12 +128,15 @@ export function Header({
                   </Link>
                 );
               })}
+              <ToolsMegaMenu />
             </nav>
 
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+              {/* Hidden from lg to xl, where the nav and tools menu need the room; the
+                  account icon beside it still leads to login. */}
               <Link
                 href="/login"
-                className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm transition-colors sm:inline-flex ${focusRing}`}
+                className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm transition-colors sm:inline-flex lg:hidden xl:inline-flex ${focusRing}`}
               >
                 Login / Sign Up
               </Link>
@@ -221,6 +230,74 @@ export function Header({
                     </li>
                   );
                 })}
+                <li>
+                  <button
+                    type="button"
+                    aria-expanded={toolsOpen}
+                    aria-controls="mobile-free-tools"
+                    onClick={() => setToolsOpen((v) => !v)}
+                    className={`font-label-md text-label-md flex w-full items-center justify-between rounded-lg px-3 py-3 transition-colors ${focusRing} ${
+                      isActive(pathname, TOOLS_BASE)
+                        ? 'text-primary-container font-semibold'
+                        : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+                    }`}
+                  >
+                    Free SEO Tools
+                    <Icon
+                      name="expand_more"
+                      size={20}
+                      className={`transition-transform ${toolsOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  <div id="mobile-free-tools" hidden={!toolsOpen} className="px-3 pb-2">
+                    {TOOL_CATEGORIES.map((category) => (
+                      <div key={category.id} className="mt-3">
+                        <p className="font-label-sm text-label-sm text-secondary mb-1 tracking-wider uppercase">
+                          {category.label}
+                        </p>
+                        <ul className="flex flex-col">
+                          {category.tools.map((tool) => (
+                            <li key={tool.slug}>
+                              {tool.status === 'live' ? (
+                                <Link
+                                  href={toolHref(tool)}
+                                  onClick={close}
+                                  aria-current={pathname === toolHref(tool) ? 'page' : undefined}
+                                  className={`font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2 rounded-lg px-2 py-2 transition-colors ${focusRing}`}
+                                >
+                                  <Icon
+                                    name={tool.icon}
+                                    size={18}
+                                    className="text-primary-container shrink-0"
+                                  />
+                                  <span className="min-w-0 flex-1">{tool.name}</span>
+                                  {tool.isNew ? <NewPill /> : null}
+                                </Link>
+                              ) : (
+                                <span
+                                  aria-disabled="true"
+                                  className="font-body-sm text-body-sm text-secondary flex items-center gap-2 px-2 py-2 opacity-70"
+                                >
+                                  <Icon name={tool.icon} size={18} className="shrink-0" />
+                                  <span className="min-w-0 flex-1">{tool.name}</span>
+                                  <SoonPill />
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                    <Link
+                      href={TOOLS_BASE}
+                      onClick={close}
+                      className={`font-label-md text-label-md text-primary-container mt-3 inline-flex items-center gap-1 rounded-sm px-2 py-2 font-semibold ${focusRing}`}
+                    >
+                      View all free tools
+                      <Icon name="north_east" size={16} />
+                    </Link>
+                  </div>
+                </li>
               </ul>
 
               <div className="border-border-subtle mt-6 flex flex-col gap-3 border-t pt-6">
