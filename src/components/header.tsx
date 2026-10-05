@@ -108,8 +108,9 @@ export function Header({
               </span>
             </Link>
 
-            {/* gap-5 until xl: with the tools trigger, gap-6 or more is too wide at 1024px. */}
-            <nav aria-label="Primary" className="hidden items-center gap-5 lg:flex xl:gap-8">
+            {/* gap-5 until xl and gap-6 from xl: with the tools trigger, anything wider squeezes
+                the logo once the admin adds a fifth or sixth menu link. */}
+            <nav aria-label="Primary" className="hidden items-center gap-5 lg:flex xl:gap-6">
               {primary.map((item) => {
                 const active = isActive(pathname, item.url);
                 return (
@@ -117,7 +118,7 @@ export function Header({
                     key={`${item.url}|${item.label}`}
                     href={item.url}
                     aria-current={active ? 'page' : undefined}
-                    className={`rounded-sm transition-colors ${focusRing} ${
+                    className={`rounded-sm whitespace-nowrap transition-colors ${focusRing} ${
                       active
                         ? 'text-primary-container font-semibold'
                         : 'font-label-md text-label-md text-on-surface-variant hover:text-on-surface'
@@ -131,9 +132,11 @@ export function Header({
             </nav>
 
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+              {/* Hidden from lg to xl, where the nav and tools menu need the room; the
+                  account icon beside it still leads to login. */}
               <Link
                 href="/login"
-                className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm transition-colors sm:inline-flex ${focusRing}`}
+                className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm transition-colors sm:inline-flex lg:hidden xl:inline-flex ${focusRing}`}
               >
                 Login / Sign Up
               </Link>
