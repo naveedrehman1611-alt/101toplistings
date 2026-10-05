@@ -1,9 +1,13 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireUser } from '@/lib/auth';
+import { removeFavourite } from '@/lib/favourite-actions';
 import { Notice } from '@/components/admin-ui';
 
 export const metadata = { title: 'My listings' };
+
+/** A saved business; the listing is null once RLS hides it (no longer approved). */
+type SavedRow = { listing_id: string; listings: { slug: string; name: string } | null };
 
 const STATUS_TEXT: Record<string, string> = {
   pending: 'Waiting for review',
@@ -21,14 +25,24 @@ export default async function Dashboard({
   const user = await requireUser('/dashboard');
   const sp = await searchParams;
   const supabase = await createClient();
-  const savedRequest = getSavedListings(supabase, user.id);
-  const { data } = await supabase
-    .from('listings')
-    .select('id, slug, name, status, rejection_note, created_at')
-    .eq('owner_user_id', user.id)
-    .order('created_at', { ascending: false });
+  const [{ data }, favourites] = await Promise.all([
+    supabase
+      .from('listings')
+      .select('id, slug, name, status, rejection_note, created_at')
+      .eq('owner_user_id', user.id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('favourites')
+      .select('listing_id, listings(slug, name)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50),
+  ]);
   const listings = data ?? [];
-  const saved = await savedRequest;
+  if (favourites.error) console.error('[favourites] dashboard read failed:', favourites.error);
+  const saved = ((favourites.data ?? []) as unknown as SavedRow[]).flatMap((f) =>
+    f.listings ? [{ id: f.listing_id, ...f.listings }] : [],
+  );
 
   return (
     <div>
@@ -80,31 +94,44 @@ export default async function Dashboard({
         </ul>
       )}
 
-      <section className="mt-12">
-        <h2 className="text-xl font-semibold">Saved listings</h2>
-        {saved.length === 0 ? (
-          <p className="mt-6 rounded-lg border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--text-muted)]">
-            Listings you save appear here.
+      <section aria-labelledby="saved-heading" className="mt-12">
+        <h2 id="saved-heading" className="text-xl font-semibold">
+          Saved businesses
+        </h2>
+        {favourites.error ? (
+          <p
+            role="alert"
+            className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+          >
+            Your saved businesses could not be loaded right now. Please try again later.
+          </p>
+        ) : saved.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--text-muted)]">
+            You have not saved any businesses yet.
           </p>
         ) : (
-          <ul className="mt-6 space-y-3">
-            {saved.map((l) => (
+          <ul className="mt-4 space-y-3">
+            {saved.map((s) => (
               <li
-                key={l.id}
+                key={s.id}
                 className="surface-card flex flex-wrap items-center justify-between gap-3 p-4"
               >
-                <div>
-                  <p className="font-medium">{l.name}</p>
-                  {l.tagline ? (
-                    <p className="text-sm text-[var(--text-muted)]">{l.tagline}</p>
-                  ) : null}
-                </div>
                 <Link
-                  href={`/listing/${l.slug}`}
-                  className="text-brand-700 text-sm hover:underline"
+                  href={`/listing/${s.slug}`}
+                  className="hover:text-brand-700 font-medium hover:underline"
                 >
-                  View<span className="sr-only"> {l.name}</span>
+                  {s.name}
                 </Link>
+                <form action={removeFavourite}>
+                  <input type="hidden" name="listing_id" value={s.id} />
+                  <button
+                    type="submit"
+                    aria-label={`Remove ${s.name} from saved businesses`}
+                    className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]"
+                  >
+                    Remove
+                  </button>
+                </form>
               </li>
             ))}
           </ul>
@@ -112,36 +139,4 @@ export default async function Dashboard({
       </section>
     </div>
   );
-}
-
-type SavedListing = { id: string; slug: string; name: string; tagline: string | null };
-
-/**
- * The visitor's favourites, newest first. RLS (favourites_own) returns only
- * their own rows; public_listings drops any listing that is no longer live, so
- * a saved listing that was suspended or removed simply stops showing here.
- */
-async function getSavedListings(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-): Promise<SavedListing[]> {
-  const { data: favourites, error } = await supabase
-    .from('favourites')
-    .select('listing_id')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(50);
-  if (error) console.error(`[supabase] favourites.byUser failed: ${error.message}`);
-  const ids = (favourites ?? []).map((f) => f.listing_id as string);
-  if (ids.length === 0) return [];
-
-  const { data: rows, error: listingsError } = await supabase
-    .from('public_listings')
-    .select('id, slug, name, tagline')
-    .in('id', ids);
-  if (listingsError) {
-    console.error(`[supabase] public_listings.saved failed: ${listingsError.message}`);
-  }
-  const byId = new Map(((rows ?? []) as SavedListing[]).map((l) => [l.id, l]));
-  return ids.flatMap((id) => byId.get(id) ?? []);
 }

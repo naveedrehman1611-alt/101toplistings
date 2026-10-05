@@ -1,7 +1,8 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Icon, type IconName } from '@/components/icon';
-import { NearMeButton } from '@/components/near-me-button';
-import type { City } from '@/lib/queries';
+import type { Category, City } from '@/lib/queries';
+import heroCity from '../../../public/images/hero-city.webp';
 
 /**
  * A category page when the directory has that category, otherwise a keyword
@@ -11,134 +12,233 @@ export function categoryHref(slugs: ReadonlySet<string>, slug: string, keyword: 
   return slugs.has(slug) ? `/category/${slug}` : `/search?q=${encodeURIComponent(keyword)}`;
 }
 
-const PILLS: { slug: string; keyword: string; label: string; icon: IconName }[] = [
-  { slug: 'restaurants', keyword: 'restaurant', label: 'Restaurants', icon: 'restaurant' },
-  { slug: 'shopping', keyword: 'shopping', label: 'Shopping & Retail', icon: 'shopping_bag' },
-  { slug: 'schools', keyword: 'school', label: 'Education & Training', icon: 'school' },
-  { slug: 'hotels', keyword: 'hotel', label: 'Hotels & Travel', icon: 'hotel' },
-  { slug: 'real-estate', keyword: 'real estate', label: 'Real Estate', icon: 'apartment' },
-  { slug: 'lawyers', keyword: 'lawyer', label: 'Legal Services', icon: 'gavel' },
+const SERVICES: {
+  icon: IconName;
+  tilt?: boolean;
+  title: string;
+  subtitle: string;
+  href: string;
+}[] = [
+  {
+    icon: 'storefront_bold',
+    title: 'Business Listings',
+    subtitle: 'Get found by local customers',
+    href: '/dashboard/listings/new',
+  },
+  {
+    icon: 'monitoring_bold',
+    title: 'SEO Services',
+    subtitle: 'Rank higher on Google',
+    href: '/contact?subject=SEO%20services',
+  },
+  {
+    icon: 'campaign_bold',
+    title: 'Digital Marketing',
+    subtitle: 'Grow your brand online',
+    href: '/contact?subject=Digital%20marketing',
+  },
+  {
+    icon: 'link_bold',
+    tilt: true,
+    title: 'Guest Posting',
+    subtitle: 'Build quality backlinks',
+    href: '/contact?subject=Guest%20posting',
+  },
+  {
+    icon: 'link_bold',
+    tilt: true,
+    title: 'Link Building',
+    subtitle: 'Boost your authority',
+    href: '/contact?subject=Link%20building',
+  },
 ];
 
-const PILL =
-  'inline-flex items-center gap-2.5 rounded-full bg-white/10 px-4 py-2 font-label-md text-label-md text-white shadow-xs backdrop-blur-md transition-all hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-primary-fixed focus-visible:outline-hidden';
+/**
+ * The strip left of the photo. In the mockup the skyline carries on, darkened,
+ * behind the heading, but the photo asset stops at its left edge; this paints
+ * the mockup's colours there (top to bottom) under a navy fade from the left
+ * and the bottom. The photo's masked left 60px blend into the strip's last 60px.
+ */
+const SKYLINE_FADE = [
+  'linear-gradient(to top, var(--color-hero-navy), transparent 6%)',
+  'linear-gradient(to right, var(--color-hero-navy), transparent 380px)',
+  'linear-gradient(to bottom, #0c5285, #135a8e 10%, #206194 20%, #396d97 30%, #4f7699 37%, #597796 46%, #5a6a80 52%, #576071 59%, #364b66 64%, #283c55 71%, #1c3036 79%, #11252a 85%, #33495f 91%, #2a4b6d)',
+].join(', ');
 
 const FIELD =
-  'flex flex-1 items-center rounded-xl bg-surface-bg px-4 py-3 text-on-surface focus-within:ring-2 focus-within:ring-primary-container';
+  'flex h-12 min-w-0 items-center gap-3.5 rounded-[10px] border border-[#e3e8ef] bg-white px-3.5 focus-within:border-hero-green focus-within:ring-2 focus-within:ring-hero-green/25';
 
-const FIELD_LABEL = 'font-label-sm text-label-sm tracking-wider text-secondary uppercase';
+// Below md the controls use 16px text: iOS Safari zooms into any smaller field on focus.
+const CONTROL =
+  'h-full w-full min-w-0 bg-transparent text-sm text-on-surface focus:outline-hidden max-md:text-base';
 
-export function Hero({
-  cities,
-  categorySlugs,
+// Native select, restyled: the chevron is drawn over its right padding, and the
+// text is grey while the "All …" option is chosen.
+const SELECT = `${CONTROL} cursor-pointer appearance-none truncate pr-7 has-[option[value='']:checked]:text-[#4b5563] [&_option]:text-on-surface`;
+
+type Option = { slug: string; name: string };
+
+function FilterSelect({
+  id,
+  name,
+  label,
+  icon,
+  allLabel,
+  options,
+  className,
 }: {
-  cities: Pick<City, 'id' | 'slug' | 'name'>[];
-  categorySlugs: ReadonlySet<string>;
+  id: string;
+  name: string;
+  label: string;
+  icon: IconName;
+  allLabel: string;
+  options: Option[];
+  className: string;
 }) {
   return (
-    <section className="text-on-primary relative w-full overflow-hidden bg-linear-to-b from-[#071328] via-[#0b1c30] to-[#0d223a] px-6 pt-16 pb-24 lg:px-12">
-      {/* Ambient glow decorative layers */}
+    <div className={`${FIELD} relative ${className}`}>
+      <Icon name={icon} size={22} className="text-[#3b4a5f]" />
+      <label htmlFor={id} className="sr-only">
+        {label}
+      </label>
+      <select id={id} name={name} defaultValue="" className={SELECT}>
+        <option value="">{allLabel}</option>
+        {options.map((o) => (
+          <option key={o.slug} value={o.slug}>
+            {o.name}
+          </option>
+        ))}
+      </select>
+      <Icon
+        name="expand_more"
+        size={18}
+        className="pointer-events-none absolute right-2.5 text-[#3b4a5f]"
+      />
+    </div>
+  );
+}
+
+export function Hero({
+  categories,
+  cities,
+}: {
+  categories: Pick<Category, 'slug' | 'name'>[];
+  cities: Pick<City, 'slug' | 'name'>[];
+}) {
+  return (
+    <section className="bg-hero-navy relative overflow-hidden text-white">
+      {/* Decorative photo. The asset is the mockup's top-right corner, so from lg it
+          sits there at the mockup's scale: the laptop ends just above the search card.
+          Nudged up 1% to hide a light line along its top edge. Below lg it lies full
+          width behind the text at 35%. */}
       <div
         aria-hidden
-        className="bg-primary-container/20 pointer-events-none absolute -top-32 left-1/2 h-[340px] w-[720px] -translate-x-1/2 rounded-full blur-[110px]"
-      />
-      <div
-        aria-hidden
-        className="bg-tertiary-container/15 pointer-events-none absolute top-48 right-10 h-96 w-96 rounded-full blur-[100px]"
-      />
-      <div className="relative mx-auto flex max-w-5xl flex-col items-center text-center">
-        {/* Trust pill badge */}
-        <div className="bg-surface-container-lowest/10 mb-6 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 shadow-xs backdrop-blur-md">
-          <Icon name="verified_user" size={16} className="text-primary-fixed" />
-          <span className="font-label-sm text-label-sm text-primary-fixed tracking-wide uppercase">
-            Pakistan&apos;s Verified Commercial Network
+        className="pointer-events-none absolute inset-x-0 top-0 aspect-[910/756] -translate-y-[1%] opacity-35 lg:left-auto lg:w-[563px] lg:opacity-100"
+      >
+        <div
+          className="absolute top-0 right-[calc(100%-60px)] hidden h-full w-[440px] lg:block"
+          style={{ backgroundImage: SKYLINE_FADE }}
+        />
+        <Image
+          src={heroCity}
+          alt=""
+          fill
+          preload
+          sizes="(min-width: 1024px) 563px, 100vw"
+          className="object-cover object-right-top lg:[mask-image:linear-gradient(to_right,transparent,black_60px)]"
+        />
+        <div className="from-hero-navy absolute inset-x-0 bottom-0 h-2/5 bg-linear-to-t to-transparent lg:h-[6%]" />
+      </div>
+
+      <div className="container-page relative pt-10 pb-14 lg:pt-[73px]">
+        <p className="border-hero-green-light/40 bg-hero-green-light/5 text-hero-green-light inline-block max-w-full rounded-2xl border px-[18px] py-[7px] text-[13px] font-semibold sm:rounded-full sm:text-[15px]">
+          {/* Wraps before the "+" on narrow phones; the margins widen the gaps around it. */}
+          <span className="me-1 whitespace-nowrap">Business Directory</span>{' '}
+          <span className="whitespace-nowrap">
+            <span className="me-1">+</span> SEO & Digital Marketing
           </span>
-        </div>
-        {/* 50rem rather than the design's max-w-3xl (48rem): browsers that round glyph
-            widths draw "…Directory –" a few pixels wider than 48rem, which pushed
-            the dash onto the second line. */}
-        <h1 className="font-display-hero text-display-hero-mobile md:text-display-hero max-w-[50rem] leading-tight tracking-tight text-white">
-          Pakistan&apos;s #1 Business Directory – Find Local Businesses
-        </h1>
-        <p className="font-body-lg text-body-lg text-surface-container-high/90 mt-4 max-w-2xl">
-          Business Directory Pakistan helps you find verified businesses, restaurants, shops, and
-          local services across Pakistan.
         </p>
 
-        {/* One GET form around the search bar and the pills, so "Near me" carries the
-            "What" keyword along (see NearMeButton). Below md the fields use 16px text:
-            iOS Safari zooms into any smaller field on focus. */}
-        <form action="/search" role="search" aria-label="Search businesses" className="w-full">
-          {/* Multi-segment unified search bar */}
-          <div className="bg-surface-card mt-10 w-full rounded-2xl p-2 shadow-2xl backdrop-blur-xs sm:p-2.5">
-            <div className="flex flex-col items-stretch gap-2 md:flex-row">
-              {/* Keyword input */}
-              <div className={FIELD}>
-                <Icon name="search" size={22} className="text-secondary mr-3" />
-                <div className="flex w-full flex-col text-left">
-                  <label htmlFor="hero-q" className={FIELD_LABEL}>
-                    What
-                  </label>
-                  <input
-                    id="hero-q"
-                    name="q"
-                    type="search"
-                    placeholder="Ex: restaurant, lawyer, gym..."
-                    className="font-body-md text-body-md text-on-surface placeholder:text-outline w-full appearance-none bg-transparent focus:outline-hidden max-md:text-base"
-                  />
-                </div>
-              </div>
-              {/* City dropdown, styled as the design's location input */}
-              <div className={FIELD}>
-                <Icon name="location_on" size={22} className="text-secondary mr-3" />
-                <div className="flex w-full flex-col text-left">
-                  <label htmlFor="hero-city" className={FIELD_LABEL}>
-                    Where
-                  </label>
-                  <select
-                    id="hero-city"
-                    name="city"
-                    defaultValue=""
-                    className="font-body-md text-body-md text-on-surface has-[option[value='']:checked]:text-outline [&_option]:text-on-surface w-full cursor-pointer appearance-none truncate border-0 bg-transparent focus:outline-hidden max-md:text-base"
-                  >
-                    <option value="">All cities (e.g. Lahore, Karachi)</option>
-                    {cities.map((c) => (
-                      <option key={c.id} value={c.slug}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              {/* Search button */}
-              <button
-                type="submit"
-                className="bg-primary-container font-title-md text-title-md text-on-primary hover:bg-primary hover:shadow-primary/30 focus-visible:ring-primary-container flex shrink-0 items-center justify-center gap-2 rounded-xl px-8 py-4 shadow-lg transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
-              >
-                <Icon name="search" size={20} />
-                <span>Search listings</span>
-              </button>
-            </div>
-          </div>
+        <h1 className="font-display mt-6 text-[40px] leading-[1.03] font-extrabold tracking-tight sm:text-5xl lg:mt-[18px] lg:text-[64px]">
+          <span className="block">Find Local Businesses.</span>
+          <span className="block">List Your Business.</span>
+          <span className="text-hero-green-light block">Grow Online.</span>
+        </h1>
 
-          {/* Quick category pills */}
-          <div className="mt-8 flex w-full flex-wrap items-center justify-center gap-3">
-            {PILLS.map((p) => (
-              <Link
-                key={p.slug}
-                href={categoryHref(categorySlugs, p.slug, p.keyword)}
-                className={PILL}
-              >
-                <Icon name={p.icon} size={18} className="text-primary-fixed" />
-                <span>{p.label}</span>
-              </Link>
-            ))}
-            <NearMeButton
-              className={`${PILL} [&>svg]:text-primary-fixed self-center whitespace-nowrap disabled:opacity-60 [&>svg]:size-[18px]`}
-              messageClassName="mt-2 max-w-xs text-center font-body-sm text-body-sm text-error-container"
+        {/* From lg the lines break where the mockup's do: no max-width gives both breaks. */}
+        <p className="mt-4 max-w-[36rem] text-lg leading-[1.55] text-white/85">
+          Discover local businesses, list your company, and build stronger{' '}
+          <br className="hidden lg:inline" />
+          online visibility with SEO, Local SEO, digital marketing,{' '}
+          <br className="hidden lg:inline" />
+          guest posting and link building services.
+        </p>
+
+        <form
+          action="/search"
+          role="search"
+          aria-label="Search businesses"
+          className="mt-9 flex w-full max-w-[69rem] flex-col gap-3.5 rounded-2xl bg-white p-[11px] shadow-2xl md:grid md:grid-cols-2 lg:flex lg:flex-row"
+        >
+          <div className={`${FIELD} lg:flex-[1.5]`}>
+            <Icon name="search" size={24} className="text-[#3b4a5f]" />
+            <label htmlFor="hero-q" className="sr-only">
+              Keyword
+            </label>
+            <input
+              id="hero-q"
+              name="q"
+              type="search"
+              placeholder="Business name, category or keyword"
+              className={`${CONTROL} appearance-none truncate placeholder:text-[#6b7280]`}
             />
           </div>
+          <FilterSelect
+            id="hero-category"
+            name="category"
+            label="Category"
+            icon="grid_view"
+            allLabel="All Categories"
+            options={categories}
+            className="lg:flex-1"
+          />
+          <FilterSelect
+            id="hero-city"
+            name="city"
+            label="City"
+            icon="location_on"
+            allLabel="All Cities"
+            options={cities}
+            className="lg:flex-[1.2]"
+          />
+          <button
+            type="submit"
+            className="bg-hero-green hover:bg-hero-green-hover focus-visible:ring-hero-green h-12 w-full shrink-0 rounded-lg text-base font-semibold text-white transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden lg:w-[188px]"
+          >
+            Search
+          </button>
         </form>
+
+        {/* From xl each item keeps its title and subtitle on one line, as in the mockup;
+            equal columns are too narrow for that, so the items are spread instead. */}
+        <ul className="mt-12 grid grid-cols-1 gap-6 min-[400px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:mt-[52px] xl:flex xl:justify-between xl:gap-4 xl:whitespace-nowrap">
+          {SERVICES.map((s) => (
+            <li key={s.title}>
+              <Link
+                href={s.href}
+                className="group focus-visible:ring-hero-green-light -m-2 flex items-center gap-3.5 rounded-2xl p-2 focus-visible:ring-2 focus-visible:outline-hidden"
+              >
+                <span className="flex size-[60px] shrink-0 items-center justify-center rounded-full bg-white/[0.06] ring-1 ring-white/10 transition-colors group-hover:bg-white/10">
+                  <Icon name={s.icon} size={30} className={s.tilt ? '-rotate-45' : undefined} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-base font-semibold">{s.title}</span>
+                  <span className="mt-1 block text-[13px] text-white/65">{s.subtitle}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

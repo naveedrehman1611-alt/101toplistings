@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+// Up to ~165 links to per-request pages: prefetch on intent only.
+import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
 import { getCategories, getCategoryBySlug, getCities, searchListings } from '@/lib/queries';
 import { Results, parsePage, parseSort } from '@/components/results';
 import { Breadcrumbs } from '@/components/ui';
@@ -55,8 +57,12 @@ export default async function CategoryPage({
   const page = parsePage(sp.page);
   const sort = parseSort(sp.sort);
   const q = sp.q?.trim().slice(0, 100) || undefined;
-  const cities = await getCities();
+  const [cities, categories] = await Promise.all([getCities(), getCategories()]);
   const city = cities.find((c) => c.slug === sp.city);
+  // A parent's results already include its children (search_listings, 0021);
+  // the links below let visitors narrow to one of them.
+  const parent = cat.parent_id ? categories.find((c) => c.id === cat.parent_id) : undefined;
+  const children = categories.filter((c) => c.parent_id === cat.id);
   const listings = await searchListings({
     query: q,
     categoryId: cat.id,
@@ -69,6 +75,7 @@ export default async function CategoryPage({
   const trail = [
     { label: 'Home', href: '/' },
     { label: 'Categories', href: '/categories' },
+    ...(parent ? [{ label: parent.name, href: `/category/${parent.slug}` }] : []),
     { label: cat.name },
   ];
   const path = `/category/${cat.slug}`;
@@ -83,6 +90,22 @@ export default async function CategoryPage({
       <h1 className="font-headline-lg text-headline-lg">{cat.name}</h1>
       {cat.description ? (
         <p className="mt-3 max-w-2xl text-[var(--text-muted)]">{cat.description}</p>
+      ) : null}
+      {children.length ? (
+        <nav aria-label={`${cat.name} subcategories`} className="mt-6">
+          <ul className="flex flex-wrap gap-2">
+            {children.map((c) => (
+              <li key={c.id}>
+                <Link
+                  href={`/category/${c.slug}`}
+                  className="hover:border-brand-500 hover:text-brand-700 inline-flex h-9 items-center rounded-full border border-[var(--border)] px-4 text-sm"
+                >
+                  {c.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       ) : null}
       <div className="mt-8">
         <ListingFilters

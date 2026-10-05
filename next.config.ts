@@ -24,18 +24,18 @@ const redirectVercelHost =
   process.env.VERCEL_ENV === 'production' && siteHost !== '' && !siteHost.endsWith('.vercel.app');
 
 const nextConfig: NextConfig = {
-  async redirects() {
-    if (!redirectVercelHost) return [];
-    return [
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: '.*\\.vercel\\.app' }],
-        destination: `https://${siteHost}/:path*`,
-        statusCode: 301,
-      },
-    ];
-  },
   images: {
+    // Uploads get a fresh, unguessable object name and are never overwritten
+    // (media-upload.ts), so an optimised variant can be cached for a month
+    // without ever going stale. Every re-optimisation is a fetch from Supabase
+    // Storage, so the longer TTL directly cuts Storage egress.
+    minimumCacheTTL: 2678400,
+    // Next 16 refuses to optimise images from private addresses (SSRF guard).
+    // Only a local Supabase stack (`supabase start`, 127.0.0.1:54321) needs
+    // that, and remotePatterns still limits fetches to its media bucket.
+    dangerouslyAllowLocalIP: supabaseUrl
+      ? ['localhost', '127.0.0.1'].includes(supabaseUrl.hostname)
+      : false,
     remotePatterns: supabaseUrl
       ? [
           {
@@ -46,6 +46,29 @@ const nextConfig: NextConfig = {
           },
         ]
       : [],
+  },
+  // Production *.vercel.app hosts go to the custom domain (see siteHost above).
+  // The reference site ran on WordPress; its public URLs map onto this app's
+  // routes so existing links and search results keep working after a move.
+  async redirects() {
+    return [
+      ...(redirectVercelHost
+        ? [
+            {
+              source: '/:path*',
+              has: [{ type: 'host' as const, value: '.*\\.vercel\\.app' }],
+              destination: `https://${siteHost}/:path*`,
+              statusCode: 301 as const,
+            },
+          ]
+        : []),
+      { source: '/listing-category/:slug', destination: '/category/:slug', permanent: true },
+      { source: '/listing-location/:slug', destination: '/city/:slug', permanent: true },
+      { source: '/listing-top-filter', destination: '/listings', permanent: true },
+      { source: '/submission', destination: '/dashboard/listings/new', permanent: true },
+      { source: '/about-us', destination: '/about', permanent: true },
+      { source: '/contact-us', destination: '/contact', permanent: true },
+    ];
   },
   experimental: {
     serverActions: {

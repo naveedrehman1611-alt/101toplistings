@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { NearMeButton } from './near-me-button';
 
-type Option = { slug: string; name: string };
+type Option = { slug: string; name: string; parent_id?: string | null };
 
 /**
  * Keyword + category + city filters (§7.5.6, criterion 46). A plain GET form,
@@ -62,7 +62,8 @@ export function ListingFilters({
             <option value="">All categories</option>
             {categories.map((c) => (
               <option key={c.slug} value={c.slug}>
-                {c.name}
+                {/* Subcategories follow their parent (getCategories is tree-ordered). */}
+                {c.parent_id ? `\u00a0\u00a0\u00a0${c.name}` : c.name}
               </option>
             ))}
           </select>
