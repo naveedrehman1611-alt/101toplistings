@@ -189,9 +189,9 @@ export function MetaTagGenerator() {
   const showImage = image && /^https?:\/\//i.test(image) && imgFailed !== image;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <ToolCard>
-        <form className="grid gap-5" onSubmit={(e) => e.preventDefault()}>
+        <form className="grid grid-cols-1 gap-5" onSubmit={(e) => e.preventDefault()}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-title-md text-title-md text-on-surface">Page details</h2>
             <div className="flex gap-2">
@@ -418,7 +418,7 @@ export function MetaTagGenerator() {
         </form>
       </ToolCard>
 
-      <div className="grid content-start gap-6">
+      <div className="grid grid-cols-1 content-start gap-6">
         <ToolCard>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-title-md text-title-md text-on-surface">Google preview</h2>
