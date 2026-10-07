@@ -13,7 +13,9 @@ import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 300;
 
-const DESCRIPTION = 'Every approved business, featured listings first, then the newest.';
+const TITLE = 'Business Directory | Find & List Businesses';
+const DESCRIPTION =
+  'Discover businesses by category and location, or add your business listing to reach more customers online.';
 
 export async function generateMetadata({
   searchParams,
@@ -22,11 +24,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const sp = await searchParams;
   const meta = await seoMetadata('/business-directory', {
-    title: 'All listings',
+    title: TITLE,
     description: DESCRIPTION,
     alternates: { canonical: '/business-directory' },
-    openGraph: { title: 'All listings', description: DESCRIPTION },
-    twitter: { card: 'summary_large_image', title: 'All listings' },
+    openGraph: { title: TITLE, description: DESCRIPTION },
+    twitter: { card: 'summary_large_image', title: TITLE },
   });
   // Filtered views are near-duplicates of /business-directory; category and city pages
   // are the indexable versions of the same filters.
