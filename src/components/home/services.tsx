@@ -56,11 +56,11 @@ export function Services({ categorySlugs }: { categorySlugs: ReadonlySet<string>
           High-Demand Sectors
         </span>
         <h2 className="font-headline-lg text-headline-lg-mobile text-on-surface md:text-headline-lg mt-2">
-          Popular Services People Search for in Pakistan
+          Popular Services People Search for Worldwide
         </h2>
         <p className="font-body-md text-body-md text-on-surface-variant mt-3">
           From daily essentials to specialized services, these are the categories people search for
-          most often across Pakistan.
+          most often in cities worldwide.
         </p>
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

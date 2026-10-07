@@ -35,14 +35,14 @@ export function Story({ stats }: { stats: DirectoryStats }) {
           <div>
             <div className="bg-secondary-container font-label-sm text-label-sm text-on-secondary-fixed mb-3 inline-flex items-center gap-2 rounded-md px-3 py-1">
               <Icon name="hub" size={16} className="text-primary" />
-              <span>National Directory Network</span>
+              <span>Global Directory Network</span>
             </div>
             <h2 className="font-headline-lg text-headline-lg-mobile text-on-surface md:text-headline-lg tracking-tight">
-              Find Trusted Local Businesses Across Pakistan
+              Find Trusted Local Businesses Worldwide
             </h2>
             <p className="font-body-md text-body-md text-on-surface-variant mt-2 max-w-2xl">
               Your one-stop commercial directory to discover verified services, check real-time
-              business details, and connect directly with local providers nationwide.
+              business details, and connect directly with local providers in your city and beyond.
             </p>
           </div>
         </div>

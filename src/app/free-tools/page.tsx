@@ -186,7 +186,7 @@ export default function FreeToolsPage() {
           </h2>
           <p className="font-body-md text-body-md text-on-surface-variant mt-2">
             The tools show what needs attention. Our SEO services handle the rest — technical fixes,
-            on-page optimisation and local SEO for businesses in Pakistan and beyond.
+            on-page optimisation and local SEO for businesses worldwide.
           </p>
         </div>
         <Link

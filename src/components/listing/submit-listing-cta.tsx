@@ -9,13 +9,13 @@ export function SubmitListingCta({ brand }: { brand: string }) {
         Submit Your Listing Today!
       </h2>
       <p className="font-body-lg text-body-lg text-surface-container-high/90 mt-2 max-w-2xl">
-        Covering all of Pakistan — add your business to {brand} and get found by customers searching
-        near you.
+        Add your business to {brand} and get found by customers searching in your city, wherever you
+        are in the world.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         {/* Same label and icon as the header's call to action. */}
         <Link
-          href="/dashboard/listings/new"
+          href="/add-business"
           className="bg-surface-card font-title-md text-title-md text-on-background hover:bg-surface-bright inline-flex items-center gap-2 rounded-xl px-6 py-3 shadow-lg transition-all hover:shadow-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
           <Icon name="add_circle" size={20} className="text-primary-container" />

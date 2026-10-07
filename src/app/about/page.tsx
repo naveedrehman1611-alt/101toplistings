@@ -1,15 +1,20 @@
 import type { Metadata } from 'next';
 import { findSection, getPageSections, getSettings, settingText } from '@/lib/queries';
+import Link from 'next/link';
 import { Breadcrumbs } from '@/components/ui';
 import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 3600;
+
+const TITLE = 'About Us | Business Directory & SEO Team';
+const DESCRIPTION =
+  'Meet the business directory and SEO team: how we review business listings, measure distance honestly, and help companies grow their online visibility.';
 export async function generateMetadata(): Promise<Metadata> {
   return seoMetadata('/about', {
-    title: 'About',
-    description: 'Why this directory exists.',
-    openGraph: { title: 'About', description: 'Why this directory exists.' },
-    twitter: { card: 'summary_large_image', title: 'About' },
+    title: TITLE,
+    description: DESCRIPTION,
+    openGraph: { title: TITLE, description: DESCRIPTION },
+    twitter: { card: 'summary_large_image', title: TITLE },
   });
 }
 
@@ -42,6 +47,18 @@ export default async function AboutPage() {
           Where a business has real coordinates, distance is measured from them. Where it does not,
           no distance is shown at all — an estimate dressed up as a measurement is worse than
           nothing.
+        </p>
+        <h2 className="font-headline-md text-headline-md mt-10">Work with us</h2>
+        <p className="mt-4 leading-relaxed text-[var(--text-muted)]">
+          Beyond the directory, we help businesses grow their visibility. You can{' '}
+          <Link href="/add-business" className="text-brand-700 font-semibold hover:underline">
+            add your business
+          </Link>{' '}
+          to {brand} or talk to us about{' '}
+          <Link href="/seo-services" className="text-brand-700 font-semibold hover:underline">
+            SEO services
+          </Link>
+          .
         </p>
       </div>
     </div>

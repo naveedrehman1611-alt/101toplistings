@@ -9,7 +9,7 @@ function faqItems(brand: string): FaqItem[] {
   return [
     {
       question: `What is ${brand}?`,
-      answer: `${brand} is an online business directory for Pakistan. It helps people find local businesses and service providers by category and city, and gives business owners a free way to be found online.`,
+      answer: `${brand} is a global online business directory. It helps people find local businesses and service providers by category and city, and gives business owners a free way to be found online.`,
     },
     {
       question: `Is ${brand} free to use?`,
@@ -33,7 +33,7 @@ function faqItems(brand: string): FaqItem[] {
     },
     {
       question: `Which cities does ${brand} cover?`,
-      answer: `${brand} lists businesses across Pakistan, from large cities such as Karachi, Lahore, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar and Quetta to smaller towns. You can browse the businesses listed in any city from its city page.`,
+      answer: `${brand} lists businesses worldwide, from large cities to smaller towns. You can browse the businesses listed in any city from its city page.`,
     },
     {
       question: `Does ${brand} verify every business listing?`,

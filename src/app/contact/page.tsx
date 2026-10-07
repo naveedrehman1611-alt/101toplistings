@@ -6,12 +6,16 @@ import { Breadcrumbs } from '@/components/ui';
 import { submitContact } from '@/lib/public-actions';
 import { seoMetadata } from '@/lib/seo';
 
+const TITLE = 'Contact Us | SEO Services & Business Listings';
+const DESCRIPTION =
+  'Contact us about SEO services, digital marketing, business listings, listing corrections and partnerships. Send a message and we will get back to you.';
+
 export async function generateMetadata(): Promise<Metadata> {
   return seoMetadata('/contact', {
-    title: 'Contact',
-    description: 'Questions, corrections and listing requests.',
-    openGraph: { title: 'Contact', description: 'Questions, corrections and listing requests.' },
-    twitter: { card: 'summary_large_image', title: 'Contact' },
+    title: TITLE,
+    description: DESCRIPTION,
+    openGraph: { title: TITLE, description: DESCRIPTION },
+    twitter: { card: 'summary_large_image', title: TITLE },
   });
 }
 
