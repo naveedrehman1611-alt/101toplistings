@@ -1,6 +1,6 @@
-// Starter taxonomy for the three launch markets — the United Kingdom, the
-// United States and the United Arab Emirates — identical to
-// supabase/migrations/0018 (categories: 0017 + 0020). The admin "Load starter data" button inserts it
+// Starter taxonomy for the launch markets — the United Kingdom, the United
+// States, the United Arab Emirates and Europe — identical to
+// supabase/migrations/0018 and 0023 (categories: 0017 + 0020). The admin "Load starter data" button inserts it
 // through the normal RLS-checked client, so a fresh database can be filled
 // without opening the SQL editor.
 //
@@ -66,6 +66,51 @@ export const STARTER_COUNTRIES: StarterCountry[] = [
     phone_code: '+971',
     latitude: 23.4241,
     longitude: 53.8478,
+  },
+  {
+    slug: 'france',
+    name: 'France',
+    iso2: 'FR',
+    iso3: 'FRA',
+    phone_code: '+33',
+    latitude: 46.2276,
+    longitude: 2.2137,
+  },
+  {
+    slug: 'germany',
+    name: 'Germany',
+    iso2: 'DE',
+    iso3: 'DEU',
+    phone_code: '+49',
+    latitude: 51.1657,
+    longitude: 10.4515,
+  },
+  {
+    slug: 'spain',
+    name: 'Spain',
+    iso2: 'ES',
+    iso3: 'ESP',
+    phone_code: '+34',
+    latitude: 40.4637,
+    longitude: -3.7492,
+  },
+  {
+    slug: 'italy',
+    name: 'Italy',
+    iso2: 'IT',
+    iso3: 'ITA',
+    phone_code: '+39',
+    latitude: 41.8719,
+    longitude: 12.5674,
+  },
+  {
+    slug: 'netherlands',
+    name: 'Netherlands',
+    iso2: 'NL',
+    iso3: 'NLD',
+    phone_code: '+31',
+    latitude: 52.1326,
+    longitude: 5.2913,
   },
 ];
 
@@ -153,6 +198,36 @@ export const STARTER_REGIONS: StarterRegion[] = [
     code: 'FU',
     lat: 25.4111,
     lng: 56.2482,
+  },
+  // Europe — the regions of the starter cities
+  {
+    country: 'france',
+    slug: 'ile-de-france',
+    name: 'Île-de-France',
+    code: 'IDF',
+    lat: 48.8499,
+    lng: 2.637,
+  },
+  { country: 'germany', slug: 'berlin-state', name: 'Berlin', code: 'BE', lat: 52.52, lng: 13.405 },
+  { country: 'germany', slug: 'bavaria', name: 'Bavaria', code: 'BY', lat: 48.7904, lng: 11.4979 },
+  {
+    country: 'spain',
+    slug: 'madrid-community',
+    name: 'Community of Madrid',
+    code: 'MD',
+    lat: 40.4168,
+    lng: -3.7038,
+  },
+  { country: 'spain', slug: 'catalonia', name: 'Catalonia', code: 'CT', lat: 41.5912, lng: 1.5209 },
+  { country: 'italy', slug: 'lazio', name: 'Lazio', code: '62', lat: 41.6552, lng: 12.9896 },
+  { country: 'italy', slug: 'lombardy', name: 'Lombardy', code: '25', lat: 45.4791, lng: 9.8452 },
+  {
+    country: 'netherlands',
+    slug: 'north-holland',
+    name: 'North Holland',
+    code: 'NH',
+    lat: 52.5206,
+    lng: 4.7885,
   },
 ];
 
@@ -388,6 +463,50 @@ export const STARTER_CITIES: StarterCity[] = [
     lat: 25.1288,
     lng: 56.3265,
     featured: false,
+  },
+  // Europe
+  {
+    region: 'ile-de-france',
+    slug: 'paris',
+    name: 'Paris',
+    lat: 48.8566,
+    lng: 2.3522,
+    featured: true,
+  },
+  {
+    region: 'berlin-state',
+    slug: 'berlin',
+    name: 'Berlin',
+    lat: 52.52,
+    lng: 13.405,
+    featured: true,
+  },
+  { region: 'bavaria', slug: 'munich', name: 'Munich', lat: 48.1351, lng: 11.582, featured: false },
+  {
+    region: 'madrid-community',
+    slug: 'madrid',
+    name: 'Madrid',
+    lat: 40.4168,
+    lng: -3.7038,
+    featured: true,
+  },
+  {
+    region: 'catalonia',
+    slug: 'barcelona',
+    name: 'Barcelona',
+    lat: 41.3874,
+    lng: 2.1686,
+    featured: false,
+  },
+  { region: 'lazio', slug: 'rome', name: 'Rome', lat: 41.9028, lng: 12.4964, featured: true },
+  { region: 'lombardy', slug: 'milan', name: 'Milan', lat: 45.4642, lng: 9.19, featured: false },
+  {
+    region: 'north-holland',
+    slug: 'amsterdam',
+    name: 'Amsterdam',
+    lat: 52.3676,
+    lng: 4.9041,
+    featured: true,
   },
 ];
 
