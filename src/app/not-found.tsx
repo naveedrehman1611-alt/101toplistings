@@ -21,7 +21,7 @@ export default function NotFound() {
             name="q"
             placeholder="Search businesses"
             aria-label="Search businesses"
-            className="border-border-subtle bg-surface-card font-body-md text-body-md text-on-surface placeholder:text-outline focus:border-primary-container focus:ring-primary-container/20 h-11 min-w-0 flex-1 rounded-lg border px-4 outline-hidden transition focus:ring-2"
+            className="border-border-subtle bg-surface-card font-body-md text-body-md text-on-surface placeholder:text-secondary focus:border-primary-container focus:ring-primary-container/20 h-11 min-w-0 flex-1 rounded-lg border px-4 outline-hidden transition focus:ring-2"
           />
           <Button type="submit">
             <Icon name="search" size={18} />

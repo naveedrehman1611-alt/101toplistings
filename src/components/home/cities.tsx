@@ -108,7 +108,7 @@ export function Cities({
                   <h3 className="font-headline-sm text-headline-sm group-hover:text-primary-fixed text-white transition-colors">
                     {c.name}
                   </h3>
-                  <span className="font-label-sm text-label-sm text-surface-container-high/80 mt-1">
+                  <span className="font-label-sm text-label-sm mt-1 text-white/85">
                     {countLabel(counts.get(c.id))}
                   </span>
                 </div>

@@ -5,7 +5,7 @@ import { Icon } from '@/components/icon';
 
 /** Shared class strings so every tool's form controls look the same. */
 export const inputClass =
-  'w-full rounded-lg border border-border-subtle bg-surface-card px-4 py-3 font-body-md text-body-md text-on-surface placeholder:text-secondary/70 focus:border-primary-container focus:outline-hidden focus:ring-2 focus:ring-primary-container/20';
+  'w-full rounded-lg border border-border-subtle bg-surface-card px-4 py-3 font-body-md text-body-md text-on-surface placeholder:text-secondary focus:border-primary-container focus:outline-hidden focus:ring-2 focus:ring-primary-container/20';
 
 export const labelClass = 'mb-2 block font-label-md text-label-md text-on-surface';
 
