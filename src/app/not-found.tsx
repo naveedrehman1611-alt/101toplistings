@@ -32,10 +32,10 @@ export default function NotFound() {
           <Button href="/" variant="ghost">
             Home
           </Button>
-          <Button href="/listings" variant="ghost">
+          <Button href="/business-directory" variant="ghost">
             All listings
           </Button>
-          <Button href="/categories" variant="ghost">
+          <Button href="/business-categories" variant="ghost">
             Categories
           </Button>
         </div>

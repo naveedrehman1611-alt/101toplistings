@@ -22,7 +22,7 @@ export function SubmitListingCta({ brand }: { brand: string }) {
           Add Listing
         </Link>
         <Link
-          href="/listings"
+          href="/business-directory"
           className="font-title-md text-title-md inline-flex items-center gap-2 rounded-xl border border-white/40 px-6 py-3 text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
           Browse listings

@@ -14,7 +14,7 @@ const DESCRIPTION =
   'Local SEO, Google Business Profile optimisation, on-page and technical SEO, content and citations for businesses across Pakistan.';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return seoMetadata('/services', {
+  return seoMetadata('/seo-services', {
     title: TITLE,
     description: DESCRIPTION,
     openGraph: { title: TITLE, description: DESCRIPTION },
@@ -100,7 +100,7 @@ export default async function ServicesPage() {
 
   return (
     <div className="container-page py-12">
-      <JsonLd data={breadcrumbSchema(trail, '/services')} />
+      <JsonLd data={breadcrumbSchema(trail, '/seo-services')} />
       <JsonLd data={offerCatalog} />
       <Breadcrumbs trail={trail} />
       <div className="max-w-3xl">

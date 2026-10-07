@@ -21,14 +21,14 @@ export async function generateMetadata({
   searchParams: Promise<{ q?: string; category?: string; city?: string }>;
 }): Promise<Metadata> {
   const sp = await searchParams;
-  const meta = await seoMetadata('/listings', {
+  const meta = await seoMetadata('/business-directory', {
     title: 'All listings',
     description: DESCRIPTION,
-    alternates: { canonical: '/listings' },
+    alternates: { canonical: '/business-directory' },
     openGraph: { title: 'All listings', description: DESCRIPTION },
     twitter: { card: 'summary_large_image', title: 'All listings' },
   });
-  // Filtered views are near-duplicates of /listings; category and city pages
+  // Filtered views are near-duplicates of /business-directory; category and city pages
   // are the indexable versions of the same filters.
   return sp.q || sp.category || sp.city
     ? { ...meta, robots: { index: false, follow: true } }
@@ -92,7 +92,7 @@ export default async function ListingsPage({
 
       <div className="mt-8">
         <ListingFilters
-          action="/listings"
+          action="/business-directory"
           q={q}
           category={cat?.slug}
           city={city?.slug}
@@ -153,7 +153,7 @@ export default async function ListingsPage({
             }
             action={
               filtered ? (
-                <Button href="/listings" variant="ghost">
+                <Button href="/business-directory" variant="ghost">
                   Clear filters
                 </Button>
               ) : undefined

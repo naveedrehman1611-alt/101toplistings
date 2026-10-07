@@ -7,7 +7,7 @@ import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 600;
 export async function generateMetadata(): Promise<Metadata> {
-  return seoMetadata('/categories', {
+  return seoMetadata('/business-categories', {
     title: 'Categories',
     description: 'Browse businesses by what they do.',
     openGraph: { title: 'Categories', description: 'Browse businesses by what they do.' },

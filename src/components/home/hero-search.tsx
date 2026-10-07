@@ -79,7 +79,7 @@ export function HeroSearch({
     if (city) params.set('city', city);
 
     const query = params.toString();
-    router.push(query ? `/search?${query}` : '/listings');
+    router.push(query ? `/search?${query}` : '/business-directory');
   }
 
   return (

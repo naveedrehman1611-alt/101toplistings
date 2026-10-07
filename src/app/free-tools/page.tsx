@@ -190,7 +190,7 @@ export default function FreeToolsPage() {
           </p>
         </div>
         <Link
-          href="/services"
+          href="/seo-services"
           className="bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary focus-visible:outline-primary-container inline-flex h-11 shrink-0 items-center gap-2 rounded-lg px-5 shadow-xs transition-all hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           See SEO services

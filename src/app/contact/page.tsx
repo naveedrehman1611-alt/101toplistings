@@ -57,7 +57,7 @@ const FAQ: { q: string; a: string; link?: { label: string; href: string } }[] = 
   {
     q: 'What areas do you cover?',
     a: "Every city and category currently in the directory — browse by category to see what's listed near you.",
-    link: { label: 'Browse categories', href: '/categories' },
+    link: { label: 'Browse categories', href: '/business-categories' },
   },
 ];
 

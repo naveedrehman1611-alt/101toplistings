@@ -41,7 +41,7 @@ const SERVICES: {
   },
   {
     // A mix of several categories, so it opens the full category index.
-    href: '/categories',
+    href: '/business-categories',
     icon: 'business_center',
     title: 'Professional and Business Services',
     body: 'Connect with consultants, designers, recruitment agencies, translators, and other professionals who help businesses grow.',

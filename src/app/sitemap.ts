@@ -9,6 +9,8 @@ import {
 import { SITE_URL } from '@/lib/supabase';
 import { LIVE_TOOLS, TOOLS_BASE, toolHref } from '@/lib/free-tools';
 import { MIN_CITY_LISTINGS_TO_INDEX, getSitemapExclusions } from '@/lib/seo';
+import { SERVICE_PAGES } from '@/lib/service-pages';
+import { BLOG_CLUSTERS, getClusterPostCounts } from '@/lib/blog-clusters';
 
 export const revalidate = 3600;
 
@@ -20,14 +22,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getBlogPosts(),
     getSitemapExclusions(),
   ]);
+  // A guide cluster with no published posts is noindex (see blog-clusters.ts),
+  // so it joins the sitemap only once it has something to show.
+  const clusterCounts = await getClusterPostCounts();
 
   // Pages switched off, or set to noindex, in the admin SEO manager are left out.
   const staticRoutes = [
     '',
-    '/services',
-    '/listings',
-    '/categories',
+    '/business-directory',
+    '/add-business',
+    '/business-categories',
+    '/locations',
+    '/claim-business',
+    '/featured-businesses',
+    '/seo-services',
+    ...SERVICE_PAGES.map((s) => s.path),
+    '/seo-audit',
+    '/pricing',
     '/blog',
+    ...BLOG_CLUSTERS.filter((c) => (clusterCounts.get(c.slug) ?? 0) > 0).map((c) => c.path),
     '/about',
     '/contact',
     TOOLS_BASE,
@@ -49,7 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}${p}`,
       changeFrequency: 'weekly' as const,
       priority:
-        p === '' ? 1 : p === '/services' ? 0.9 : p === '/privacy' || p === '/terms' ? 0.3 : 0.7,
+        p === '' ? 1 : p === '/business-directory' || p === '/seo-services' ? 0.9 : p === '/privacy' || p === '/terms' ? 0.3 : 0.7,
     })),
     ...cats.map((c) => ({
       url: `${SITE_URL}/category/${c.slug}`,
