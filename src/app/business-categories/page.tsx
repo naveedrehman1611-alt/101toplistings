@@ -43,7 +43,9 @@ export default async function CategoriesPage() {
     <div className="container-page py-12">
       <JsonLd data={breadcrumbSchema(trail, '/business-categories')} />
       <Breadcrumbs trail={trail} />
-      <h1 className="font-headline-lg text-headline-lg">{header?.heading ?? 'Business categories'}</h1>
+      <h1 className="font-headline-lg text-headline-lg">
+        {header?.heading ?? 'Business categories'}
+      </h1>
       {header?.subheading ? (
         <p className="mt-3 text-[var(--text-muted)]">{header.subheading}</p>
       ) : null}

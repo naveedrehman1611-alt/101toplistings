@@ -3293,4 +3293,17 @@ update settings set value = to_jsonb('List your business, get discovered online,
  where key = 'seo.default_description'
    and value = to_jsonb('Search local businesses by name, category and city, with real addresses, opening hours and reviews.'::text);
 
+
+-- The pages rows behind the moved routes point at their new paths, and the
+-- /seo-services header seeded in 0018 (Pakistan-only copy) is cleared where
+-- nobody has edited it, so the page's own global copy shows.
+update pages set route_pattern = '/business-directory' where route_pattern = '/listings';
+update pages set route_pattern = '/business-categories' where route_pattern = '/categories';
+update pages set route_pattern = '/seo-services' where route_pattern = '/services';
+update page_sections s set heading = null, subheading = null
+  from pages p
+ where p.id = s.page_id and p.slug = 'services' and s.section_key = 'header'
+   and s.heading = 'SEO services for local businesses'
+   and s.subheading like '% helps businesses across Pakistan get found on Google%';
+
 commit;

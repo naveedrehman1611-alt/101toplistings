@@ -6,7 +6,7 @@ import {
   getCities,
   getCityListingCounts,
 } from '@/lib/queries';
-import { SITE_URL } from '@/lib/supabase';
+import { SITE_URL, supabase } from '@/lib/supabase';
 import { LIVE_TOOLS, TOOLS_BASE, toolHref } from '@/lib/free-tools';
 import { MIN_CITY_LISTINGS_TO_INDEX, getSitemapExclusions } from '@/lib/seo';
 import { SERVICE_PAGES } from '@/lib/service-pages';
@@ -24,7 +24,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
   // A guide cluster with no published posts is noindex (see blog-clusters.ts),
   // so it joins the sitemap only once it has something to show.
-  const clusterCounts = await getClusterPostCounts();
+  // /featured-businesses is noindex while nothing is featured; same rule.
+  const [clusterCounts, featured] = await Promise.all([
+    getClusterPostCounts(),
+    supabase
+      .from('public_listings')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_featured', true),
+  ]);
+  const hasFeatured = !featured.error && (featured.count ?? 0) > 0;
 
   // Pages switched off, or set to noindex, in the admin SEO manager are left out.
   const staticRoutes = [
@@ -34,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/business-categories',
     '/locations',
     '/claim-business',
-    '/featured-businesses',
+    ...(hasFeatured ? ['/featured-businesses'] : []),
     '/seo-services',
     ...SERVICE_PAGES.map((s) => s.path),
     '/seo-audit',
