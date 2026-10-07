@@ -3,7 +3,7 @@ import type { IconName } from '@/components/icon';
 /**
  * The SEO and digital marketing service pages: one list that drives each page
  * (/seo-services/<slug> and /digital-marketing), the /seo-services hub cards, the
- * OfferCatalog JSON-LD and the sitemap.
+ * header's Services menu, the OfferCatalog JSON-LD and the sitemap.
  */
 
 export type ServicePage = {
@@ -585,4 +585,17 @@ export const SERVICE_PAGES: ServicePage[] = [
 
 export function servicePage(slug: string): ServicePage | undefined {
   return SERVICE_PAGES.find((p) => p.slug === slug);
+}
+
+/** What the header's Services menu needs: no page copy, so the client bundle stays small. */
+export type ServiceNavItem = Pick<ServicePage, 'slug' | 'path' | 'name' | 'description' | 'icon'>;
+
+export function serviceNavItems(): ServiceNavItem[] {
+  return SERVICE_PAGES.map(({ slug, path, name, description, icon }) => ({
+    slug,
+    path,
+    name,
+    description,
+    icon,
+  }));
 }
