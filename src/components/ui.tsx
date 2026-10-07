@@ -15,7 +15,7 @@ export function Stars({ value, count }: { value: number | null; count: number })
   if (value === null || count === 0) return null;
   return (
     <span className="font-label-md text-label-md inline-flex items-center gap-1">
-      <Icon name="star" size={16} className="text-badge-gold" />
+      <Icon name="star" size={16} className="text-rating-star" />
       <span className="text-on-surface font-semibold">{value.toFixed(1)}</span>
       <span className="text-secondary">({count})</span>
     </span>

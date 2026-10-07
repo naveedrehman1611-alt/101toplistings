@@ -212,3 +212,26 @@ Re-checked when the homepage became a section builder (`docs/HOMEPAGE.md`).
   so every listing, review, category and city write is visible at once. Failures throw inside the
   cached function, so an outage is never stored. Keyword and location searches stay live. Measured:
   repeated renders of a category or city page make no database call.
+
+## Logo and photos on the new-listing form
+
+`/dashboard/listings/new` takes an optional logo and up to three photos with the rest of the form,
+in one Server Action request. The limits live in `src/lib/listing-image-limits.ts`, which both the
+browser and the server import.
+
+- **Shrunk in the browser before upload.** `ImageFileInput` runs `shrinkImage` (`src/lib/image-shrink.ts`)
+  as soon as a file is picked: a logo is scaled to fit 512px and a photo to fit 1600px, then encoded as WebP
+  down a fixed quality ladder (0.82 → 0.5) until it is at most 1 MB. Browsers without a WebP encoder fall back
+  to PNG for logos and JPEG for photos. The steps are fixed, so the same picture always comes out the same.
+  Measured in Chromium, an 8.5 MB 4000×3000 JPEG became a 294 KB 1600×1200 WebP, and a 5.4 MB 2000×2000
+  PNG logo became 12 KB. JPEGs are always re-encoded, which also drops EXIF data such as GPS position.
+- **The 4.5 MB body cap holds.** The server allows each file at most 1 MB on this form, so four files and
+  the text fields fit under Vercel's request limit. The edit page still uploads one file per request with the
+  4 MB cap, and it uses the same shrinking input.
+- **No duplicate bytes for the cover.** The first photo is both the cover and the first gallery image. Two
+  `listing_images` rows point at one media row, so it is one object in Storage and one source image for the
+  optimiser.
+- **Bounded per listing.** Owners can keep at most 3 gallery photos plus a cover and a logo, and staff can keep
+  up to 20 gallery photos. Every image is validated before the listing is inserted. An image that fails to
+  store afterwards is reported in the success message instead of being retried.
+- **Cache.** Unchanged: unique object names, a one-year `cacheControl` and a 31-day optimiser TTL.

@@ -2,9 +2,15 @@ import type { ReactNode } from 'react';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase-server';
 import { removeListingImage, uploadListingImage } from '@/lib/listing-image-actions';
-import { ACCEPT_ATTR, MAX_UPLOAD_BYTES } from '@/lib/media-upload';
+import {
+  LOGO_MAX_EDGE,
+  OWNER_MAX_GALLERY,
+  PHOTO_MAX_EDGE,
+  STAFF_MAX_GALLERY,
+} from '@/lib/listing-image-limits';
 import { mediaUrl, type MediaItem } from '@/lib/media';
 import { DangerButton, SubmitButton } from './admin-ui';
+import { ImageFileInput } from './image-file-input';
 
 type Row = {
   id: string;
@@ -12,8 +18,6 @@ type Row = {
   sort_order: number;
   media: MediaItem | null;
 };
-
-const HINT = `JPEG, PNG, WebP, GIF or AVIF, up to ${MAX_UPLOAD_BYTES / 1024 / 1024} MB.`;
 
 /**
  * The "Images" section of a listing edit page. Drops into both the admin page
@@ -40,6 +44,7 @@ export async function ListingImages({
   const cover = rows.find((r) => r.kind === 'cover');
   const logo = rows.find((r) => r.kind === 'logo');
   const gallery = rows.filter((r) => r.kind === 'gallery');
+  const galleryLimit = context === 'owner' ? OWNER_MAX_GALLERY : STAFF_MAX_GALLERY;
 
   const hidden = (
     <>
@@ -81,7 +86,12 @@ export async function ListingImages({
       </div>
 
       <div className="mt-8">
-        <h3 className="font-medium">Gallery</h3>
+        <h3 className="font-medium">
+          Gallery{' '}
+          <span className="text-sm font-normal text-[var(--text-muted)]">
+            ({gallery.length} of {galleryLimit})
+          </span>
+        </h3>
         {gallery.length > 0 ? (
           <ul className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {gallery.map((g) =>
@@ -100,7 +110,13 @@ export async function ListingImages({
         ) : (
           <p className="mt-2 text-sm text-[var(--text-muted)]">No gallery images yet.</p>
         )}
-        <UploadForm kind="gallery" hidden={hidden} label="Add to gallery" />
+        {gallery.length < galleryLimit ? (
+          <UploadForm kind="gallery" hidden={hidden} label="Add to gallery" />
+        ) : (
+          <p className="mt-3 text-xs text-[var(--text-muted)]">
+            The gallery is full. Remove a photo to add another.
+          </p>
+        )}
       </div>
     </section>
   );
@@ -119,16 +135,13 @@ function UploadForm({
     <form action={uploadListingImage} className="mt-3 space-y-2">
       {hidden}
       <input type="hidden" name="kind" value={kind} />
-      <label className="block text-sm">
-        <span className="sr-only">Image file</span>
-        <input
-          type="file"
-          name="file"
-          required
-          accept={ACCEPT_ATTR}
-          className="block w-full text-sm file:mr-3 file:rounded-lg file:border file:border-[var(--border)] file:bg-[var(--surface)] file:px-3 file:py-1.5"
-        />
-      </label>
+      <ImageFileInput
+        name="file"
+        variant={kind === 'logo' ? 'logo' : 'photo'}
+        label="Image file"
+        required
+        hint={`Resized in your browser to at most ${kind === 'logo' ? LOGO_MAX_EDGE : PHOTO_MAX_EDGE}px before upload.`}
+      />
       <label className="block text-sm">
         <span className="sr-only">Alt text</span>
         <input
@@ -138,7 +151,6 @@ function UploadForm({
           className="focus:border-primary-container focus:ring-primary-container/20 h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-hidden focus:ring-2"
         />
       </label>
-      <p className="text-xs text-[var(--text-muted)]">{HINT}</p>
       <SubmitButton>{label}</SubmitButton>
     </form>
   );

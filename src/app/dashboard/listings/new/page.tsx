@@ -61,6 +61,7 @@ export default async function NewOwnListing({
             action={submitOwnListing}
             categories={categories}
             cities={cities}
+            images
             submitLabel="Submit for review"
           />
         </div>

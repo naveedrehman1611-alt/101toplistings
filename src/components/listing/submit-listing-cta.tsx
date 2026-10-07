@@ -8,7 +8,7 @@ export function SubmitListingCta({ brand }: { brand: string }) {
       <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-white">
         Submit Your Listing Today!
       </h2>
-      <p className="font-body-lg text-body-lg text-surface-container-high/90 mt-2 max-w-2xl">
+      <p className="font-body-lg text-body-lg mt-2 max-w-2xl text-white/90">
         Add your business to {brand} and get found by customers searching in your city, wherever you
         are in the world.
       </p>

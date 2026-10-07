@@ -26,7 +26,7 @@ export default async function AboutPage() {
     <div className="container-page py-12">
       <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: header?.heading ?? 'About' }]} />
       <div className="max-w-2xl">
-        <h1 className="font-headline-lg text-headline-lg">{header?.heading}</h1>
+        <h1 className="font-headline-lg text-headline-lg">{header?.heading || `About ${brand}`}</h1>
         {header?.subheading ? (
           <p className="mt-4 text-lg text-[var(--text-muted)]">{header.subheading}</p>
         ) : null}

@@ -225,7 +225,7 @@ export function SlugGenerator() {
                     <CopyButton text={r.slug} />
                   </div>
                   <p
-                    className={`font-label-sm text-label-sm mt-2 ${long ? 'text-badge-gold' : 'text-on-surface-variant'}`}
+                    className={`font-label-sm text-label-sm mt-2 ${long ? 'text-amber-700' : 'text-on-surface-variant'}`}
                   >
                     {r.slug.length} characters
                     {long ? ` · over ${RECOMMENDED_MAX}, consider shortening` : ''}

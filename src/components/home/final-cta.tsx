@@ -12,7 +12,7 @@ export function FinalCta({ brand }: { brand: string }) {
         <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-white">
           Submit Your Listing Today!
         </h2>
-        <p className="font-body-lg text-body-lg text-surface-container-high/90 mt-3 max-w-2xl">
+        <p className="font-body-lg text-body-lg mt-3 max-w-2xl text-white/90">
           List your business on {brand} for free and start reaching customers who are searching for
           services like yours.
         </p>
