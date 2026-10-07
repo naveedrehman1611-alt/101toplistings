@@ -28,10 +28,10 @@ export default function Image() {
         <span style={{ color: '#9ffdd3', marginLeft: -16 }}>Site</span>
       </div>
       <div style={{ display: 'flex', marginTop: 24, fontSize: 38, opacity: 0.9 }}>
-        SEO services and local business directory for Pakistan
+        Business directory and SEO services
       </div>
       <div style={{ display: 'flex', marginTop: 48, fontSize: 30, opacity: 0.75 }}>
-        Karachi · Lahore · Islamabad · Rawalpindi · Faisalabad · Peshawar
+        List your business · Get found online · Grow with SEO
       </div>
     </div>,
     size,

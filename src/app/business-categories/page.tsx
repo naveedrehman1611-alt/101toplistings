@@ -3,15 +3,20 @@ import type { Metadata } from 'next';
 import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
 import { findSection, getCategories, getPageSections, type Category } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
+import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 600;
+const TITLE = 'Business Categories | Find Companies by Industry';
+const DESCRIPTION =
+  'Browse businesses by industry and category. Discover companies, services, and local providers in the directory.';
+
 export async function generateMetadata(): Promise<Metadata> {
-  return seoMetadata('/categories', {
-    title: 'Categories',
-    description: 'Browse businesses by what they do.',
-    openGraph: { title: 'Categories', description: 'Browse businesses by what they do.' },
-    twitter: { card: 'summary_large_image', title: 'Categories' },
+  return seoMetadata('/business-categories', {
+    title: TITLE,
+    description: DESCRIPTION,
+    openGraph: { title: TITLE, description: DESCRIPTION },
+    twitter: { card: 'summary_large_image', title: TITLE },
   });
 }
 
@@ -32,15 +37,26 @@ export default async function CategoriesPage() {
   }
   const roots = categories.filter((c) => !c.parent_id || !ids.has(c.parent_id));
 
+  const trail = [{ label: 'Home', href: '/' }, { label: header?.heading ?? 'Categories' }];
+
   return (
     <div className="container-page py-12">
-      <Breadcrumbs
-        trail={[{ label: 'Home', href: '/' }, { label: header?.heading ?? 'Categories' }]}
-      />
-      <h1 className="font-headline-lg text-headline-lg">{header?.heading}</h1>
+      <JsonLd data={breadcrumbSchema(trail, '/business-categories')} />
+      <Breadcrumbs trail={trail} />
+      <h1 className="font-headline-lg text-headline-lg">
+        {header?.heading ?? 'Business categories'}
+      </h1>
       {header?.subheading ? (
         <p className="mt-3 text-[var(--text-muted)]">{header.subheading}</p>
       ) : null}
+      <p className="mt-3 max-w-2xl text-[var(--text-muted)]">
+        This business directory by category groups companies by the industry they work in. Pick a
+        category to see the businesses listed under it, or{' '}
+        <Link href="/add-business" className="text-brand-700 hover:underline">
+          list your business
+        </Link>{' '}
+        in the category that fits.
+      </p>
       <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {roots.map((c) => {
           const kids = childrenOf.get(c.id) ?? [];

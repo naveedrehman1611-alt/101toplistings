@@ -53,7 +53,7 @@ export default async function AdminMenus({
       <h1 className="text-2xl font-semibold">Menus</h1>
       <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
         The header, mobile and footer navigation. Links are either a path on this site, such as
-        /listings, or a full http(s):// address. Hidden links stay here but are not shown.
+        /business-directory, or a full http(s):// address. Hidden links stay here but are not shown.
       </p>
       <Notice ok={sp.ok} error={sp.error} />
 
@@ -79,7 +79,7 @@ export default async function AdminMenus({
           name="url"
           required
           defaultValue={editing?.url}
-          placeholder="/listings or https://example.com"
+          placeholder="/business-directory or https://example.com"
         />
         <Check
           label="Visible"

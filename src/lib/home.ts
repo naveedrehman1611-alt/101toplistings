@@ -293,7 +293,7 @@ async function buildSection(
         emptyTitle: fillBrand(String(settings.empty_title), brand),
         emptyText: fillBrand(String(settings.empty_text), brand),
         addListingHref: ADD_LISTING_HREF,
-        browseHref: '/listings',
+        browseHref: '/business-directory',
         cta,
       };
     }

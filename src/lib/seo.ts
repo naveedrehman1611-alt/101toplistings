@@ -10,12 +10,29 @@ import { supabase } from './supabase';
 
 export const SEO_ROUTES = [
   { route: '/', label: 'Home' },
-  { route: '/listings', label: 'All listings' },
-  { route: '/categories', label: 'Categories' },
+  { route: '/business-directory', label: 'Business directory' },
+  { route: '/add-business', label: 'Add your business' },
+  { route: '/business-categories', label: 'Business categories' },
+  { route: '/locations', label: 'Locations' },
+  { route: '/claim-business', label: 'Claim your listing' },
+  { route: '/featured-businesses', label: 'Featured businesses' },
+  { route: '/seo-services', label: 'SEO services' },
+  { route: '/seo-services/local-seo', label: 'Local SEO' },
+  { route: '/seo-services/technical-seo', label: 'Technical SEO' },
+  { route: '/seo-services/on-page-seo', label: 'On-page SEO' },
+  { route: '/seo-services/off-page-seo', label: 'Off-page SEO' },
+  { route: '/seo-services/link-building', label: 'Link building' },
+  { route: '/seo-services/guest-posting', label: 'Guest posting' },
+  { route: '/seo-services/content-marketing', label: 'Content marketing' },
+  { route: '/digital-marketing', label: 'Digital marketing' },
+  { route: '/seo-audit', label: 'SEO audit' },
+  { route: '/pricing', label: 'Pricing' },
   { route: '/blog', label: 'Blog' },
+  { route: '/blog/business-directory', label: 'Blog: directory guides' },
+  { route: '/blog/seo', label: 'Blog: SEO guides' },
+  { route: '/blog/digital-marketing', label: 'Blog: digital marketing guides' },
   { route: '/about', label: 'About' },
   { route: '/contact', label: 'Contact' },
-  { route: '/services', label: 'SEO services' },
   { route: '/privacy', label: 'Privacy policy' },
   { route: '/terms', label: 'Terms of use' },
   // Always noindex and disallowed in robots.ts: result pages are thin and
@@ -53,7 +70,7 @@ export const SHARE_IMAGE = {
   url: '/opengraph-image',
   width: 1200,
   height: 630,
-  alt: 'RankYouSite — SEO services and local business directory for Pakistan',
+  alt: 'RankYouSite — business directory and SEO services',
 };
 
 /** The stored robots value for the "hide from search engines" toggle. */

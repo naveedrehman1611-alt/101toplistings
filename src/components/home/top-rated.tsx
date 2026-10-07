@@ -30,8 +30,8 @@ export function TopRated({
             Top-Rated Businesses in Your Area
           </h2>
           <p className="font-body-md text-body-md text-on-surface-variant mt-2">
-            Find trusted local businesses reviewed by real customers across Karachi, Lahore,
-            Islamabad, Rawalpindi, Faisalabad, and other cities of Pakistan.
+            Find trusted local businesses reviewed by real customers in your city and in cities
+            worldwide.
           </p>
         </div>
         {anyVerified ? (

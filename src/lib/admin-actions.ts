@@ -63,7 +63,7 @@ export async function setListingStatus(
   updateTag(tableTag('public_listings'));
   updateTag(SEARCH_TAG);
   revalidatePath('/');
-  revalidatePath('/listings');
+  revalidatePath('/business-directory');
   revalidatePath('/listing/[slug]', 'page');
   revalidatePath('/admin/listings');
 

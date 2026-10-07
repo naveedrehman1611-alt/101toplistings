@@ -186,11 +186,11 @@ export default function FreeToolsPage() {
           </h2>
           <p className="font-body-md text-body-md text-on-surface-variant mt-2">
             The tools show what needs attention. Our SEO services handle the rest — technical fixes,
-            on-page optimisation and local SEO for businesses in Pakistan and beyond.
+            on-page optimisation and local SEO for businesses worldwide.
           </p>
         </div>
         <Link
-          href="/services"
+          href="/seo-services"
           className="bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary focus-visible:outline-primary-container inline-flex h-11 shrink-0 items-center gap-2 rounded-lg px-5 shadow-xs transition-all hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           See SEO services

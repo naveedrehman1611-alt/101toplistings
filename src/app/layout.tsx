@@ -38,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = settingText(s, 'seo.default_description', '');
   return {
     metadataBase: safeUrl(SITE_URL),
-    title: { default: title, template: `%s · ${brand}` },
+    title: { default: title, template: `%s | ${brand}` },
     description,
     openGraph: { title, description, siteName: brand, type: 'website', url: SITE_URL },
     twitter: { card: 'summary_large_image', title, description },
@@ -57,6 +57,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   const brand = settingText(settings, 'brand.name', 'RankYouSite');
   const email = settingText(settings, 'contact.email');
+  // Social profiles from Settings, so the Organization entity links to them.
+  const sameAs = ['facebook', 'instagram', 'linkedin', 'x', 'youtube']
+    .map((k) => settingText(settings, `social.${k}`))
+    .filter((u) => /^https?:\/\//.test(u));
 
   // Site-wide Organization + WebSite schema; the SearchAction lets Google
   // offer a sitelinks search box that lands on /search.
@@ -69,7 +73,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         name: brand,
         url: SITE_URL,
         ...(email ? { email } : {}),
-        areaServed: { '@type': 'Country', name: 'Pakistan' },
+        ...(sameAs.length ? { sameAs } : {}),
       },
       {
         '@type': 'WebSite',
@@ -102,7 +106,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
         <Header
           brand={brand}
-          subtitle={settingText(settings, 'brand.subtitle', 'Pakistan Directory')}
+          subtitle={settingText(settings, 'brand.subtitle', 'Business Directory')}
           nav={nav}
           mobileNav={mobileNav}
         />
@@ -114,7 +118,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           about={settingText(
             settings,
             'footer.about',
-            'Covering all of Pakistan, from Karachi to Lahore and Islamabad to Peshawar. Connecting customers with trusted local businesses.',
+            'A business directory and SEO services for businesses worldwide. Connecting customers with trusted local businesses.',
           )}
           copyright={settingText(settings, 'footer.copyright', brand)}
           email={settingText(settings, 'contact.email')}

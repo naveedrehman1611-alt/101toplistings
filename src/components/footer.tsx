@@ -129,7 +129,7 @@ export function Footer({
             <h2 className="font-title-md text-title-md text-on-surface">Newsletter</h2>
             <p className="font-body-sm text-body-sm text-on-surface-variant">
               Subscribe for updates on new businesses, cities and guides added to the directory
-              across Pakistan.
+              worldwide.
             </p>
             <NewsletterForm />
             <p className="font-label-sm text-label-sm text-secondary">

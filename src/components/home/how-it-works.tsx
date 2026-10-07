@@ -12,7 +12,7 @@ const STEPS: Step[] = [
   {
     icon: 'reviews',
     title: 'Read Reviews & Compare',
-    body: 'Browse detailed business profiles with real customer reviews, contact info, and location maps — all in one place. Fast, free, and trusted across Pakistan.',
+    body: 'Browse detailed business profiles with real customer reviews, contact info, and location maps — all in one place. Fast, free, and built for businesses worldwide.',
   },
   {
     icon: 'near_me',
@@ -34,8 +34,8 @@ export function HowItWorks({ brand }: { brand: string }) {
             How Does {brand} Work?
           </h2>
           <p className="font-body-md text-body-md text-on-surface-variant mt-3">
-            {brand} is a trusted Business Directory Pakistan — helping users search, compare, and
-            connect with local businesses quickly and easily.
+            {brand} is a global business directory — helping users search, compare, and connect with
+            local businesses quickly and easily.
           </p>
         </div>
         <div className="relative grid grid-cols-1 gap-8 md:grid-cols-3">

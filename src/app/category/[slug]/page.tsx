@@ -74,7 +74,7 @@ export default async function CategoryPage({
   const filtered = Boolean(q || city);
   const trail = [
     { label: 'Home', href: '/' },
-    { label: 'Categories', href: '/categories' },
+    { label: 'Categories', href: '/business-categories' },
     ...(parent ? [{ label: parent.name, href: `/category/${parent.slug}` }] : []),
     { label: cat.name },
   ];

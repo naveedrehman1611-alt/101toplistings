@@ -63,14 +63,14 @@ export function Cities({
         <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
             <span className="font-label-sm text-label-sm text-primary-container font-semibold uppercase">
-              Provincial & Metro Hubs
+              Metro Hubs
             </span>
             <h2 className="font-headline-lg text-headline-lg-mobile text-on-surface md:text-headline-lg mt-1">
               Browse Businesses by City
             </h2>
             <p className="font-body-md text-body-md text-on-surface-variant mt-2 max-w-2xl">
-              Find local businesses and service providers in major cities across Pakistan. Select a
-              city to explore available categories and business listings.
+              Find local businesses and service providers in major cities worldwide. Select a city
+              to explore available categories and business listings.
             </p>
           </div>
         </div>

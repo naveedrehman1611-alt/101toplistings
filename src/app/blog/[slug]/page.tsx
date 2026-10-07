@@ -7,6 +7,7 @@ import { SHARE_IMAGE } from '@/lib/seo';
 import { Markdown } from '@/components/markdown';
 import { redirectOrNotFound } from '@/lib/redirects';
 import { jsonLdHtml } from '@/lib/json-ld';
+import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 
 export const revalidate = 600;
 
@@ -54,17 +55,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     url: `${SITE_URL}/blog/${post.slug}`,
   };
 
+  const trail = [
+    { label: 'Home', href: '/' },
+    { label: 'Blog', href: '/blog' },
+    { label: post.title },
+  ];
+
   return (
     <div className="container-page py-12">
+      <JsonLd data={breadcrumbSchema(trail, `/blog/${post.slug}`)} />
       {/* The title is editor-written: escape "<" so a "</script>" in it cannot close the tag. */}
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(jsonLd)} />
-      <Breadcrumbs
-        trail={[
-          { label: 'Home', href: '/' },
-          { label: 'Blog', href: '/blog' },
-          { label: post.title },
-        ]}
-      />
+      <Breadcrumbs trail={trail} />
       <article className="mx-auto max-w-2xl">
         <h1 className="font-headline-lg text-headline-lg">{post.title}</h1>
         {post.standfirst ? (
@@ -74,6 +76,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <p className="mt-3 text-sm text-[var(--text-muted)]">{post.read_minutes} min read</p>
         ) : null}
         <div className="mt-8">{post.body ? <Markdown source={post.body} /> : null}</div>
+        <p className="border-border-subtle mt-10 border-t pt-6 text-[var(--text-muted)]">
+          <Link href="/seo-services" className="text-brand-700 font-semibold hover:underline">
+            Need help with SEO?
+          </Link>{' '}
+          or{' '}
+          <Link href="/add-business" className="text-brand-700 font-semibold hover:underline">
+            list your business
+          </Link>
+          .
+        </p>
       </article>
 
       {related.length > 0 ? (

@@ -1,5 +1,5 @@
 /**
- * The /listings browse view: featured listings pinned first, 15 per page, each
+ * The /business-directory browse view: featured listings pinned first, 15 per page, each
  * row carrying category, city, open/closed state, phone, published date and a
  * short excerpt, plus a directory-wide summary (totals, top categories, top
  * cities).

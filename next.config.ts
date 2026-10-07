@@ -64,7 +64,12 @@ const nextConfig: NextConfig = {
         : []),
       { source: '/listing-category/:slug', destination: '/category/:slug', permanent: true },
       { source: '/listing-location/:slug', destination: '/city/:slug', permanent: true },
-      { source: '/listing-top-filter', destination: '/listings', permanent: true },
+      { source: '/listing-top-filter', destination: '/business-directory', permanent: true },
+      // The SEO strategy's URL structure: the old paths keep working (query
+      // strings are carried over, so filtered /listings links still land).
+      { source: '/listings', destination: '/business-directory', permanent: true },
+      { source: '/categories', destination: '/business-categories', permanent: true },
+      { source: '/services', destination: '/seo-services', permanent: true },
       { source: '/submission', destination: '/dashboard/listings/new', permanent: true },
       { source: '/about-us', destination: '/about', permanent: true },
       { source: '/contact-us', destination: '/contact', permanent: true },

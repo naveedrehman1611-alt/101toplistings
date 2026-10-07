@@ -315,7 +315,7 @@ export default async function EditSection({
               name="cta_url"
               maxLength={500}
               defaultValue={section.cta_url}
-              placeholder="/listings or https://example.com"
+              placeholder="/business-directory or https://example.com"
             />
           </>
         ) : null}
@@ -575,7 +575,7 @@ function ItemFields({
           name="url"
           maxLength={500}
           defaultValue={item?.url}
-          placeholder="/listings or https://example.com"
+          placeholder="/business-directory or https://example.com"
         />
       ) : null}
     </>

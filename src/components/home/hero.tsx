@@ -23,33 +23,33 @@ const SERVICES: {
     icon: 'storefront_bold',
     title: 'Business Listings',
     subtitle: 'Get found by local customers',
-    href: '/dashboard/listings/new',
+    href: '/add-business',
   },
   {
     icon: 'monitoring_bold',
     title: 'SEO Services',
     subtitle: 'Rank higher on Google',
-    href: '/contact?subject=SEO%20services',
+    href: '/seo-services',
   },
   {
     icon: 'campaign_bold',
     title: 'Digital Marketing',
     subtitle: 'Grow your brand online',
-    href: '/contact?subject=Digital%20marketing',
+    href: '/digital-marketing',
   },
   {
     icon: 'link_bold',
     tilt: true,
     title: 'Guest Posting',
     subtitle: 'Build quality backlinks',
-    href: '/contact?subject=Guest%20posting',
+    href: '/seo-services/guest-posting',
   },
   {
     icon: 'link_bold',
     tilt: true,
     title: 'Link Building',
     subtitle: 'Boost your authority',
-    href: '/contact?subject=Link%20building',
+    href: '/seo-services/link-building',
   },
 ];
 
@@ -160,19 +160,31 @@ export function Hero({
         </p>
 
         <h1 className="font-display mt-6 text-[40px] leading-[1.03] font-extrabold tracking-tight sm:text-5xl lg:mt-[18px] lg:text-[64px]">
-          <span className="block">Find Local Businesses.</span>
           <span className="block">List Your Business.</span>
-          <span className="text-hero-green-light block">Grow Online.</span>
+          <span className="block">Get Found Online.</span>
+          <span className="text-hero-green-light block">Grow With SEO.</span>
         </h1>
 
         {/* From lg the lines break where the mockup's do: no max-width gives both breaks. */}
         <p className="mt-4 max-w-[36rem] text-lg leading-[1.55] text-white/85">
-          Discover local businesses, list your company, and build stronger{' '}
-          <br className="hidden lg:inline" />
-          online visibility with SEO, Local SEO, digital marketing,{' '}
-          <br className="hidden lg:inline" />
-          guest posting and link building services.
+          Discover businesses worldwide, create a powerful business listing, and get SEO &amp;
+          digital marketing services to grow your visibility, traffic, and leads.
         </p>
+
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Link
+            href="/add-business"
+            className="bg-hero-green hover:bg-hero-green-hover focus-visible:ring-hero-green inline-flex h-12 items-center justify-center rounded-lg px-6 text-base font-semibold text-white transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
+          >
+            Add Your Business
+          </Link>
+          <Link
+            href="/seo-audit"
+            className="focus-visible:ring-hero-green-light inline-flex h-12 items-center justify-center rounded-lg border border-white/40 px-6 text-base font-semibold text-white transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:outline-hidden"
+          >
+            Get an SEO Audit
+          </Link>
+        </div>
 
         <form
           action="/search"
@@ -218,6 +230,24 @@ export function Hero({
             Search
           </button>
         </form>
+
+        <p className="mt-4 text-sm text-white/75">
+          <Link
+            href="/business-directory"
+            className="underline-offset-4 hover:text-white hover:underline"
+          >
+            Browse Businesses
+          </Link>
+          <span aria-hidden className="mx-2">
+            ·
+          </span>
+          <Link
+            href="/seo-services"
+            className="underline-offset-4 hover:text-white hover:underline"
+          >
+            Explore SEO Services
+          </Link>
+        </p>
 
         {/* From xl each item keeps its title and subtitle on one line, as in the mockup;
             equal columns are too narrow for that, so the items are spread instead. */}
