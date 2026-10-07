@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Icon } from '@/components/icon';
+import { SiteLogo } from '@/components/site-logo';
 import { NewsletterForm } from '@/components/newsletter-form';
 import type { City, MenuItem } from '@/lib/queries';
 
@@ -31,18 +32,6 @@ function legalLinks(company: MenuItem[]): MenuItem[] {
 const linkClass =
   'font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface rounded-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
 
-/** Same split as the header: "RankYouSite" -> "RankYou" + accented "Site". */
-function Wordmark({ name }: { name: string }) {
-  const parts = /^(.+?)([A-Z][a-z0-9]*)$/.exec(name);
-  if (!parts) return <>{name}</>;
-  return (
-    <>
-      {parts[1]}
-      <span className="text-primary-container">{parts[2]}</span>
-    </>
-  );
-}
-
 export function Footer({
   brand,
   about,
@@ -73,14 +62,7 @@ export function Footer({
       <div className="mx-auto max-w-7xl px-6 pt-16 pb-12 lg:px-12">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-12">
           <div className={`space-y-4 ${locations.length > 0 ? 'lg:col-span-4' : 'lg:col-span-6'}`}>
-            <div className="flex items-center gap-3">
-              <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-xl">
-                <Icon name="verified" size={20} className="text-on-primary" />
-              </div>
-              <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight">
-                <Wordmark name={brand} />
-              </span>
-            </div>
+            <SiteLogo alt={brand} variant="full" className="h-auto w-full max-w-80" />
             {about ? (
               <p className="font-body-md text-body-md text-on-surface-variant max-w-sm">{about}</p>
             ) : null}

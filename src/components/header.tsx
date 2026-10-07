@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@/components/icon';
+import { SiteLogo } from '@/components/site-logo';
 import { drawer } from '@/lib/motion';
 import { TOOLS_BASE, toolHref, toolsByCategory } from '@/lib/free-tools';
 import { NewPill, SoonPill, ToolsMegaMenu } from '@/components/tools/tools-mega-menu';
@@ -32,29 +33,12 @@ function isActive(pathname: string, url: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
-/**
- * "RankYouSite" -> "RankYou" + "Site" in the accent colour, as in the design. A
- * name without a trailing capitalised word renders whole. Same split as the footer.
- */
-function Wordmark({ name }: { name: string }) {
-  const parts = /^(.+?)([A-Z][a-z0-9]*)$/.exec(name);
-  if (!parts) return <>{name}</>;
-  return (
-    <>
-      {parts[1]}
-      <span className="text-primary-container">{parts[2]}</span>
-    </>
-  );
-}
-
 export function Header({
   brand,
-  subtitle,
   nav,
   mobileNav,
 }: {
   brand: string;
-  subtitle: string;
   nav: MenuItem[];
   mobileNav: MenuItem[];
 }) {
@@ -92,20 +76,8 @@ export function Header({
       <header className="bg-surface-card/90 sticky top-0 z-40 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="flex h-20 items-center justify-between gap-3 sm:gap-6">
-            <Link href="/" className={`flex min-w-0 items-center gap-3 rounded-xl ${focusRing}`}>
-              <span className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-xs">
-                <Icon name="verified" className="text-on-primary" />
-              </span>
-              <span className="flex min-w-0 flex-col">
-                <span className="font-headline-sm text-headline-sm text-on-surface leading-none tracking-tight">
-                  <Wordmark name={brand} />
-                </span>
-                {subtitle ? (
-                  <span className="font-label-sm text-label-sm text-secondary mt-1 truncate leading-none tracking-wider uppercase">
-                    {subtitle}
-                  </span>
-                ) : null}
-              </span>
+            <Link href="/" className={`flex min-w-0 shrink items-center rounded-xl ${focusRing}`}>
+              <SiteLogo alt={brand} eager className="h-9 w-auto sm:h-11 lg:h-10 xl:h-11" />
             </Link>
 
             {/* gap-5 until xl and gap-6 from xl: with the tools trigger, anything wider squeezes
@@ -196,9 +168,7 @@ export function Header({
               className="bg-surface-card absolute top-0 right-0 flex h-full w-80 max-w-[85vw] flex-col overflow-y-auto p-6 shadow-2xl"
             >
               <div className="mb-6 flex items-center justify-between gap-4">
-                <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight">
-                  <Wordmark name={brand} />
-                </span>
+                <SiteLogo alt={brand} className="h-9 w-auto min-w-0" />
                 <button
                   ref={closeButton}
                   type="button"
