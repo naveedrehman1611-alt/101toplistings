@@ -21,6 +21,7 @@ export function MegaMenu({
   label,
   shortLabel = label,
   active,
+  width = 'max-w-6xl',
   children,
 }: {
   label: string;
@@ -28,6 +29,8 @@ export function MegaMenu({
   shortLabel?: string;
   /** The current page belongs to this menu. */
   active: boolean;
+  /** Max-width class of the panel, which is centred under the header. */
+  width?: string;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -139,7 +142,7 @@ export function MegaMenu({
             {/* tabIndex -1: a click on a muted row or the background keeps focus inside. */}
             <div
               tabIndex={-1}
-              className="bg-surface-card border-border-subtle pointer-events-auto mx-auto max-w-6xl rounded-2xl border shadow-[0_12px_40px_rgba(0,0,0,0.12)] outline-none"
+              className={`bg-surface-card border-border-subtle pointer-events-auto mx-auto ${width} rounded-2xl border shadow-[0_12px_40px_rgba(0,0,0,0.12)] outline-none`}
             >
               {children}
             </div>

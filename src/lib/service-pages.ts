@@ -6,6 +6,8 @@ import type { IconName } from '@/components/icon';
  * header's Services menu, the OfferCatalog JSON-LD and the sitemap.
  */
 
+export type ServiceCategoryId = 'seo' | 'links' | 'marketing';
+
 export type ServicePage = {
   slug: string;
   /** Public URL path, e.g. /seo-services/local-seo. */
@@ -20,6 +22,8 @@ export type ServicePage = {
   /** Answer-first definition shown under the H1. */
   intro: string;
   icon: IconName;
+  /** Column in the header's Services menu. */
+  category: ServiceCategoryId;
   includes: { title: string; body: string }[];
   steps?: { title: string; body: string }[];
   /** Visible on the page only; there is deliberately no FAQPage markup. */
@@ -47,6 +51,7 @@ export const SERVICE_PAGES: ServicePage[] = [
     intro:
       'Local SEO is the work of making a business easy to find when people search for it by place, such as "plumber near me" or "dentist in Dubai". As a local SEO agency we combine accurate listings, consistent citations, location pages and reviews so search engines trust your business for the area you serve.',
     icon: 'location_on',
+    category: 'seo',
     includes: [
       {
         title: 'Business listing clean-up',
@@ -117,6 +122,7 @@ export const SERVICE_PAGES: ServicePage[] = [
     intro:
       'Technical SEO makes sure search engines can crawl, understand and index your website, and that visitors get a fast, stable page. As a technical SEO agency we find the problems holding a site back, fix them in priority order and explain each change in plain language.',
     icon: 'build',
+    category: 'seo',
     includes: [
       {
         title: 'Crawl and indexing review',
@@ -188,6 +194,7 @@ export const SERVICE_PAGES: ServicePage[] = [
     intro:
       'On-page SEO is the work done on the pages of your own site: matching each page to what searchers want, and getting titles, headings, content and internal links right. As an on-page SEO agency we focus on pages that can earn traffic and leads, written for people first.',
     icon: 'fact_check',
+    category: 'seo',
     includes: [
       {
         title: 'Keyword and intent mapping',
@@ -258,6 +265,7 @@ export const SERVICE_PAGES: ServicePage[] = [
     intro:
       'Off-page SEO covers the signals that come from outside your website, mainly links, brand mentions and citations from other trusted sites. We build that authority ethically, with relevant outreach and useful content, and avoid the shortcuts that put rankings at risk.',
     icon: 'public',
+    category: 'seo',
     includes: [
       {
         title: 'Backlink profile review',
@@ -324,6 +332,7 @@ export const SERVICE_PAGES: ServicePage[] = [
     intro:
       'Link building is the practice of earning links from other websites to yours, because search engines treat relevant links as a sign of trust. Our SEO link building services follow a white hat link building approach: real outreach, useful content and relevant sites, with no paid schemes or link farms.',
     icon: 'link',
+    category: 'links',
     includes: [
       {
         title: 'Link opportunity research',
@@ -390,6 +399,7 @@ export const SERVICE_PAGES: ServicePage[] = [
     intro:
       'Guest posting means writing a useful article for another website in your field, with a link back to yours where it fits. Our guest post outreach services focus on relevant sites with real readers, editorial standards and content that earns its place.',
     icon: 'handshake',
+    category: 'links',
     includes: [
       {
         title: 'Site selection',
@@ -456,6 +466,7 @@ export const SERVICE_PAGES: ServicePage[] = [
     intro:
       'SEO content marketing is publishing pages and articles that answer what your customers search for, so they find you before they decide. We plan topics around real search demand, write clear and accurate content, and connect it to the pages that turn readers into enquiries.',
     icon: 'campaign',
+    category: 'marketing',
     includes: [
       {
         title: 'Topic and keyword research',
@@ -526,6 +537,7 @@ export const SERVICE_PAGES: ServicePage[] = [
     intro:
       'Digital marketing is how a business gets found, trusted and chosen online. As a digital marketing agency offering online marketing services, we start with search, because it captures people already looking, and build outward with content, local presence and authority.',
     icon: 'rocket_launch',
+    category: 'marketing',
     includes: [
       {
         title: 'Search engine optimization',
@@ -588,14 +600,14 @@ export function servicePage(slug: string): ServicePage | undefined {
 }
 
 /** What the header's Services menu needs: no page copy, so the client bundle stays small. */
-export type ServiceNavItem = Pick<ServicePage, 'slug' | 'path' | 'name' | 'description' | 'icon'>;
+export type ServiceNavItem = Pick<ServicePage, 'slug' | 'path' | 'name' | 'icon' | 'category'>;
 
 export function serviceNavItems(): ServiceNavItem[] {
-  return SERVICE_PAGES.map(({ slug, path, name, description, icon }) => ({
+  return SERVICE_PAGES.map(({ slug, path, name, icon, category }) => ({
     slug,
     path,
     name,
-    description,
     icon,
+    category,
   }));
 }

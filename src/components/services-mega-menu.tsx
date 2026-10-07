@@ -4,10 +4,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon } from '@/components/icon';
 import { MegaMenu, MegaMenuFooter, focusRing } from '@/components/mega-menu';
-import type { ServiceNavItem } from '@/lib/service-pages';
+import type { ServiceCategoryId, ServiceNavItem } from '@/lib/service-pages';
 
 /** The services hub. Kept here, not imported, so the page copy stays out of the client bundle. */
 export const SERVICES_BASE = '/seo-services';
+
+/** Menu columns, in order. Labels live here so the page copy stays out of the client bundle. */
+export const SERVICE_CATEGORIES: { id: ServiceCategoryId; label: string }[] = [
+  { id: 'seo', label: 'SEO' },
+  { id: 'links', label: 'Links & Authority' },
+  { id: 'marketing', label: 'Content & Marketing' },
+];
 
 /** The page is the services hub or one of the service pages. */
 export function isServicePath(pathname: string, services: ServiceNavItem[]): boolean {
@@ -18,7 +25,7 @@ export function isServicePath(pathname: string, services: ServiceNavItem[]): boo
   );
 }
 
-/** Desktop "SEO Services" trigger and its panel: one card per service, as on the hub. */
+/** Desktop "SEO Services" trigger and its panel: icon rows in columns, as in the tools menu. */
 export function ServicesMegaMenu({
   services,
   label,
@@ -34,28 +41,35 @@ export function ServicesMegaMenu({
       label={label ?? 'SEO Services'}
       shortLabel={label ?? 'Services'}
       active={isServicePath(pathname, services)}
+      width="max-w-3xl"
     >
-      <ul className="grid grid-cols-4 gap-2 p-4">
-        {services.map((service) => (
-          <li key={service.slug}>
-            <Link
-              href={service.path}
-              aria-current={pathname === service.path ? 'page' : undefined}
-              className={`group hover:bg-surface-container-low flex h-full flex-col rounded-xl p-3 transition-colors ${focusRing}`}
-            >
-              <span className="bg-brand-50 text-primary-container mb-3 grid size-10 place-items-center rounded-lg">
-                <Icon name={service.icon} size={20} />
-              </span>
-              <span className="font-title-md text-title-md text-on-surface group-hover:text-primary-container transition-colors">
-                {service.name}
-              </span>
-              <span className="font-body-sm text-body-sm text-on-surface-variant mt-1 line-clamp-2">
-                {service.description}
-              </span>
-            </Link>
-          </li>
+      <div className="grid grid-cols-3 gap-6 p-6">
+        {SERVICE_CATEGORIES.map((category) => (
+          <div key={category.id}>
+            <p className="font-label-sm text-label-sm text-secondary mb-2 px-2 tracking-wider uppercase">
+              {category.label}
+            </p>
+            <ul className="flex flex-col gap-0.5">
+              {services
+                .filter((service) => service.category === category.id)
+                .map((service) => (
+                  <li key={service.slug}>
+                    <Link
+                      href={service.path}
+                      aria-current={pathname === service.path ? 'page' : undefined}
+                      className={`font-label-md text-label-md text-on-surface hover:bg-surface-container-low hover:text-primary-container flex items-center gap-3 rounded-lg px-2 py-2 transition-colors ${focusRing}`}
+                    >
+                      <span className="bg-brand-50 text-primary-container grid size-8 shrink-0 place-items-center rounded-lg">
+                        <Icon name={service.icon} size={18} />
+                      </span>
+                      <span className="min-w-0 flex-1">{service.name}</span>
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
       <MegaMenuFooter>
         <p className="font-body-sm text-body-sm text-on-surface-variant">
           Not sure where to start?{' '}
