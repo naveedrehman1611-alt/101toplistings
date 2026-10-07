@@ -104,12 +104,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Skip to content
         </a>
-        <Header
-          brand={brand}
-          subtitle={settingText(settings, 'brand.subtitle', 'Business Directory')}
-          nav={nav}
-          mobileNav={mobileNav}
-        />
+        <Header brand={brand} nav={nav} mobileNav={mobileNav} />
         {/* tabIndex lets the skip link move keyboard focus here, not just scroll. */}
         <main id="main" tabIndex={-1} className="flex-1 outline-hidden">
           {children}
