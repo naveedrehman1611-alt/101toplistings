@@ -63,10 +63,10 @@ export default async function HomePage() {
   ]);
 
   const brand = settingText(settings, 'brand.name', 'RankYouSite');
-  const homeCities = pickHomeCities(cities);
+  const cityMarkets = pickHomeCities(cities);
   const [highlights, cityCounts] = await Promise.all([
     getListingHighlights(topRated.map((l) => l.id)),
-    getCityListingCounts(homeCities.map((c) => c.id)),
+    getCityListingCounts(cityMarkets.flatMap((m) => m.cities.map((c) => c.id))),
   ]);
 
   const categorySlugs = new Set(categories.map((c) => c.slug));
@@ -85,7 +85,7 @@ export default async function HomePage() {
       />
       <Story stats={stats} />
       <WhyChoose brand={brand} />
-      <Cities cities={homeCities} counts={cityCounts} />
+      <Cities markets={cityMarkets} counts={cityCounts} />
       <Services categorySlugs={categorySlugs} />
       <HowItWorks brand={brand} />
       <GrowVisibility brand={brand} />
