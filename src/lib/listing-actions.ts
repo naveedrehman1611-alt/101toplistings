@@ -6,6 +6,14 @@ import { writeAudit } from './audit';
 import { check, runAndReturn } from './action-flow';
 import { FormError, bool, text, uuid } from './form-data';
 import { freeSlug, parseHours, parseListingForm, writeHours } from './listing-input';
+import { readOptionalImageUpload, type ValidImage } from './media-upload';
+import {
+  discardMedia,
+  storeListingMedia,
+  type MediaRow,
+  type Supabase,
+} from './listing-image-store';
+import { LISTING_IMAGE_MAX_BYTES, LOGO_FIELD, PHOTO_FIELDS } from './listing-image-limits';
 
 const STATUSES = ['approved', 'pending', 'draft', 'rejected', 'suspended'] as const;
 const VERIFICATIONS = ['unverified', 'pending', 'verified', 'rejected'] as const;
@@ -102,6 +110,9 @@ export async function submitOwnListing(fd: FormData) {
     const supabase = await createClient();
     const base = await parseListingForm(fd, supabase);
     const hours = parseHours(fd);
+    // Every image is validated before anything is written, so a bad file is
+    // reported with nothing created rather than leaving a half-made listing.
+    const images = await readNewListingImages(fd);
     const after = check(
       await supabase
         .from('listings')
@@ -119,8 +130,92 @@ export async function submitOwnListing(fd: FormData) {
     );
     if (!after) throw new FormError('The listing could not be saved.');
     await writeHours(supabase, after.id, hours);
-    return `Thanks — ${after.name} was submitted and will appear once it has been reviewed.`;
+    const failed = await storeNewListingImages(supabase, user.id, after, images);
+    return `Thanks — ${after.name} was submitted and will appear once it has been reviewed.${failed}`;
   });
+}
+
+type NewListingImages = { logo: ValidImage | null; photos: ValidImage[] };
+
+/** The optional logo and photos on the new-listing form; empty inputs are skipped. */
+async function readNewListingImages(fd: FormData): Promise<NewListingImages> {
+  const logo = await readOptionalImageUpload(fd, LOGO_FIELD, LISTING_IMAGE_MAX_BYTES, 'Logo');
+  const photos: ValidImage[] = [];
+  for (const [i, field] of PHOTO_FIELDS.entries()) {
+    const photo = await readOptionalImageUpload(
+      fd,
+      field,
+      LISTING_IMAGE_MAX_BYTES,
+      `Photo ${i + 1}`,
+    );
+    if (photo) photos.push(photo);
+  }
+  return { logo, photos };
+}
+
+/**
+ * Stores the new listing's images, one at a time in a fixed order: logo, then
+ * photos as they appear on the form. This runs after the listing exists, as the
+ * storage policy checks the uploader manages that listing id.
+ *
+ * The listing is already submitted by now, so a failed image does not fail the
+ * request: it is cleaned up as far as possible and reported in the returned
+ * suffix for the success message ('' when everything was saved).
+ */
+async function storeNewListingImages(
+  supabase: Supabase,
+  uploaderId: string,
+  listing: { id: string; name: string },
+  { logo, photos }: NewListingImages,
+): Promise<string> {
+  type Row = { kind: 'cover' | 'logo' | 'gallery'; sort_order: number };
+  type Job = { image: ValidImage; alt: string; rows: Row[] };
+
+  const jobs: Job[] = [];
+  if (logo) {
+    jobs.push({
+      image: logo,
+      alt: `${listing.name} logo`,
+      rows: [{ kind: 'logo', sort_order: 0 }],
+    });
+  }
+  photos.forEach((image, i) => {
+    const rows: Row[] = [{ kind: 'gallery', sort_order: i }];
+    // The first photo is also the cover, so cards and the page hero have an
+    // image. Both rows point at one media row: no second upload, no extra bytes.
+    if (i === 0) rows.push({ kind: 'cover', sort_order: 0 });
+    jobs.push({ image, alt: `${listing.name} photo ${i + 1}`, rows });
+  });
+
+  let failures = 0;
+  let reason: string | null = null;
+  for (const job of jobs) {
+    let media: MediaRow | null = null;
+    try {
+      media = await storeListingMedia(supabase, {
+        uploaderId,
+        listing,
+        image: job.image,
+        alt: job.alt,
+      });
+      const mediaId = media.id;
+      check(
+        await supabase
+          .from('listing_images')
+          .insert(job.rows.map((row) => ({ listing_id: listing.id, media_id: mediaId, ...row }))),
+      );
+    } catch (e) {
+      failures += 1;
+      reason ??= e instanceof FormError ? e.message.replace(/\.$/, '') : 'storage error';
+      // storeListingMedia cleans up after itself; a stored media row whose
+      // listing_images insert failed is unused, so remove it and its file.
+      if (media) await discardMedia(supabase, media).catch(() => undefined);
+    }
+  }
+  if (failures === 0) return '';
+  const what =
+    failures === 1 ? '1 image could not be saved' : `${failures} images could not be saved`;
+  return ` ${what} (${reason}) — you can add ${failures === 1 ? 'it' : 'them'} from the listing's edit page.`;
 }
 
 export async function updateOwnListing(fd: FormData) {

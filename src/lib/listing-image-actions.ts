@@ -5,9 +5,14 @@ import { requireRole, requireUser, type CurrentUser } from './auth';
 import { writeAudit } from './audit';
 import { check, runAndReturn } from './action-flow';
 import { FormError, text, uuid } from './form-data';
-import { objectName, putObject, readImageUpload, removeObjects } from './media-upload';
-
-type Supabase = Awaited<ReturnType<typeof createClient>>;
+import { readImageUpload } from './media-upload';
+import {
+  discardMedia,
+  storeListingMedia,
+  type MediaRef,
+  type Supabase,
+} from './listing-image-store';
+import { OWNER_MAX_GALLERY, STAFF_MAX_GALLERY } from './listing-image-limits';
 
 /**
  * Cover, logo and gallery images for one listing. The same forms are used from
@@ -19,9 +24,6 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 const KINDS = ['cover', 'logo', 'gallery'] as const;
 type Kind = (typeof KINDS)[number];
-
-// Enough for a good gallery without letting one listing fill the bucket.
-const MAX_GALLERY = 20;
 
 type Target = { user: CurrentUser; listingId: string; path: string; staff: boolean };
 
@@ -87,34 +89,20 @@ export async function uploadListingImage(fd: FormData) {
         .eq('kind', kind)
         .order('sort_order', { ascending: false }),
     ) as unknown as ExistingImage[];
-    if (kind === 'gallery' && existing.length >= MAX_GALLERY) {
-      throw new FormError(`A gallery holds at most ${MAX_GALLERY} images. Remove one first.`);
+    // Owners get a small gallery; staff can curate a larger one. Either way one
+    // listing cannot fill the bucket.
+    const maxGallery = t.staff ? STAFF_MAX_GALLERY : OWNER_MAX_GALLERY;
+    if (kind === 'gallery' && existing.length >= maxGallery) {
+      throw new FormError(`A gallery holds at most ${maxGallery} images. Remove one first.`);
     }
 
     const image = await readImageUpload(fd);
-    // The uploader's uid leads the path: that prefix is what the storage policy
-    // lets them write to, and the listing id after it is what it checks they manage.
-    const path = `listings/${t.user.id}/${listing.id}/${objectName(image)}`;
-    await putObject(supabase, path, image);
-
-    const { data: media, error } = await supabase
-      .from('media')
-      .insert({
-        path,
-        alt: text(fd, 'alt', 300) ?? `${listing.name} ${kind === 'gallery' ? 'photo' : kind}`,
-        width: image.width,
-        height: image.height,
-        size_bytes: image.size,
-        mime_type: image.mime,
-        folder: 'listings',
-        uploaded_by: t.user.id,
-      })
-      .select('*')
-      .single();
-    if (error) {
-      await removeObjects(supabase, [path]);
-      throw error;
-    }
+    const media = await storeListingMedia(supabase, {
+      uploaderId: t.user.id,
+      listing,
+      image,
+      alt: text(fd, 'alt', 300) ?? `${listing.name} ${kind === 'gallery' ? 'photo' : kind}`,
+    });
 
     // Cover and logo are single (a partial unique index enforces it). Replacing
     // repoints the existing row at the new media, so there is never a moment with
@@ -182,27 +170,9 @@ export async function removeListingImage(fd: FormData) {
   });
 }
 
-type MediaRef = { id: string; path: string; folder: string | null };
 type ExistingImage = {
   id: string;
   media_id: string | null;
   sort_order: number;
   media: MediaRef | null;
 };
-
-/**
- * Deletes a listing photo's media row and file once nothing uses it. Library
- * images are left alone: they belong to the media library, not the listing.
- * If RLS refuses the delete (an owner removing a photo a moderator uploaded),
- * the row stays for an editor to clean up from the media library.
- */
-async function discardMedia(supabase: Supabase, media: MediaRef | null) {
-  if (!media || media.folder !== 'listings') return;
-  const { count } = await supabase
-    .from('listing_images')
-    .select('id', { count: 'exact', head: true })
-    .eq('media_id', media.id);
-  if (count) return;
-  const { data } = await supabase.from('media').delete().eq('id', media.id).select('id');
-  if (data?.length) await removeObjects(supabase, [media.path]);
-}
