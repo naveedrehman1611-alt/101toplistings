@@ -181,6 +181,30 @@
   --radius-card: 1rem;
 }
 
+/* Homepage stats strip: cells rise in on load, their icons then bob gently;
+   --rise-delay and --float-delay stagger them. Inline so those vars resolve on
+   each element, not on :root. Under reduced motion the global rule below cuts
+   both to a single instant run. */
+@theme inline {
+  --animate-rise: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) var(--rise-delay, 0s) both;
+  --animate-float: float 3.2s ease-in-out var(--float-delay, 0s) infinite;
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+}
+
 /* Light only, deliberately. There is no dark palette and no
    prefers-color-scheme block: the site must render on a light background
    regardless of the visitor's system setting. color-scheme is pinned to light so

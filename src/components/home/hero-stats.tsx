@@ -1,17 +1,10 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Icon, type IconName } from '@/components/icon';
 import type { DirectoryStats, ReviewSummary } from '@/lib/queries';
+import { CountUp } from './count-up';
 
-/**
- * A directory count for the stats strip: exact below 1,000, then K or M with one
- * decimal and a "+" (1234 → "1.2K+", 10000 → "10K+", 1250000 → "1.2M+").
- * Truncates rather than rounds so the "+" stays true: 1999 is "1.9K+", not "2K+".
- */
-export function compactCount(n: number): string {
-  if (n >= 1e6) return `${Math.floor(n / 1e5) / 10}M+`;
-  if (n >= 1e3) return `${Math.floor(n / 1e2) / 10}K+`;
-  return n.toLocaleString('en-US');
-}
+// Bobs up and down; each cell sets --float-delay so the icons move out of step.
+const FLOAT = 'inline-flex motion-safe:animate-float';
 
 function Figure({
   icon,
@@ -21,12 +14,14 @@ function Figure({
 }: {
   icon: IconName;
   tone: string;
-  value: string;
+  value: ReactNode;
   label: string;
 }) {
   return (
     <>
-      <Icon name={icon} size={40} className={tone} />
+      <span className={`${FLOAT} ${tone}`}>
+        <Icon name={icon} size={40} />
+      </span>
       <div className="min-w-0">
         <p className="font-display text-on-surface text-[22px] leading-tight font-extrabold">
           {value}
@@ -51,13 +46,14 @@ function StarRow({ className, width }: { className: string; width?: string }) {
 
 /** Grey stars with gold ones clipped on top to the real average, so 4.3 fills 86%. */
 function Rating({ reviews }: { reviews: ReviewSummary }) {
-  const score = reviews.average.toFixed(1);
-  const fill = `${(Math.min(Math.max(reviews.average, 0), 5) / 5) * 100}%`;
+  const average = Math.min(Math.max(reviews.average, 0), 5);
+  const score = average.toFixed(1);
+  const fill = `${(average / 5) * 100}%`;
   const count = reviews.count.toLocaleString('en-US');
   return (
     // Below sm the cell is half of a 320px screen: stars, score and label stack.
     <div className="grid justify-items-center gap-y-1.5 sm:grid-cols-[auto_auto] sm:items-center sm:gap-x-3">
-      <span aria-hidden className="relative flex">
+      <span aria-hidden className={`relative ${FLOAT}`}>
         <StarRow className="text-[#d9dee7]" />
         <StarRow
           className="text-hero-star absolute inset-y-0 left-0 overflow-hidden"
@@ -65,7 +61,8 @@ function Rating({ reviews }: { reviews: ReviewSummary }) {
         />
       </span>
       <span aria-hidden className="font-display text-on-surface text-base leading-tight font-bold">
-        {score}/5
+        <CountUp to={average} format="score" />
+        /5
       </span>
       <span aria-hidden className="text-secondary text-sm sm:col-start-1">
         User Reviews
@@ -114,7 +111,7 @@ export function HeroStats({
         <Figure
           icon="handshake"
           tone="text-[#16a34a]"
-          value={compactCount(listings)}
+          value={<CountUp to={listings} format="compact" />}
           label="Active Businesses"
         />
       ),
@@ -127,7 +124,7 @@ export function HeroStats({
         <Figure
           icon="location_city"
           tone="text-[#2f6fed]"
-          value={compactCount(cities)}
+          value={<CountUp to={cities} format="compact" />}
           label="Cities Covered"
         />
       ),
@@ -137,7 +134,12 @@ export function HeroStats({
     cells.push({
       key: 'reviewed',
       content: (
-        <Figure icon="schedule" tone="text-[#16a34a]" value="100%" label="Reviewed Listings" />
+        <Figure
+          icon="schedule"
+          tone="text-[#16a34a]"
+          value={<CountUp to={100} format="percent" />}
+          label="Reviewed Listings"
+        />
       ),
     });
   }
@@ -157,9 +159,17 @@ export function HeroStats({
         {cells.map((cell, i) => (
           <li
             key={cell.key}
+            // Cells rise in one after another, then their icons float out of step.
+            style={
+              {
+                '--rise-delay': `${i * 120}ms`,
+                '--float-delay': `${i * -0.8}s`,
+              } as CSSProperties
+            }
             // A third cell alone on the second mobile row spans both columns, centred.
             className={[
               CELL,
+              'motion-safe:animate-rise',
               // lg: as in the design, figures sit left in their column, just after the
               // divider; the rating stays centred.
               cell.key === 'rating' ? '' : 'lg:justify-start lg:pl-8 lg:first:pl-0',
