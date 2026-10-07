@@ -65,8 +65,7 @@ export function ImageFileInput({
     return () => form.removeEventListener('reset', onReset);
   }, []);
 
-  async function onChange(e: ChangeEvent<HTMLInputElement>) {
-    const input = e.currentTarget;
+  async function process(input: HTMLInputElement) {
     const picked = input.files?.[0];
     if (!picked) {
       clear();
@@ -100,6 +99,15 @@ export function ImageFileInput({
     }
   }
 
+  // A file picked before hydration (a slow phone, the form is usable before
+  // React attaches onChange) is already in the input on mount: shrink it too,
+  // or the raw camera file would post.
+  const onMount = useEffectEvent(() => {
+    const input = inputRef.current;
+    if (input?.files?.length) void process(input);
+  });
+  useEffect(() => onMount(), []);
+
   const hintId = hint ? `${id}-hint` : undefined;
   const statusId = `${id}-status`;
   const square = variant === 'logo';
@@ -109,10 +117,7 @@ export function ImageFileInput({
   if (status.kind === 'ready') {
     const size = dims ? `${dims.w}×${dims.h}` : null;
     const bytes = formatBytes(status.file.size);
-    statusText =
-      status.file === status.original
-        ? ['Ready to upload', size, bytes].filter(Boolean).join(' · ')
-        : `${size ? `Resized to ${size}` : 'Resized'} · ${bytes} (was ${formatBytes(status.original.size)})`;
+    statusText = `${size ? `Resized to ${size}` : 'Resized'} · ${bytes} (was ${formatBytes(status.original.size)})`;
   }
 
   return (
@@ -128,7 +133,7 @@ export function ImageFileInput({
         name={name}
         accept={IMAGE_ACCEPT}
         required={required}
-        onChange={onChange}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => void process(e.currentTarget)}
         aria-describedby={[hintId, statusId].filter(Boolean).join(' ')}
         className="mt-1 block w-full text-sm file:mr-3 file:rounded-lg file:border file:border-[var(--border)] file:bg-[var(--surface)] file:px-3 file:py-1.5"
       />

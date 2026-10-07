@@ -169,7 +169,7 @@ async function storeNewListingImages(
   { logo, photos }: NewListingImages,
 ): Promise<string> {
   type Row = { kind: 'cover' | 'logo' | 'gallery'; sort_order: number };
-  type Job = { image: ValidImage; alt: string; rows: Row[] };
+  type Job = { image: ValidImage; alt: string; rows: Row[]; photo: boolean };
 
   const jobs: Job[] = [];
   if (logo) {
@@ -177,16 +177,22 @@ async function storeNewListingImages(
       image: logo,
       alt: `${listing.name} logo`,
       rows: [{ kind: 'logo', sort_order: 0 }],
+      photo: false,
     });
   }
   photos.forEach((image, i) => {
-    const rows: Row[] = [{ kind: 'gallery', sort_order: i }];
-    // The first photo is also the cover, so cards and the page hero have an
-    // image. Both rows point at one media row: no second upload, no extra bytes.
-    if (i === 0) rows.push({ kind: 'cover', sort_order: 0 });
-    jobs.push({ image, alt: `${listing.name} photo ${i + 1}`, rows });
+    jobs.push({
+      image,
+      alt: `${listing.name} photo ${i + 1}`,
+      rows: [{ kind: 'gallery', sort_order: i }],
+      photo: true,
+    });
   });
 
+  // The first photo that stores is also the cover, so cards and the page hero
+  // have an image. Both rows point at one media row: no second upload, no
+  // extra bytes, and they are inserted together so they succeed or fail as one.
+  let hasCover = false;
   let failures = 0;
   let reason: string | null = null;
   for (const job of jobs) {
@@ -199,11 +205,14 @@ async function storeNewListingImages(
         alt: job.alt,
       });
       const mediaId = media.id;
+      const withCover = job.photo && !hasCover;
+      const rows: Row[] = withCover ? [...job.rows, { kind: 'cover', sort_order: 0 }] : job.rows;
       check(
         await supabase
           .from('listing_images')
-          .insert(job.rows.map((row) => ({ listing_id: listing.id, media_id: mediaId, ...row }))),
+          .insert(rows.map((row) => ({ listing_id: listing.id, media_id: mediaId, ...row }))),
       );
+      if (withCover) hasCover = true;
     } catch (e) {
       failures += 1;
       reason ??= e instanceof FormError ? e.message.replace(/\.$/, '') : 'storage error';

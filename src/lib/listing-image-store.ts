@@ -76,11 +76,14 @@ export async function storeListingMedia(
  */
 export async function discardMedia(supabase: Supabase, media: MediaRef | null) {
   if (!media || media.folder !== 'listings') return;
-  const { count } = await supabase
+  const { count, error } = await supabase
     .from('listing_images')
     .select('id', { count: 'exact', head: true })
     .eq('media_id', media.id);
-  if (count) return;
+  // Fail closed: deleting the media row cascades to every listing_images row
+  // still using it (a cover and gallery photo can share one), so an unknown
+  // count must keep it.
+  if (error || count) return;
   const { data } = await supabase.from('media').delete().eq('id', media.id).select('id');
   if (data?.length) await removeObjects(supabase, [media.path]);
 }

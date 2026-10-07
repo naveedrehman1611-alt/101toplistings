@@ -7,11 +7,13 @@ import { LISTING_IMAGE_MAX_BYTES, LOGO_MAX_EDGE, PHOTO_MAX_EDGE } from './listin
  *
  * The algorithm is fixed so the same picture always comes out the same:
  * 1. Decode, honouring EXIF rotation, and fit inside maxEdge×maxEdge (never upscale).
- * 2. A PNG or WebP already within both the size and byte caps is returned untouched.
- * 3. Otherwise encode WebP down a fixed quality ladder until it fits. Browsers
+ * 2. Always re-encode, even a file already within the caps: that is what
+ *    strips its metadata, and it keeps every output on the same path.
+ * 3. Encode WebP down a fixed quality ladder until it fits. Browsers
  *    that cannot encode WebP (Safari) fall back to PNG for logos, which keeps
  *    transparency, and JPEG for photos.
  * 4. PNG has no quality knob, so it steps the dimensions down by 0.75 instead.
+ * An animated GIF keeps only its first frame, which is fine for a logo or photo.
  *
  * Re-encoding also drops EXIF metadata, GPS position included, which owners
  * rarely mean to publish with a photo of their shop.
@@ -22,13 +24,6 @@ export type ShrinkVariant = 'logo' | 'photo';
 export const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,image/avif';
 
 const ACCEPTED = new Set(IMAGE_ACCEPT.split(','));
-
-// Everything else is always re-encoded. JPEG because it is what phone cameras
-// write, GPS position and all, and passing a small one through would publish
-// that. GIF to get a modern format (an animation is flattened to its first
-// frame, which is fine for a logo or photo), AVIF because not every browser
-// that views the site can display it.
-const PASS_THROUGH = new Set(['image/png', 'image/webp']);
 
 // Some platforms (Chrome on Windows reading the registry) report an empty type
 // for .webp or .avif files, so the extension stands in when the type is missing.
@@ -68,10 +63,6 @@ export async function shrinkImage(file: File, variant: ShrinkVariant): Promise<F
     const srcW = source instanceof HTMLImageElement ? source.naturalWidth : source.width;
     const srcH = source instanceof HTMLImageElement ? source.naturalHeight : source.height;
     if (!srcW || !srcH) throw new Error('That file is not a readable image.');
-
-    if (file.size <= maxBytes && Math.max(srcW, srcH) <= maxEdge && PASS_THROUGH.has(type)) {
-      return file;
-    }
 
     const scale = Math.min(1, maxEdge / Math.max(srcW, srcH));
     let w = Math.max(1, Math.round(srcW * scale));

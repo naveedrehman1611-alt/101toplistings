@@ -224,7 +224,8 @@ browser and the server import.
   down a fixed quality ladder (0.82 → 0.5) until it is at most 1 MB. Browsers without a WebP encoder fall back
   to PNG for logos and JPEG for photos. The steps are fixed, so the same picture always comes out the same.
   Measured in Chromium, an 8.5 MB 4000×3000 JPEG became a 294 KB 1600×1200 WebP, and a 5.4 MB 2000×2000
-  PNG logo became 12 KB. JPEGs are always re-encoded, which also drops EXIF data such as GPS position.
+  PNG logo became 12 KB. Every file is re-encoded, even one already within the limits, which also drops EXIF
+  data such as GPS position.
 - **The 4.5 MB body cap holds.** The server allows each file at most 1 MB on this form, so four files and
   the text fields fit under Vercel's request limit. The edit page still uploads one file per request with the
   4 MB cap, and it uses the same shrinking input.

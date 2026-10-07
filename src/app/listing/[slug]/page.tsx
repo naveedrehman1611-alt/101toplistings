@@ -234,7 +234,10 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
     }));
   }
   if (images.cover || images.gallery.length > 0) {
-    business.image = [images.cover, ...images.gallery].flatMap((m) => (m ? [m.url] : []));
+    // A new listing's first photo is both its cover and a gallery image, so dedupe.
+    business.image = [
+      ...new Set([images.cover, ...images.gallery].flatMap((m) => (m ? [m.url] : []))),
+    ];
   }
   if (images.logo) business.logo = images.logo.url;
   if (listing.social_links.length > 0) {
