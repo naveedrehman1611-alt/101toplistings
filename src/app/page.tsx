@@ -4,7 +4,9 @@ import {
   getCities,
   getCityListingCounts,
   getDirectoryStats,
+  getFeaturedListingCards,
   getListingHighlights,
+  getPostCards,
   getReviewSummary,
   getSettings,
   searchListings,
@@ -14,6 +16,8 @@ import { seoMetadata } from '@/lib/seo';
 import { Hero } from '@/components/home/hero';
 import { HeroStats } from '@/components/home/hero-stats';
 import { TopRated } from '@/components/home/top-rated';
+import { FeaturedBusinesses } from '@/components/home/featured-businesses';
+import { LatestGuides } from '@/components/home/latest-guides';
 import { Story } from '@/components/home/story';
 import { WhyChoose } from '@/components/home/why-choose';
 import { Cities, pickHomeCities } from '@/components/home/cities';
@@ -53,19 +57,23 @@ export async function generateMetadata(
  * card and city count comes from Supabase and is hidden when it is missing.
  */
 export default async function HomePage() {
-  const [settings, categories, cities, topRated, stats, reviews] = await Promise.all([
-    getSettings(),
-    getCategories(),
-    getCities(),
-    searchListings({ sort: 'rating', limit: 3 }),
-    getDirectoryStats(),
-    getReviewSummary(),
-  ]);
+  const [settings, categories, cities, topRated, featured, guides, stats, reviews] =
+    await Promise.all([
+      getSettings(),
+      getCategories(),
+      getCities(),
+      searchListings({ sort: 'rating', limit: 3 }),
+      getFeaturedListingCards(3),
+      getPostCards({ limit: 3 }),
+      getDirectoryStats(),
+      getReviewSummary(),
+    ]);
 
   const brand = settingText(settings, 'brand.name', 'RankYouSite');
   const homeCities = pickHomeCities(cities);
   const [highlights, cityCounts] = await Promise.all([
-    getListingHighlights(topRated.map((l) => l.id)),
+    // One highlights read covers both rows of cards.
+    getListingHighlights([...new Set([...topRated, ...featured].map((l) => l.id))]),
     getCityListingCounts(homeCities.map((c) => c.id)),
   ]);
 
@@ -86,11 +94,18 @@ export default async function HomePage() {
       <Story stats={stats} />
       <WhyChoose brand={brand} />
       <Cities cities={homeCities} counts={cityCounts} />
+      <FeaturedBusinesses
+        listings={featured}
+        highlights={highlights}
+        categoryNames={categoryNames}
+        cityNames={cityNames}
+      />
       <Services categorySlugs={categorySlugs} />
       <HowItWorks brand={brand} />
       <GrowVisibility brand={brand} />
       <HelpingCustomers brand={brand} />
       <CtaBanner brand={brand} />
+      <LatestGuides posts={guides} />
       <Faq brand={brand} />
       <FinalCta brand={brand} />
     </>

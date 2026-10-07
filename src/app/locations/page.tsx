@@ -7,7 +7,7 @@ import { Breadcrumbs, Button, EmptyState } from '@/components/ui';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { MIN_CITY_LISTINGS_TO_INDEX, seoMetadata } from '@/lib/seo';
 
-export const revalidate = 600;
+export const revalidate = 3600;
 
 const TITLE = 'Business Directory by Country & City';
 const DESCRIPTION =

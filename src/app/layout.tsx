@@ -7,6 +7,7 @@ import { BackToTop } from '@/components/back-to-top';
 import { getCities, getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
 import { jsonLdHtml } from '@/lib/json-ld';
+import { DEFAULT_MOBILE_NAV, DEFAULT_PRIMARY_NAV } from '@/lib/nav';
 
 // Criterion 36: critical fonts preloaded.
 const inter = Inter({
@@ -107,8 +108,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Header
           brand={brand}
           subtitle={settingText(settings, 'brand.subtitle', 'Business Directory')}
-          nav={nav}
-          mobileNav={mobileNav}
+          nav={nav.length ? nav : DEFAULT_PRIMARY_NAV}
+          mobileNav={mobileNav.length ? mobileNav : DEFAULT_MOBILE_NAV}
         />
         <main id="main" className="flex-1">
           {children}

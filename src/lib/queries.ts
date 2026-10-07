@@ -829,6 +829,26 @@ export async function getListingCardsByIds(ids: string[]): Promise<ListingCard[]
   return attachCovers(ordered);
 }
 
+/**
+ * The home page's "Featured businesses" row: newest featured listings, one
+ * bounded read (plus covers) per home regeneration. Empty when nothing is
+ * featured, and the section then hides itself.
+ */
+export async function getFeaturedListingCards(limit = 3): Promise<ListingCard[]> {
+  const rows = await readList<Omit<ListingCard, 'distance_km' | 'total_count'>>(
+    'public_listings.featured',
+    supabase
+      .from('public_listings')
+      .select(
+        'id, slug, name, tagline, category_id, city_id, latitude, longitude, rating_average, review_count, is_featured, published_at',
+      )
+      .eq('is_featured', true)
+      .order('published_at', { ascending: false })
+      .limit(limit),
+  );
+  return attachCovers(rows.map((r) => ({ ...r, distance_km: null, total_count: rows.length })));
+}
+
 export type CardExtras = { id: string; phone_primary: string | null; excerpt: string | null };
 
 /** Phone and a 200-character excerpt per card, from the public_listing_cards view (0021). */

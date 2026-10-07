@@ -9,8 +9,7 @@ import { drawer } from '@/lib/motion';
 import { TOOLS_BASE, toolHref, toolsByCategory } from '@/lib/free-tools';
 import { NewPill, SoonPill, ToolsMegaMenu } from '@/components/tools/tools-mega-menu';
 import type { MenuItem } from '@/lib/queries';
-
-const ADD_LISTING = '/dashboard/listings/new';
+import { ADD_BUSINESS_HREF as ADD_LISTING, SEO_AUDIT_HREF } from '@/lib/nav';
 
 const TOOL_CATEGORIES = toolsByCategory();
 
@@ -81,10 +80,11 @@ export function Header({
   }, [open]);
 
   const close = () => setOpen(false);
-  const primary = withHome(nav);
-  // Login and Add Listing have their own buttons at the foot of the drawer.
+  // The logo is the home link on the desktop bar, which has no room for a second one.
+  const primary = nav.filter((item) => item.url !== '/');
+  // Login, Add Your Business and the SEO audit have their own buttons at the foot of the drawer.
   const drawerItems = withHome(mobileNav).filter(
-    (item) => item.url !== '/login' && item.url !== ADD_LISTING,
+    (item) => item.url !== '/login' && item.url !== ADD_LISTING && item.url !== SEO_AUDIT_HREF,
   );
 
   return (
@@ -108,9 +108,9 @@ export function Header({
               </span>
             </Link>
 
-            {/* gap-5 until xl and gap-6 from xl: with the tools trigger, anything wider squeezes
-                the logo once the admin adds a fifth or sixth menu link. */}
-            <nav aria-label="Primary" className="hidden items-center gap-5 lg:flex xl:gap-6">
+            {/* From xl only, and four links at most: with the tools trigger and the two header
+                buttons, anything more squeezes the logo. The drawer carries the full menu. */}
+            <nav aria-label="Primary" className="hidden items-center gap-5 xl:flex">
               {primary.map((item) => {
                 const active = isActive(pathname, item.url);
                 return (
@@ -132,21 +132,29 @@ export function Header({
             </nav>
 
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-              {/* Hidden from lg to xl, where the nav and tools menu need the room; the
-                  account icon beside it still leads to login. */}
+              {/* Hidden from xl, where the nav and tools menu need the room; the account
+                  icon beside it still leads to login. */}
               <Link
                 href="/login"
-                className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm transition-colors sm:inline-flex lg:hidden xl:inline-flex ${focusRing}`}
+                className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm transition-colors sm:inline-flex xl:hidden ${focusRing}`}
               >
                 Login / Sign Up
+              </Link>
+              {/* From lg, where it fits beside the add button; the drawer has it below. */}
+              <Link
+                href={SEO_AUDIT_HREF}
+                className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low hidden items-center gap-2 rounded-lg border px-4 py-2.5 whitespace-nowrap transition-colors lg:inline-flex ${focusRing}`}
+              >
+                <Icon name="manage_search" size={18} className="xl:hidden" />
+                Get an SEO Audit
               </Link>
               {/* Icon only below sm, so the bar fits a 360px screen. */}
               <Link
                 href={ADD_LISTING}
                 className={`bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary inline-flex size-10 items-center justify-center gap-2 rounded-lg shadow-xs transition-all hover:shadow-sm sm:size-auto sm:px-5 sm:py-2.5 ${focusRing}`}
               >
-                <Icon name="add_circle" size={18} />
-                <span className="sr-only sm:not-sr-only">Add Listing</span>
+                <Icon name="add_circle" size={18} className="xl:hidden" />
+                <span className="sr-only whitespace-nowrap sm:not-sr-only">Add Your Business</span>
               </Link>
               <Link
                 href="/dashboard"
@@ -161,7 +169,7 @@ export function Header({
                 onClick={() => setOpen(true)}
                 aria-label="Open menu"
                 aria-expanded={open}
-                className={`border-border-subtle text-on-surface hover:bg-surface-container-low grid size-10 place-items-center rounded-lg border transition-colors lg:hidden ${focusRing}`}
+                className={`border-border-subtle text-on-surface hover:bg-surface-container-low grid size-10 place-items-center rounded-lg border transition-colors xl:hidden ${focusRing}`}
               >
                 <Icon name="menu" />
               </button>
@@ -175,7 +183,7 @@ export function Header({
       <AnimatePresence>
         {open ? (
           <motion.div
-            className="fixed inset-0 z-50 lg:hidden"
+            className="fixed inset-0 z-50 xl:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -314,7 +322,15 @@ export function Header({
                   className={`bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary inline-flex h-11 items-center justify-center gap-2 rounded-lg shadow-xs transition-all hover:shadow-sm ${focusRing}`}
                 >
                   <Icon name="add_circle" size={18} />
-                  Add Listing
+                  Add Your Business
+                </Link>
+                <Link
+                  href={SEO_AUDIT_HREF}
+                  onClick={close}
+                  className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low inline-flex h-11 items-center justify-center gap-2 rounded-lg border transition-colors ${focusRing}`}
+                >
+                  <Icon name="manage_search" size={18} />
+                  Get an SEO Audit
                 </Link>
               </div>
             </motion.nav>

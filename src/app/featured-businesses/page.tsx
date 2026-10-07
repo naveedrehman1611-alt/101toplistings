@@ -7,7 +7,7 @@ import { Breadcrumbs, Button, EmptyState } from '@/components/ui';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { seoMetadata } from '@/lib/seo';
 
-export const revalidate = 600;
+export const revalidate = 3600;
 
 const TITLE = 'Featured Businesses | Top Business Listings';
 const DESCRIPTION =
