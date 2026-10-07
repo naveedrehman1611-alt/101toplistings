@@ -3284,4 +3284,13 @@ values
    'Growing a business online with content, search and outreach.', 3)
 on conflict (slug) do nothing;
 
+-- The site-wide defaults, where nobody has edited them since 0013, become the
+-- strategy's home title and description.
+update settings set value = to_jsonb('RankYouSite | Business Directory & SEO Services'::text)
+ where key = 'seo.default_title'
+   and value = to_jsonb('RankYouSite — local business directory'::text);
+update settings set value = to_jsonb('List your business, get discovered online, and grow with SEO and digital marketing. Explore businesses worldwide or promote your own.'::text)
+ where key = 'seo.default_description'
+   and value = to_jsonb('Search local businesses by name, category and city, with real addresses, opening hours and reviews.'::text);
+
 commit;
