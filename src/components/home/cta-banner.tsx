@@ -10,7 +10,7 @@ export function CtaBanner({ brand }: { brand: string }) {
           <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-white">
             Get Your Business in Front of Thousands
           </h2>
-          <p className="font-body-lg text-body-lg text-surface-container-high/90 mt-2">
+          <p className="font-body-lg text-body-lg mt-2 text-white/90">
             Create a free profile on {brand} and reach customers worldwide who are already searching
             for businesses like yours.
           </p>

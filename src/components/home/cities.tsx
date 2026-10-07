@@ -123,9 +123,7 @@ function CityTile({
         <h3 className="font-headline-sm text-headline-sm group-hover:text-primary-fixed text-white transition-colors">
           {city.name}
         </h3>
-        <span className="font-label-sm text-label-sm text-surface-container-high/80 mt-1">
-          {countLabel(count)}
-        </span>
+        <span className="font-label-sm text-label-sm mt-1 text-white/85">{countLabel(count)}</span>
       </div>
     </Link>
   );

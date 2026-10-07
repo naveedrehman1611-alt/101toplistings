@@ -65,9 +65,10 @@ export function Results({
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <p className="text-sm text-[var(--text-muted)]">
+        {/* An h2, so the cards' h3 titles follow the page h1 without skipping a level. */}
+        <h2 className="font-sans text-sm font-normal tracking-normal text-[var(--text-muted)]">
           {total} {Number(total) === 1 ? 'business' : 'businesses'}
-        </p>
+        </h2>
         <div className="flex flex-wrap gap-2">
           {(nearest ? [{ key: 'nearest' as const, label: 'Nearest' }, ...SORTS] : SORTS).map(
             (s) => (
