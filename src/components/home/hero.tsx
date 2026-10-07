@@ -12,47 +12,6 @@ export function categoryHref(slugs: ReadonlySet<string>, slug: string, keyword: 
   return slugs.has(slug) ? `/category/${slug}` : `/search?q=${encodeURIComponent(keyword)}`;
 }
 
-const SERVICES: {
-  icon: IconName;
-  tilt?: boolean;
-  title: string;
-  subtitle: string;
-  href: string;
-}[] = [
-  {
-    icon: 'storefront_bold',
-    title: 'Business Listings',
-    subtitle: 'Get found by local customers',
-    href: '/add-business',
-  },
-  {
-    icon: 'monitoring_bold',
-    title: 'SEO Services',
-    subtitle: 'Rank higher on Google',
-    href: '/seo-services',
-  },
-  {
-    icon: 'campaign_bold',
-    title: 'Digital Marketing',
-    subtitle: 'Grow your brand online',
-    href: '/digital-marketing',
-  },
-  {
-    icon: 'link_bold',
-    tilt: true,
-    title: 'Guest Posting',
-    subtitle: 'Build quality backlinks',
-    href: '/seo-services/guest-posting',
-  },
-  {
-    icon: 'link_bold',
-    tilt: true,
-    title: 'Link Building',
-    subtitle: 'Boost your authority',
-    href: '/seo-services/link-building',
-  },
-];
-
 /**
  * The strip left of the photo. In the mockup the skyline carries on, darkened,
  * behind the heading, but the photo asset stops at its left edge; this paints
@@ -248,27 +207,6 @@ export function Hero({
             Explore SEO Services
           </Link>
         </p>
-
-        {/* From xl each item keeps its title and subtitle on one line, as in the mockup;
-            equal columns are too narrow for that, so the items are spread instead. */}
-        <ul className="mt-12 grid grid-cols-1 gap-6 min-[400px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:mt-[52px] xl:flex xl:justify-between xl:gap-4 xl:whitespace-nowrap">
-          {SERVICES.map((s) => (
-            <li key={s.title}>
-              <Link
-                href={s.href}
-                className="group focus-visible:ring-hero-green-light -m-2 flex items-center gap-3.5 rounded-2xl p-2 focus-visible:ring-2 focus-visible:outline-hidden"
-              >
-                <span className="flex size-[60px] shrink-0 items-center justify-center rounded-full bg-white/[0.06] ring-1 ring-white/10 transition-colors group-hover:bg-white/10">
-                  <Icon name={s.icon} size={30} className={s.tilt ? '-rotate-45' : undefined} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-base font-semibold">{s.title}</span>
-                  <span className="mt-1 block text-[13px] text-white/65">{s.subtitle}</span>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );

@@ -60,17 +60,27 @@ export type ValidImage = {
   height: number | null;
 };
 
+/** "1 MB", "4 MB", "1.5 MB": whole numbers stay whole. */
+function formatMegabytes(bytes: number): string {
+  const mb = bytes / 1024 / 1024;
+  return `${Number.isInteger(mb) ? mb : Number(mb.toFixed(1))} MB`;
+}
+
 /**
  * Reads and validates an uploaded image. Neither the file name nor the browser's
  * mime type is trusted: the extension must be on the allowlist AND agree with the
  * type detected from the file's own magic bytes. The stored name is generated
  * later, so the original name is only ever used for that extension check.
  */
-export async function readImageUpload(fd: FormData, key = 'file'): Promise<ValidImage> {
+export async function readImageUpload(
+  fd: FormData,
+  key = 'file',
+  maxBytes = MAX_UPLOAD_BYTES,
+): Promise<ValidImage> {
   const file = fd.get(key);
   if (!(file instanceof File) || file.size === 0) throw new FormError('Choose an image to upload.');
-  if (file.size > MAX_UPLOAD_BYTES) {
-    throw new FormError(`Images must be ${MAX_UPLOAD_BYTES / 1024 / 1024} MB or smaller.`);
+  if (file.size > maxBytes) {
+    throw new FormError(`Images must be ${formatMegabytes(maxBytes)} or smaller.`);
   }
 
   const dot = file.name.lastIndexOf('.');
@@ -95,6 +105,29 @@ export async function readImageUpload(fd: FormData, key = 'file'): Promise<Valid
     width: sniffed.width,
     height: sniffed.height,
   };
+}
+
+/**
+ * An image field the user may leave empty. A file input with nothing chosen
+ * still posts a File (size 0, no name), which means "not provided": that and a
+ * missing field return null. Anything else must pass readImageUpload, and its
+ * error is prefixed with `label` (e.g. "Photo 2: …") so the user knows which
+ * field to fix.
+ */
+export async function readOptionalImageUpload(
+  fd: FormData,
+  key: string,
+  maxBytes = MAX_UPLOAD_BYTES,
+  label?: string,
+): Promise<ValidImage | null> {
+  const file = fd.get(key);
+  if (!(file instanceof File) || file.size === 0) return null;
+  try {
+    return await readImageUpload(fd, key, maxBytes);
+  } catch (e) {
+    if (label && e instanceof FormError) throw new FormError(`${label}: ${e.message}`);
+    throw e;
+  }
 }
 
 /** A fresh, unguessable object name. Uploads never overwrite, so caching can be permanent. */

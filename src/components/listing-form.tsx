@@ -1,4 +1,12 @@
 import { Check, Field, Select, SubmitButton, TextArea } from './admin-ui';
+import { ImageFileInput } from './image-file-input';
+import {
+  LISTING_IMAGE_MAX_BYTES,
+  LOGO_FIELD,
+  LOGO_MAX_EDGE,
+  PHOTO_FIELDS,
+  PHOTO_MAX_EDGE,
+} from '@/lib/listing-image-limits';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 // Monday first reads naturally in a form; day_of_week stays 0 = Sunday.
@@ -39,6 +47,10 @@ export type EditableHour = {
  * One form for admin and for business owners. `staff` adds the fields only
  * moderators may set (status, verification, featured, slug, SEO); the owner
  * action ignores them even if posted, and RLS pins them as well.
+ *
+ * `images` adds a logo and photo pickers that post with the rest of the form.
+ * Only the new-listing page uses it: there is no listing to attach images to
+ * before the first submit, whereas edit pages have their own Images section.
  */
 export function ListingForm({
   action,
@@ -47,6 +59,7 @@ export function ListingForm({
   categories,
   cities,
   staff = false,
+  images = false,
   submitLabel,
 }: {
   action: (fd: FormData) => Promise<void>;
@@ -55,6 +68,7 @@ export function ListingForm({
   categories: { id: string; name: string }[];
   cities: { id: string; label: string }[];
   staff?: boolean;
+  images?: boolean;
   submitLabel: string;
 }) {
   const hourByDay = new Map(hours.map((h) => [h.day_of_week, h]));
@@ -89,6 +103,35 @@ export function ListingForm({
           />
         </div>
       </fieldset>
+
+      {images ? (
+        <fieldset className="surface-card p-5">
+          <legend className="px-1 font-semibold">Logo and photos</legend>
+          <p className="text-xs text-[var(--text-muted)]">
+            Optional. Pictures are resized in your browser before they are sent (logo up to{' '}
+            {LOGO_MAX_EDGE}px, photos up to {PHOTO_MAX_EDGE}px, each under{' '}
+            {LISTING_IMAGE_MAX_BYTES / 1024 / 1024} MB). The first photo is also the cover shown on
+            your listing page and in search results.
+          </p>
+          <div className="mt-4 grid gap-5 sm:grid-cols-2">
+            <ImageFileInput
+              name={LOGO_FIELD}
+              variant="logo"
+              label="Logo"
+              hint="A square logo looks best."
+            />
+            {PHOTO_FIELDS.map((field, i) => (
+              <ImageFileInput
+                key={field}
+                name={field}
+                variant="photo"
+                label={i === 0 ? 'Photo 1 (cover)' : `Photo ${i + 1}`}
+                hint={i === 0 ? 'Landscape photos fill the cover best.' : undefined}
+              />
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
 
       <fieldset className="surface-card grid gap-4 p-5 sm:grid-cols-2">
         <legend className="px-1 font-semibold">Contact</legend>
