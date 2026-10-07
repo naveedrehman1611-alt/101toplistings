@@ -116,10 +116,10 @@ export function ListingReviews({
                 <span
                   role="img"
                   aria-label={`${rating} out of 5 stars`}
-                  className="text-badge-gold"
+                  className="text-rating-star"
                 >
                   {'★'.repeat(rating)}
-                  <span className="text-[var(--border)]">{'★'.repeat(5 - rating)}</span>
+                  <span className="text-ink-400">{'★'.repeat(5 - rating)}</span>
                 </span>
                 {r.title ? (
                   <span className="font-title-md text-title-md text-on-surface">{r.title}</span>

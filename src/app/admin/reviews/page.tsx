@@ -61,7 +61,7 @@ export default async function AdminReviews({
             <li key={r.id} className="surface-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm">
-                  <span className="text-badge-gold">{'★'.repeat(r.rating as number)}</span>{' '}
+                  <span className="text-rating-star">{'★'.repeat(r.rating as number)}</span>{' '}
                   {listing ? (
                     <Link
                       href={`/listing/${listing.slug}`}

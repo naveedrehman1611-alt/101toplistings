@@ -85,7 +85,7 @@ export function BusinessCard({
         <div className="mt-auto flex flex-col gap-2 pt-3">
           {rating ? (
             <p className="flex items-center gap-1 text-sm">
-              <Icon name="star" size={16} fill="currentColor" className="text-accent-500" />
+              <Icon name="star" size={16} fill="currentColor" className="text-rating-star" />
               <span aria-hidden className="text-ink-900 font-medium">
                 {rating}
               </span>

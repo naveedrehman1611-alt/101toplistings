@@ -179,7 +179,7 @@ function StarRating({
                 aria-hidden
                 className={`peer-focus-visible:ring-primary-container block rounded px-0.5 leading-none transition-colors peer-focus-visible:ring-2 ${
                   small ? 'text-2xl' : 'text-3xl'
-                } ${n <= value ? 'text-badge-gold' : 'text-[var(--border)]'}`}
+                } ${n <= value ? 'text-rating-star' : 'text-ink-400'}`}
               >
                 ★
               </span>

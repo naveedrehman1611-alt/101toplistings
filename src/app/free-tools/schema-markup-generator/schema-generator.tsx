@@ -166,7 +166,7 @@ export function SchemaGenerator() {
           <h2 className="font-title-md text-title-md text-on-surface">{def.label} details</h2>
           <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
             <span className="text-error">*</span> required ·{' '}
-            <span className="text-badge-gold">◆</span> recommended by Google
+            <span className="text-rating-star">◆</span> recommended by Google
           </p>
           {def.sections.map((section) => (
             <fieldset key={section.title} className="border-border-subtle mt-6 border-t pt-5">
@@ -269,7 +269,7 @@ function LevelMark({ level }: { level?: Level }) {
     );
   if (level === 'recommended')
     return (
-      <span className="text-badge-gold ml-1" aria-hidden="true">
+      <span className="text-rating-star ml-1" aria-hidden="true">
         ◆
       </span>
     );
@@ -548,7 +548,7 @@ function RepeatField({
 const ISSUE_STYLE: Record<Issue['level'], { icon: 'error' | 'report' | 'verified'; cls: string }> =
   {
     error: { icon: 'error', cls: 'text-error' },
-    warning: { icon: 'report', cls: 'text-badge-gold' },
+    warning: { icon: 'report', cls: 'text-rating-star' },
     info: { icon: 'verified', cls: 'text-tertiary' },
   };
 
