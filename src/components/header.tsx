@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@/components/icon';
 import { SiteLogo } from '@/components/site-logo';
 import { drawer } from '@/lib/motion';
+import { useSignedIn } from '@/lib/use-signed-in';
 import { TOOLS_BASE, toolHref, toolsByCategory } from '@/lib/free-tools';
 import { NewPill, SoonPill, ToolsMegaMenu } from '@/components/tools/tools-mega-menu';
 import type { MenuItem } from '@/lib/queries';
@@ -43,6 +44,8 @@ export function Header({
   mobileNav: MenuItem[];
 }) {
   const pathname = usePathname();
+  // null while unknown: neither the login link nor the account icon shows yet.
+  const signedIn = useSignedIn();
   const [open, setOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -66,7 +69,8 @@ export function Header({
 
   const close = () => setOpen(false);
   const primary = withHome(nav);
-  // Login and Add Listing have their own buttons at the foot of the drawer.
+  // Login (or the account link) and Add Listing have their own buttons at the
+  // foot of the drawer.
   const drawerItems = withHome(mobileNav).filter(
     (item) => item.url !== '/login' && item.url !== ADD_LISTING,
   );
@@ -104,14 +108,16 @@ export function Header({
             </nav>
 
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-              {/* Hidden from lg to xl, where the nav and tools menu need the room; the
-                  account icon beside it still leads to login. */}
-              <Link
-                href="/login"
-                className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm transition-colors sm:inline-flex lg:hidden xl:inline-flex ${focusRing}`}
-              >
-                Login / Sign Up
-              </Link>
+              {/* Signed out only. Shortened to "Login" from lg to xl, where the nav and
+                  tools menu need the room. */}
+              {signedIn === false ? (
+                <Link
+                  href="/login"
+                  className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm whitespace-nowrap transition-colors sm:inline-flex ${focusRing}`}
+                >
+                  Login<span className="lg:hidden xl:inline">&nbsp;/ Sign Up</span>
+                </Link>
+              ) : null}
               {/* Icon only below sm, so the bar fits a 360px screen. */}
               <Link
                 href={ADD_LISTING}
@@ -120,13 +126,16 @@ export function Header({
                 <Icon name="add_circle" size={18} />
                 <span className="sr-only sm:not-sr-only">Add Listing</span>
               </Link>
-              <Link
-                href="/dashboard"
-                aria-label="Your account"
-                className={`bg-primary hidden h-8 w-8 shrink-0 items-center justify-center rounded-full sm:flex ${focusRing}`}
-              >
-                <Icon name="person" size={18} className="text-on-primary" />
-              </Link>
+              {/* Signed in only. */}
+              {signedIn ? (
+                <Link
+                  href="/dashboard"
+                  aria-label="Your account"
+                  className={`bg-primary hidden h-8 w-8 shrink-0 items-center justify-center rounded-full sm:flex ${focusRing}`}
+                >
+                  <Icon name="person" size={18} className="text-on-primary" />
+                </Link>
+              ) : null}
               <button
                 ref={menuButton}
                 type="button"
@@ -271,13 +280,22 @@ export function Header({
               </ul>
 
               <div className="border-border-subtle mt-6 flex flex-col gap-3 border-t pt-6">
-                <Link
-                  href="/login"
-                  onClick={close}
-                  className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low inline-flex h-11 items-center justify-center rounded-lg border transition-colors ${focusRing}`}
-                >
-                  Login / Sign Up
-                </Link>
+                {signedIn === null ? null : (
+                  <Link
+                    href={signedIn ? '/dashboard' : '/login'}
+                    onClick={close}
+                    className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low inline-flex h-11 items-center justify-center gap-2 rounded-lg border transition-colors ${focusRing}`}
+                  >
+                    {signedIn ? (
+                      <>
+                        <Icon name="person" size={18} />
+                        Your Account
+                      </>
+                    ) : (
+                      'Login / Sign Up'
+                    )}
+                  </Link>
+                )}
                 <Link
                   href={ADD_LISTING}
                   onClick={close}
