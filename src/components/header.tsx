@@ -5,7 +5,9 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@/components/icon';
+import { SiteLogo } from '@/components/site-logo';
 import { drawer } from '@/lib/motion';
+import { useSignedIn } from '@/lib/use-signed-in';
 import { TOOLS_BASE, toolHref, toolsByCategory } from '@/lib/free-tools';
 import { NewPill, SoonPill, ToolsMegaMenu } from '@/components/tools/tools-mega-menu';
 import { SERVICES_BASE, ServicesMegaMenu, isServicePath } from '@/components/services-mega-menu';
@@ -39,35 +41,20 @@ function isServicesLink(item: MenuItem): boolean {
   return item.url.replace(/\/+$/, '') === SERVICES_BASE;
 }
 
-/**
- * "RankYouSite" -> "RankYou" + "Site" in the accent colour, as in the design. A
- * name without a trailing capitalised word renders whole. Same split as the footer.
- */
-function Wordmark({ name }: { name: string }) {
-  const parts = /^(.+?)([A-Z][a-z0-9]*)$/.exec(name);
-  if (!parts) return <>{name}</>;
-  return (
-    <>
-      {parts[1]}
-      <span className="text-primary-container">{parts[2]}</span>
-    </>
-  );
-}
-
 export function Header({
   brand,
-  subtitle,
   nav,
   mobileNav,
   services,
 }: {
   brand: string;
-  subtitle: string;
   nav: MenuItem[];
   mobileNav: MenuItem[];
   services: ServiceNavItem[];
 }) {
   const pathname = usePathname();
+  // null while unknown: neither the login link nor the account icon shows yet.
+  const signedIn = useSignedIn();
   const [open, setOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -94,8 +81,8 @@ export function Header({
   const primary = withHome(nav);
   // Without an admin link to the hub, the Services menu sits just before the tools.
   const servicesLink = primary.find(isServicesLink);
-  // Login and Add Listing have their own buttons at the foot of the drawer, and the
-  // services hub its own section.
+  // Login (or the account link) and Add Listing have their own buttons at the
+  // foot of the drawer, and the services hub its own section.
   const drawerItems = withHome(mobileNav).filter(
     (item) => item.url !== '/login' && item.url !== ADD_LISTING && !isServicesLink(item),
   );
@@ -105,20 +92,8 @@ export function Header({
       <header className="bg-surface-card/90 sticky top-0 z-40 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="flex h-20 items-center justify-between gap-3 sm:gap-6">
-            <Link href="/" className={`flex min-w-0 items-center gap-3 rounded-xl ${focusRing}`}>
-              <span className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-xs">
-                <Icon name="verified" className="text-on-primary" />
-              </span>
-              <span className="flex min-w-0 flex-col">
-                <span className="font-headline-sm text-headline-sm text-on-surface leading-none tracking-tight">
-                  <Wordmark name={brand} />
-                </span>
-                {subtitle ? (
-                  <span className="font-label-sm text-label-sm text-secondary mt-1 truncate leading-none tracking-wider uppercase">
-                    {subtitle}
-                  </span>
-                ) : null}
-              </span>
+            <Link href="/" className={`flex min-w-0 shrink items-center rounded-xl ${focusRing}`}>
+              <SiteLogo alt={brand} eager className="h-9 w-auto sm:h-11 lg:h-10 xl:h-11" />
             </Link>
 
             {/* gap-4 until xl and gap-6 from xl: with the services and tools triggers, anything
@@ -155,14 +130,16 @@ export function Header({
             </nav>
 
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-              {/* Hidden from lg to xl, where the nav and tools menu need the room; the
-                  account icon beside it still leads to login. */}
-              <Link
-                href="/login"
-                className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm transition-colors sm:inline-flex lg:hidden xl:inline-flex ${focusRing}`}
-              >
-                Login / Sign Up
-              </Link>
+              {/* Signed out only. Shortened to "Login" from lg to xl, where the nav and
+                  tools menu need the room. */}
+              {signedIn === false ? (
+                <Link
+                  href="/login"
+                  className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm whitespace-nowrap transition-colors sm:inline-flex ${focusRing}`}
+                >
+                  Login<span className="lg:hidden xl:inline">&nbsp;/ Sign Up</span>
+                </Link>
+              ) : null}
               {/* Icon only below sm, so the bar fits a 360px screen. */}
               <Link
                 href={ADD_LISTING}
@@ -171,13 +148,16 @@ export function Header({
                 <Icon name="add_circle" size={18} />
                 <span className="sr-only sm:not-sr-only">Add Listing</span>
               </Link>
-              <Link
-                href="/dashboard"
-                aria-label="Your account"
-                className={`bg-primary hidden h-8 w-8 shrink-0 items-center justify-center rounded-full sm:flex ${focusRing}`}
-              >
-                <Icon name="person" size={18} className="text-on-primary" />
-              </Link>
+              {/* Signed in only. */}
+              {signedIn ? (
+                <Link
+                  href="/dashboard"
+                  aria-label="Your account"
+                  className={`bg-primary hidden h-8 w-8 shrink-0 items-center justify-center rounded-full sm:flex ${focusRing}`}
+                >
+                  <Icon name="person" size={18} className="text-on-primary" />
+                </Link>
+              ) : null}
               <button
                 ref={menuButton}
                 type="button"
@@ -219,9 +199,7 @@ export function Header({
               className="bg-surface-card absolute top-0 right-0 flex h-full w-80 max-w-[85vw] flex-col overflow-y-auto p-6 shadow-2xl"
             >
               <div className="mb-6 flex items-center justify-between gap-4">
-                <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight">
-                  <Wordmark name={brand} />
-                </span>
+                <SiteLogo alt={brand} className="h-9 w-auto min-w-0" />
                 <button
                   ref={closeButton}
                   type="button"
@@ -373,13 +351,22 @@ export function Header({
               </ul>
 
               <div className="border-border-subtle mt-6 flex flex-col gap-3 border-t pt-6">
-                <Link
-                  href="/login"
-                  onClick={close}
-                  className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low inline-flex h-11 items-center justify-center rounded-lg border transition-colors ${focusRing}`}
-                >
-                  Login / Sign Up
-                </Link>
+                {signedIn === null ? null : (
+                  <Link
+                    href={signedIn ? '/dashboard' : '/login'}
+                    onClick={close}
+                    className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low inline-flex h-11 items-center justify-center gap-2 rounded-lg border transition-colors ${focusRing}`}
+                  >
+                    {signedIn ? (
+                      <>
+                        <Icon name="person" size={18} />
+                        Your Account
+                      </>
+                    ) : (
+                      'Login / Sign Up'
+                    )}
+                  </Link>
+                )}
                 <Link
                   href={ADD_LISTING}
                   onClick={close}
