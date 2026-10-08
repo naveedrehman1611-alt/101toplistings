@@ -12,18 +12,6 @@ export function categoryHref(slugs: ReadonlySet<string>, slug: string, keyword: 
   return slugs.has(slug) ? `/category/${slug}` : `/search?q=${encodeURIComponent(keyword)}`;
 }
 
-/**
- * The strip left of the photo. In the mockup the skyline carries on, darkened,
- * behind the heading, but the photo asset stops at its left edge; this paints
- * the mockup's colours there (top to bottom) under a navy fade from the left
- * and the bottom. The photo's masked left 60px blend into the strip's last 60px.
- */
-const SKYLINE_FADE = [
-  'linear-gradient(to top, var(--color-hero-navy), transparent 6%)',
-  'linear-gradient(to right, var(--color-hero-navy), transparent 380px)',
-  'linear-gradient(to bottom, #0c5285, #135a8e 10%, #206194 20%, #396d97 30%, #4f7699 37%, #597796 46%, #5a6a80 52%, #576071 59%, #364b66 64%, #283c55 71%, #1c3036 79%, #11252a 85%, #33495f 91%, #2a4b6d)',
-].join(', ');
-
 const FIELD =
   'flex h-12 min-w-0 items-center gap-3.5 rounded-[10px] border border-[#e3e8ef] bg-white px-3.5 focus-within:border-hero-green focus-within:ring-2 focus-within:ring-hero-green/25';
 
@@ -86,27 +74,23 @@ export function Hero({
 }) {
   return (
     <section className="bg-hero-navy relative overflow-hidden text-white">
-      {/* Decorative photo. The asset is the mockup's top-right corner, so from lg it
-          sits there at the mockup's scale: the laptop ends just above the search card.
-          Nudged up 1% to hide a light line along its top edge. Below lg it lies full
-          width behind the text at 35%. */}
+      {/* Decorative photo, flat-edged: no fades. The asset is the mockup's top-right
+          corner, so from lg it sits there at the mockup's scale: the laptop ends just
+          above the search card. Nudged up 1% to hide a light line along its top edge.
+          Below lg it fills the section behind the text under a flat navy overlay. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 aspect-[910/756] -translate-y-[1%] opacity-35 lg:left-auto lg:w-[563px] lg:opacity-100"
+        className="pointer-events-none absolute inset-0 lg:inset-auto lg:top-0 lg:right-0 lg:aspect-[910/756] lg:w-[563px] lg:-translate-y-[1%] lg:overflow-hidden lg:rounded-bl-3xl"
       >
-        <div
-          className="absolute top-0 right-[calc(100%-60px)] hidden h-full w-[440px] lg:block"
-          style={{ backgroundImage: SKYLINE_FADE }}
-        />
         <Image
           src={heroCity}
           alt=""
           fill
           preload
           sizes="(min-width: 1024px) 563px, 100vw"
-          className="object-cover object-right-top lg:[mask-image:linear-gradient(to_right,transparent,black_60px)]"
+          className="object-cover object-right-top"
         />
-        <div className="from-hero-navy absolute inset-x-0 bottom-0 h-2/5 bg-linear-to-t to-transparent lg:h-[6%]" />
+        <div className="bg-hero-navy/70 absolute inset-0 lg:hidden" />
       </div>
 
       <div className="container-page relative pt-10 pb-14 lg:pt-[73px]">

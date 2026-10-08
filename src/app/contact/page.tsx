@@ -163,16 +163,12 @@ export default async function ContactPage({
 
   return (
     <>
-      <section className="from-brand-50 relative overflow-hidden border-b border-[var(--border)] bg-gradient-to-b to-[var(--surface)]">
-        <div
-          aria-hidden
-          className="bg-brand-200/40 pointer-events-none absolute -top-32 left-1/2 size-[36rem] -translate-x-1/2 rounded-full blur-3xl"
-        />
-        <div className="container-page relative pt-8 pb-16 sm:pb-20">
+      <section className="border-b border-[var(--border)] bg-[var(--surface)]">
+        <div className="container-page pt-8 pb-16 sm:pb-20">
           <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label }]} />
           <div className="mx-auto max-w-2xl pt-4 text-center">
             <span className="border-brand-200 text-brand-700 inline-flex items-center gap-2 rounded-full border bg-[var(--surface)] px-4 py-1.5 text-sm font-medium shadow-sm">
-              <span aria-hidden className="bg-accent-500 size-1.5 rounded-full" />
+              <span aria-hidden className="bg-brand-500 size-1.5 rounded-full" />
               {label}
             </span>
             <h1 className="font-display-hero text-display-hero-mobile sm:text-display-hero mt-5">
@@ -367,7 +363,7 @@ export default async function ContactPage({
               </div>
               <button
                 type="submit"
-                className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex h-12 items-center justify-center gap-2 rounded-xl px-7 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
+                className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex h-12 items-center justify-center gap-2 rounded-xl px-7 shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
               >
                 Send message
                 <SendIcon className="size-4" />

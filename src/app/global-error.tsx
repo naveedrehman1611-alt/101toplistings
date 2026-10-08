@@ -2,7 +2,7 @@
 
 // Replaces the root layout when the layout itself fails, so it cannot rely on
 // globals.css or the site header; styles are inline on purpose, with the Stitch
-// palette written out as hex (on-surface ink, secondary muted text, emerald CTA).
+// palette written out as hex (on-surface ink, secondary muted text, green CTA).
 export default function GlobalError({
   error,
   retry,
@@ -23,7 +23,7 @@ export default function GlobalError({
           textAlign: 'center',
           padding: 16,
           background: '#f8fafc',
-          color: '#0b1c30',
+          color: '#062347',
           WebkitFontSmoothing: 'antialiased',
         }}
       >
@@ -61,7 +61,7 @@ export default function GlobalError({
               padding: '0 20px',
               borderRadius: 8,
               border: 0,
-              background: '#047857',
+              background: '#0c8226',
               color: '#ffffff',
               fontFamily: 'inherit',
               fontSize: 14,

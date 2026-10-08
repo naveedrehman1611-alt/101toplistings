@@ -50,7 +50,7 @@ export default async function Dashboard({
         <h1 className="text-2xl font-semibold">My listings</h1>
         <Link
           href="/dashboard/listings/new"
-          className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex h-10 items-center rounded-lg px-4 shadow-xs transition hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
+          className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex h-10 items-center rounded-lg px-4 shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
         >
           Add your business
         </Link>

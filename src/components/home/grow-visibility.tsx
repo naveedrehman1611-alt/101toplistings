@@ -80,7 +80,7 @@ export function GrowVisibility({ brand }: { brand: string }) {
             <div className="mt-8 pt-4">
               <Link
                 href="/dashboard/listings/new"
-                className="bg-tertiary-container font-title-md text-title-md text-on-tertiary hover:bg-tertiary focus-visible:ring-primary-container inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden sm:px-6"
+                className="bg-primary-container font-title-md text-title-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden sm:px-6"
               >
                 <Icon name="add_business" size={20} />
                 <span className="text-center text-balance">Add Your Business — It&apos;s Free</span>

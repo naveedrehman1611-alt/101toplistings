@@ -4,7 +4,7 @@ import { Icon } from '@/components/icon';
 /** "Submit Your Listing Today!" band at the foot of a listing page (Stitch banner style). */
 export function SubmitListingCta({ brand }: { brand: string }) {
   return (
-    <section className="relative mt-16 overflow-hidden rounded-3xl bg-linear-to-r from-[#071328] via-[#0b1c30] to-[#047857] p-10 text-white shadow-xl sm:p-14">
+    <section className="bg-hero-navy relative mt-16 overflow-hidden rounded-3xl p-10 text-white shadow-xl sm:p-14">
       <h2 className="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-white">
         Submit Your Listing Today!
       </h2>

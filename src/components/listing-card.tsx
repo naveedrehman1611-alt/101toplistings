@@ -60,7 +60,7 @@ export function ListingCard({
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="from-primary-container to-on-background flex size-full items-center justify-center bg-linear-to-br transition-transform duration-500 group-hover:scale-105">
+          <div className="bg-hero-navy flex size-full items-center justify-center transition-transform duration-500 group-hover:scale-105">
             <Icon name="storefront" size={48} className="text-white/60" />
           </div>
         )}

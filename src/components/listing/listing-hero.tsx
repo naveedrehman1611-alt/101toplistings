@@ -46,7 +46,7 @@ export function ListingHero({
             className="object-cover"
           />
         ) : (
-          <div className="from-primary-container to-on-background flex size-full items-center justify-center bg-linear-to-br">
+          <div className="bg-hero-navy flex size-full items-center justify-center">
             <Icon name="storefront" size={48} className="text-white/60" />
           </div>
         )}

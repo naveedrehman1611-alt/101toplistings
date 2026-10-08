@@ -108,7 +108,7 @@ export function OpenStatus({
     >
       <span
         aria-hidden
-        className={`size-1.5 rounded-full ${open ? 'bg-emerald-400' : 'bg-red-400'}`}
+        className={`size-1.5 rounded-full ${open ? 'bg-brand-400' : 'bg-red-400'}`}
       />
       {open ? 'Open' : 'Closed'}
       <span className="sr-only"> now</span>
