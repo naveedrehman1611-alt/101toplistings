@@ -61,7 +61,7 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
         ) : (
           <div
             aria-hidden
-            className="from-primary-container to-on-background font-display grid size-full place-items-center bg-linear-to-br text-2xl font-semibold text-white"
+            className="bg-hero-navy font-display grid size-full place-items-center text-2xl font-semibold text-white"
           >
             {initial(row.name)}
           </div>
@@ -174,7 +174,7 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
 
 function OpenBadge({ state }: { state: OpenState }) {
   if (state === 'open') {
-    return <span className={`${PILL} bg-emerald-50 text-emerald-700`}>Open now</span>;
+    return <span className={`${PILL} bg-brand-50 text-brand-800`}>Open now</span>;
   }
   if (state === 'closed') {
     return <span className={`${PILL} bg-red-50 text-red-700`}>Closed</span>;

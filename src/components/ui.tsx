@@ -64,7 +64,7 @@ export function Button({
 }) {
   const cls =
     variant === 'primary'
-      ? 'bg-primary-container text-on-primary shadow-xs hover:bg-primary hover:shadow-[0_4px_12px_rgba(4,120,87,0.25)]'
+      ? 'bg-primary-container text-on-primary shadow-xs hover:bg-primary hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)]'
       : 'border border-border-subtle bg-surface-card text-on-surface hover:bg-[#f1f5f9]';
   const base = `inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 font-label-md text-label-md transition focus-visible:ring-2 focus-visible:ring-primary-container focus-visible:ring-offset-2 focus-visible:outline-hidden ${cls}`;
   if (href) {

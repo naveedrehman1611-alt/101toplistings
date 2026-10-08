@@ -18,14 +18,14 @@ export default function Image() {
         flexDirection: 'column',
         justifyContent: 'center',
         padding: '80px',
-        background: 'linear-gradient(120deg, #071328 0%, #0b1c30 55%, #047857 100%)',
+        background: '#062347',
         color: 'white',
       }}
     >
       <div style={{ display: 'flex', fontSize: 96, fontWeight: 700 }}>
         <span>RankYou</span>
         {/* The fallback font leaves a wide side bearing after "u"; close it up. */}
-        <span style={{ color: '#9ffdd3', marginLeft: -16 }}>Site</span>
+        <span style={{ color: '#38c612', marginLeft: -16 }}>Site</span>
       </div>
       <div style={{ display: 'flex', marginTop: 24, fontSize: 38, opacity: 0.9 }}>
         Business directory and SEO services

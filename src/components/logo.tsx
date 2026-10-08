@@ -44,9 +44,9 @@ export function Logo({
       className={`font-display text-xl leading-none font-bold tracking-tight ${tone === 'dark' ? 'text-white' : 'text-ink-900'} ${className}`}
     >
       {main}
-      {/* orange-500 is only 2.5:1 on white, so light backgrounds take orange-700 (5.2:1). */}
+      {/* Logo green is 3.1:1 on white, so light backgrounds take the darker brand-700 (5.0:1). */}
       {brand.accent ? (
-        <span className={tone === 'dark' ? 'text-orange-500' : 'text-orange-700'}>
+        <span className={tone === 'dark' ? 'text-brand-500' : 'text-brand-700'}>
           {brand.accent}
         </span>
       ) : null}

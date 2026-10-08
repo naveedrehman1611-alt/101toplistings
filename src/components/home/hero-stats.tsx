@@ -110,7 +110,7 @@ export function HeroStats({
       content: (
         <Figure
           icon="handshake"
-          tone="text-[#16a34a]"
+          tone="text-brand-600"
           value={<CountUp to={listings} format="compact" />}
           label="Active Businesses"
         />
@@ -123,7 +123,7 @@ export function HeroStats({
       content: (
         <Figure
           icon="location_city"
-          tone="text-[#2f6fed]"
+          tone="text-accent-500"
           value={<CountUp to={cities} format="compact" />}
           label="Cities Covered"
         />
@@ -136,7 +136,7 @@ export function HeroStats({
       content: (
         <Figure
           icon="schedule"
-          tone="text-[#16a34a]"
+          tone="text-brand-600"
           value={<CountUp to={100} format="percent" />}
           label="Reviewed Listings"
         />

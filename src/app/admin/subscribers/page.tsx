@@ -122,7 +122,7 @@ export default async function AdminSubscribers({
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs ${
                           active
-                            ? 'bg-emerald-50 text-emerald-800'
+                            ? 'bg-brand-50 text-brand-800'
                             : 'bg-[var(--surface-2)] text-[var(--text-muted)]'
                         }`}
                       >

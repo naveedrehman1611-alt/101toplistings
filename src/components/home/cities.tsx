@@ -127,12 +127,12 @@ function CityTile({
       href={`/city/${city.slug}`}
       className="group bg-on-background focus-visible:ring-primary-container focus-visible:ring-offset-surface-container relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-2xl p-6 shadow-md transition-all duration-300 hover:shadow-2xl focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
     >
-      {/* A brand-tinted backdrop with the tile's icon as artwork. It sits under
+      {/* A flat navy backdrop with the tile's icon as artwork. It sits under
           the photo, so it shows for a city with no photo yet and if the photo
           fails to load. */}
       <div
         aria-hidden
-        className="from-primary-container absolute inset-0 grid place-items-center bg-linear-to-br to-[#0b1c30] text-white/15 transition-transform duration-700 group-hover:scale-110"
+        className="bg-hero-navy absolute inset-0 grid place-items-center text-white/15 transition-transform duration-700 group-hover:scale-110"
       >
         <Icon name={ICONS[index % ICONS.length]} size={160} />
       </div>
@@ -148,10 +148,7 @@ function CityTile({
           className="object-cover opacity-80 transition-transform duration-700 group-hover:scale-110"
         />
       )}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-linear-to-t from-[#0b1c30] via-[#0b1c30]/40 to-transparent"
-      />
+      <div aria-hidden className="bg-hero-navy/60 absolute inset-0" />
       <div className="relative z-10 flex flex-col">
         <span className="group-hover:bg-primary-container mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur-md transition-colors">
           <Icon name={ICONS[index % ICONS.length]} size={20} />

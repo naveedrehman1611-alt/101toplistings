@@ -57,11 +57,7 @@ export function CityGrid({ section }: { section: CityGridVM }) {
                 )}
                 <span
                   aria-hidden
-                  className="absolute inset-0 bg-black/30 transition-colors duration-500 group-hover:bg-black/40 group-focus-visible:bg-black/40"
-                />
-                <span
-                  aria-hidden
-                  className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/55 to-transparent"
+                  className="bg-hero-navy/60 group-hover:bg-hero-navy/70 group-focus-visible:bg-hero-navy/70 absolute inset-0 transition-colors duration-500"
                 />
                 <h3 className="absolute inset-x-0 bottom-0 px-4 pb-6 text-center text-lg font-medium text-white">
                   {city.name}
