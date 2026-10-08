@@ -10,7 +10,9 @@ import { drawer } from '@/lib/motion';
 import { useSignedIn } from '@/lib/use-signed-in';
 import { TOOLS_BASE, toolHref, toolsByCategory } from '@/lib/free-tools';
 import { NewPill, SoonPill, ToolsMegaMenu } from '@/components/tools/tools-mega-menu';
+import { SERVICES_BASE, ServicesMegaMenu, isServicePath } from '@/components/services-mega-menu';
 import type { MenuItem } from '@/lib/queries';
+import type { ServiceNavItem } from '@/lib/service-pages';
 
 const ADD_LISTING = '/dashboard/listings/new';
 
@@ -34,20 +36,28 @@ function isActive(pathname: string, url: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
+/** An admin link to the services hub becomes the Services menu, in its place. */
+function isServicesLink(item: MenuItem): boolean {
+  return item.url.replace(/\/+$/, '') === SERVICES_BASE;
+}
+
 export function Header({
   brand,
   nav,
   mobileNav,
+  services,
 }: {
   brand: string;
   nav: MenuItem[];
   mobileNav: MenuItem[];
+  services: ServiceNavItem[];
 }) {
   const pathname = usePathname();
   // null while unknown: neither the login link nor the account icon shows yet.
   const signedIn = useSignedIn();
   const [open, setOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
 
@@ -69,10 +79,12 @@ export function Header({
 
   const close = () => setOpen(false);
   const primary = withHome(nav);
+  // Without an admin link to the hub, the Services menu sits just before the tools.
+  const servicesLink = primary.find(isServicesLink);
   // Login (or the account link) and Add Listing have their own buttons at the
-  // foot of the drawer.
+  // foot of the drawer, and the services hub its own section.
   const drawerItems = withHome(mobileNav).filter(
-    (item) => item.url !== '/login' && item.url !== ADD_LISTING,
+    (item) => item.url !== '/login' && item.url !== ADD_LISTING && !isServicesLink(item),
   );
 
   return (
@@ -84,10 +96,19 @@ export function Header({
               <SiteLogo alt={brand} eager className="h-9 w-auto sm:h-11 lg:h-10 xl:h-11" />
             </Link>
 
-            {/* gap-5 until xl and gap-6 from xl: with the tools trigger, anything wider squeezes
-                the logo once the admin adds a fifth or sixth menu link. */}
-            <nav aria-label="Primary" className="hidden items-center gap-5 lg:flex xl:gap-6">
+            {/* gap-4 until xl and gap-6 from xl: with the services and tools triggers, anything
+                wider squeezes the logo once the admin adds a fifth or sixth menu link. */}
+            <nav aria-label="Primary" className="hidden items-center gap-4 lg:flex xl:gap-6">
               {primary.map((item) => {
+                if (item === servicesLink) {
+                  return (
+                    <ServicesMegaMenu
+                      key={`${item.url}|${item.label}`}
+                      services={services}
+                      label={item.label}
+                    />
+                  );
+                }
                 const active = isActive(pathname, item.url);
                 return (
                   <Link
@@ -104,6 +125,7 @@ export function Header({
                   </Link>
                 );
               })}
+              {servicesLink ? null : <ServicesMegaMenu services={services} />}
               <ToolsMegaMenu />
             </nav>
 
@@ -209,6 +231,55 @@ export function Header({
                     </li>
                   );
                 })}
+                <li>
+                  <button
+                    type="button"
+                    aria-expanded={servicesOpen}
+                    aria-controls="mobile-services"
+                    onClick={() => setServicesOpen((v) => !v)}
+                    className={`font-label-md text-label-md flex w-full items-center justify-between rounded-lg px-3 py-3 transition-colors ${focusRing} ${
+                      isServicePath(pathname, services)
+                        ? 'text-primary-container font-semibold'
+                        : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+                    }`}
+                  >
+                    SEO Services
+                    <Icon
+                      name="expand_more"
+                      size={20}
+                      className={`transition-transform ${servicesOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  <div id="mobile-services" hidden={!servicesOpen} className="px-3 pb-2">
+                    <ul className="mt-1 flex flex-col">
+                      {services.map((service) => (
+                        <li key={service.slug}>
+                          <Link
+                            href={service.path}
+                            onClick={close}
+                            aria-current={pathname === service.path ? 'page' : undefined}
+                            className={`font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2 rounded-lg px-2 py-2 transition-colors ${focusRing}`}
+                          >
+                            <Icon
+                              name={service.icon}
+                              size={18}
+                              className="text-primary-container shrink-0"
+                            />
+                            <span className="min-w-0 flex-1">{service.name}</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      href={SERVICES_BASE}
+                      onClick={close}
+                      className={`font-label-md text-label-md text-primary-container mt-1 inline-flex items-center gap-1 rounded-sm px-2 py-2 font-semibold ${focusRing}`}
+                    >
+                      View all SEO services
+                      <Icon name="north_east" size={16} />
+                    </Link>
+                  </div>
+                </li>
                 <li>
                   <button
                     type="button"

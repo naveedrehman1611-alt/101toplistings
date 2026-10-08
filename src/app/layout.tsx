@@ -7,6 +7,7 @@ import { BackToTop } from '@/components/back-to-top';
 import { getCities, getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
 import { jsonLdHtml } from '@/lib/json-ld';
+import { serviceNavItems } from '@/lib/service-pages';
 
 // Criterion 36: critical fonts preloaded.
 const inter = Inter({
@@ -104,7 +105,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Skip to content
         </a>
-        <Header brand={brand} nav={nav} mobileNav={mobileNav} />
+        <Header brand={brand} nav={nav} mobileNav={mobileNav} services={serviceNavItems()} />
         {/* tabIndex lets the skip link move keyboard focus here, not just scroll. */}
         <main id="main" tabIndex={-1} className="flex-1 outline-hidden">
           {children}
