@@ -67,13 +67,21 @@ export function ServicePageView({
         <p className="mt-4 text-lg text-[var(--text-muted)]">{page.intro}</p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href={page.ctaHref} className={PRIMARY_BTN}>
-            <Icon name="mail" size={20} />
+            <Icon name={page.ctaHref === '/seo-audit' ? 'fact_check' : 'mail'} size={20} />
             {page.ctaLabel}
           </Link>
-          <Link href="/seo-audit" className={SECONDARY_BTN}>
-            <Icon name="fact_check" size={20} />
-            Free SEO audit
-          </Link>
+          {/* The second button offers whichever of audit and quote the first one doesn't. */}
+          {page.ctaHref === '/seo-audit' ? (
+            <Link href="/contact?subject=SEO%20services" className={SECONDARY_BTN}>
+              <Icon name="mail" size={20} />
+              Request a quote
+            </Link>
+          ) : (
+            <Link href="/seo-audit" className={SECONDARY_BTN}>
+              <Icon name="fact_check" size={20} />
+              Free SEO audit
+            </Link>
+          )}
         </div>
       </div>
 

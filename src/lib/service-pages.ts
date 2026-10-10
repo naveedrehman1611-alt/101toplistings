@@ -1,4 +1,12 @@
 import type { IconName } from '@/components/icon';
+import { CORE_PAGES, TECHNICAL_PAGES } from '@/lib/services/core';
+import { LINKS_AI_PAGES } from '@/lib/services/links-ai';
+import { PLATFORM_ECOMMERCE_PAGES } from '@/lib/services/platform-ecommerce';
+import { SPECIALTY_PAGES } from '@/lib/services/specialty';
+import { INDUSTRY_PAGES_1 } from '@/lib/services/industries-1';
+import { INDUSTRY_PAGES_2 } from '@/lib/services/industries-2';
+import { INDUSTRY_PAGES_3 } from '@/lib/services/industries-3';
+import { INDUSTRY_PAGES_4 } from '@/lib/services/industries-4';
 
 /**
  * The SEO and digital marketing service pages: one list that drives each page
@@ -7,6 +15,10 @@ import type { IconName } from '@/components/icon';
  */
 
 export type ServiceCategoryId = 'seo' | 'links' | 'marketing';
+
+/** Section on the /seo-services hub. */
+export type HubCategoryId =
+  'core' | 'technical' | 'links' | 'ai' | 'platform' | 'ecommerce' | 'specialty' | 'industry';
 
 export type ServicePage = {
   slug: string;
@@ -24,6 +36,10 @@ export type ServicePage = {
   icon: IconName;
   /** Column in the header's Services menu. */
   category: ServiceCategoryId;
+  /** Section on the /seo-services hub. */
+  hub: HubCategoryId;
+  /** Short badge on the hub card. */
+  tag: string;
   includes: { title: string; body: string }[];
   steps?: { title: string; body: string }[];
   /** Visible on the page only; there is deliberately no FAQPage markup. */
@@ -39,7 +55,8 @@ const SEO_QUOTE = '/contact?subject=SEO%20services';
 const SEO_GUIDES = { label: 'SEO guides and how-tos', href: '/blog/seo' };
 const MARKETING_GUIDES = { label: 'Digital marketing guides', href: '/blog/digital-marketing' };
 
-export const SERVICE_PAGES: ServicePage[] = [
+/** The original service pages: the only ones in the header menu and on /digital-marketing. */
+export const MENU_SERVICE_PAGES: ServicePage[] = [
   {
     slug: 'local-seo',
     path: '/seo-services/local-seo',
@@ -52,6 +69,8 @@ export const SERVICE_PAGES: ServicePage[] = [
       'Local SEO is the work of making a business easy to find when people search for it by place, such as "plumber near me" or "dentist in Dubai". As a local SEO agency we combine accurate listings, consistent citations, location pages and reviews so search engines trust your business for the area you serve.',
     icon: 'location_on',
     category: 'seo',
+    hub: 'core',
+    tag: 'Most Popular',
     includes: [
       {
         title: 'Business listing clean-up',
@@ -123,6 +142,8 @@ export const SERVICE_PAGES: ServicePage[] = [
       'Technical SEO makes sure search engines can crawl, understand and index your website, and that visitors get a fast, stable page. As a technical SEO agency we find the problems holding a site back, fix them in priority order and explain each change in plain language.',
     icon: 'build',
     category: 'seo',
+    hub: 'technical',
+    tag: 'Foundation',
     includes: [
       {
         title: 'Crawl and indexing review',
@@ -195,6 +216,8 @@ export const SERVICE_PAGES: ServicePage[] = [
       'On-page SEO is the work done on the pages of your own site: matching each page to what searchers want, and getting titles, headings, content and internal links right. As an on-page SEO agency we focus on pages that can earn traffic and leads, written for people first.',
     icon: 'fact_check',
     category: 'seo',
+    hub: 'technical',
+    tag: 'On-Page',
     includes: [
       {
         title: 'Keyword and intent mapping',
@@ -266,6 +289,8 @@ export const SERVICE_PAGES: ServicePage[] = [
       'Off-page SEO covers the signals that come from outside your website, mainly links, brand mentions and citations from other trusted sites. We build that authority ethically, with relevant outreach and useful content, and avoid the shortcuts that put rankings at risk.',
     icon: 'public',
     category: 'seo',
+    hub: 'technical',
+    tag: 'Off-Page',
     includes: [
       {
         title: 'Backlink profile review',
@@ -333,6 +358,8 @@ export const SERVICE_PAGES: ServicePage[] = [
       'Link building is the practice of earning links from other websites to yours, because search engines treat relevant links as a sign of trust. Our SEO link building services follow a white hat link building approach: real outreach, useful content and relevant sites, with no paid schemes or link farms.',
     icon: 'link',
     category: 'links',
+    hub: 'links',
+    tag: 'High Impact',
     includes: [
       {
         title: 'Link opportunity research',
@@ -400,6 +427,8 @@ export const SERVICE_PAGES: ServicePage[] = [
       'Guest posting means writing a useful article for another website in your field, with a link back to yours where it fits. Our guest post outreach services focus on relevant sites with real readers, editorial standards and content that earns its place.',
     icon: 'handshake',
     category: 'links',
+    hub: 'links',
+    tag: 'Outreach',
     includes: [
       {
         title: 'Site selection',
@@ -467,6 +496,8 @@ export const SERVICE_PAGES: ServicePage[] = [
       'SEO content marketing is publishing pages and articles that answer what your customers search for, so they find you before they decide. We plan topics around real search demand, write clear and accurate content, and connect it to the pages that turn readers into enquiries.',
     icon: 'campaign',
     category: 'marketing',
+    hub: 'specialty',
+    tag: 'Content',
     includes: [
       {
         title: 'Topic and keyword research',
@@ -538,6 +569,8 @@ export const SERVICE_PAGES: ServicePage[] = [
       'Digital marketing is how a business gets found, trusted and chosen online. As a digital marketing agency offering online marketing services, we start with search, because it captures people already looking, and build outward with content, local presence and authority.',
     icon: 'rocket_launch',
     category: 'marketing',
+    hub: 'specialty',
+    tag: 'Full Funnel',
     includes: [
       {
         title: 'Search engine optimization',
@@ -595,6 +628,20 @@ export const SERVICE_PAGES: ServicePage[] = [
   },
 ];
 
+/** Every service page: the menu pages, then the rest of the catalogue in hub order. */
+export const SERVICE_PAGES: ServicePage[] = [
+  ...MENU_SERVICE_PAGES,
+  ...CORE_PAGES,
+  ...TECHNICAL_PAGES,
+  ...LINKS_AI_PAGES,
+  ...PLATFORM_ECOMMERCE_PAGES,
+  ...SPECIALTY_PAGES,
+  ...INDUSTRY_PAGES_1,
+  ...INDUSTRY_PAGES_2,
+  ...INDUSTRY_PAGES_3,
+  ...INDUSTRY_PAGES_4,
+];
+
 export function servicePage(slug: string): ServicePage | undefined {
   return SERVICE_PAGES.find((p) => p.slug === slug);
 }
@@ -603,7 +650,7 @@ export function servicePage(slug: string): ServicePage | undefined {
 export type ServiceNavItem = Pick<ServicePage, 'slug' | 'path' | 'name' | 'icon' | 'category'>;
 
 export function serviceNavItems(): ServiceNavItem[] {
-  return SERVICE_PAGES.map(({ slug, path, name, icon, category }) => ({
+  return MENU_SERVICE_PAGES.map(({ slug, path, name, icon, category }) => ({
     slug,
     path,
     name,

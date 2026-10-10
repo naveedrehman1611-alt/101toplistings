@@ -4,13 +4,7 @@ import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { SERVICE_PAGES } from '@/lib/service-pages';
 import { SITE_URL } from '@/lib/supabase';
 import { seoMetadata } from '@/lib/seo';
-import {
-  HUB_CATEGORIES,
-  INDUSTRIES,
-  INDUSTRIES_ICON,
-  INDUSTRIES_TITLE,
-  SERVICE_TAGS,
-} from '@/lib/services-hub';
+import { HUB_CATEGORIES, UNFEATURED_HUBS } from '@/lib/services-hub';
 import { HubHero } from '@/components/services-hub/hub-hero';
 import { HubSectionHeader } from '@/components/services-hub/hub-section-header';
 import { ServiceCard } from '@/components/services-hub/service-card';
@@ -49,11 +43,15 @@ export default async function ServicesPage() {
     header?.subheading ??
     `${brand} is an SEO agency and SEO company offering professional, affordable SEO services for small business and growing brands worldwide. We help you rank higher, earn more organic traffic and turn visits into leads.`;
 
-  // Categories in HUB_CATEGORIES order; one with no services yet is skipped.
-  const categories = HUB_CATEGORIES.map((c) => ({
+  // Sections in HUB_CATEGORIES order; one with no services yet is skipped.
+  const groups = HUB_CATEGORIES.map((c) => ({
     ...c,
-    services: SERVICE_PAGES.filter((s) => s.category === c.id),
+    services: SERVICE_PAGES.filter((s) => s.hub === c.id),
   })).filter((c) => c.services.length > 0);
+  const categories = groups.filter((c) => c.id !== 'industry');
+  const industries = groups.find((c) => c.id === 'industry');
+  const industryCount = industries?.services.length ?? 0;
+  const serviceCount = SERVICE_PAGES.length - industryCount;
 
   const trail = [{ label: 'Home', href: '/' }, { label: 'SEO services' }];
   // Built from SERVICE_PAGES so the structured data always matches the cards.
@@ -88,11 +86,11 @@ export default async function ServicesPage() {
         heading={heading}
         subheading={subheading}
         stats={[
-          { value: SERVICE_PAGES.length, label: 'SEO Services' },
+          { value: serviceCount, label: 'SEO Services' },
           {
             value: (
               <>
-                {INDUSTRIES.length}
+                {industryCount}
                 <sup className="text-base">+</sup>
               </>
             ),
@@ -117,29 +115,31 @@ export default async function ServicesPage() {
                   <ServiceCard
                     key={s.slug}
                     service={s}
-                    tag={SERVICE_TAGS[s.slug]}
-                    featured={i === 0}
+                    tag={s.tag}
+                    featured={i === 0 && !UNFEATURED_HUBS.includes(id)}
                   />
                 ))}
               </div>
             </section>
           ))}
 
-          <section aria-labelledby="hub-industries">
-            <HubSectionHeader
-              id="hub-industries"
-              icon={INDUSTRIES_ICON}
-              title={INDUSTRIES_TITLE}
-              count={`${INDUSTRIES.length}+ Industries`}
-            />
-            <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-              {INDUSTRIES.map((ind) => (
-                <li key={ind.name}>
-                  <IndustryTile name={ind.name} icon={ind.icon} />
-                </li>
-              ))}
-            </ul>
-          </section>
+          {industries ? (
+            <section aria-labelledby="hub-industry">
+              <HubSectionHeader
+                id="hub-industry"
+                icon={industries.icon}
+                title={industries.title}
+                count={`${industryCount} Industries`}
+              />
+              <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+                {industries.services.map((s) => (
+                  <li key={s.slug}>
+                    <IndustryTile name={s.name} icon={s.icon} href={s.path} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </div>
       </div>
 

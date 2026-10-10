@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { getSettings, settingText } from '@/lib/queries';
 import { ServicePageView } from '@/components/service-page';
 import { Icon } from '@/components/icon';
-import { SERVICE_PAGES, servicePage } from '@/lib/service-pages';
+import { MENU_SERVICE_PAGES, servicePage } from '@/lib/service-pages';
 import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function DigitalMarketingPage() {
   if (!PAGE) notFound();
   const settings = await getSettings();
-  const subServices = SERVICE_PAGES.filter((p) => p.path.startsWith('/seo-services/'));
+  const subServices = MENU_SERVICE_PAGES.filter((p) => p.path.startsWith('/seo-services/'));
   return (
     <ServicePageView
       page={PAGE}
