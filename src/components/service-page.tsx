@@ -37,10 +37,13 @@ export function ServicePageView({
   page,
   brand,
   extra,
+  directory = [],
 }: {
   page: ServicePage;
   brand: string;
   extra?: ReactNode;
+  /** Matching directory categories, for industry pages (src/lib/service-directory.ts). */
+  directory?: { label: string; href: string }[];
 }) {
   const isMarketing = page.slug === 'digital-marketing';
   const trail = isMarketing
@@ -235,10 +238,10 @@ export function ServicePageView({
               id="sp-guides"
               className="font-display text-on-surface text-lg leading-tight font-extrabold"
             >
-              Guides and tools
+              {directory.length > 0 ? 'Directory, guides and tools' : 'Guides and tools'}
             </h2>
             <ul className="mt-4 flex flex-wrap gap-3">
-              {page.guides.map((g) => (
+              {[...directory, ...page.guides].map((g) => (
                 <li key={g.href}>
                   <Link
                     href={g.href}
