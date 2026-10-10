@@ -55,8 +55,9 @@ const HELP: Record<string, string> = {
     'Text after the five stars in the pill under the footer blurb, such as "5.0 Google Rating · 500+ Clients Ranked". Leave it blank to hide the pill.',
   'footer.copyright': 'Follows the year in the footer bottom bar. {brand} becomes the brand name.',
   'contact.email': 'Rendered in the footer and on the contact page.',
-  'contact.phone': 'Phone number shown in the footer. Leave it blank to show none.',
-  'contact.address': 'Postal address shown in the footer. Leave it blank to show none.',
+  'contact.phone': 'Not shown by the current footer design.',
+  'contact.address':
+    'Location shown in the footer, linked to Google Maps. Leave it blank to show Manchester, United Kingdom.',
   'social.facebook': `Full https:// address of the Facebook page. ${SOCIAL_HELP}`,
   'social.instagram': `Full https:// address of the Instagram profile. ${SOCIAL_HELP}`,
   'social.x': `Full https:// address of the X (Twitter) profile. ${SOCIAL_HELP}`,

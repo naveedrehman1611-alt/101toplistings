@@ -119,8 +119,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           trustLine={settingText(settings, 'footer.trust_line').trim()}
           copyright={settingText(settings, 'footer.copyright', brand)}
           email={email}
-          phone={settingText(settings, 'contact.phone').trim()}
-          address={settingText(settings, 'contact.address').trim()}
+          address={settingText(settings, 'contact.address').trim() || 'Manchester, United Kingdom'}
           social={social}
         />
         <BackToTop />

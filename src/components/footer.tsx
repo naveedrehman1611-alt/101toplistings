@@ -4,7 +4,7 @@ import { Icon, type IconName } from '@/components/icon';
 import { SiteLogo } from '@/components/site-logo';
 import { BackToTopLink } from '@/components/back-to-top';
 import { servicePage } from '@/lib/service-pages';
-import { WHATSAPP_NUMBER, whatsappHref } from '@/lib/whatsapp';
+import { whatsappHref } from '@/lib/whatsapp';
 
 type FooterLink = { label: string; href: string; external?: boolean; highlight?: boolean };
 
@@ -123,13 +123,6 @@ const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400';
 const textLink = `rounded-sm ${focusRing}`;
 
-/** "+92 307 7139528" from the WhatsApp number, for when no phone is set. */
-function formatPakistanNumber(digits: string): string {
-  return digits.startsWith('92') && digits.length === 12
-    ? `+92 ${digits.slice(2, 5)} ${digits.slice(5)}`
-    : `+${digits}`;
-}
-
 function FooterAnchor({
   link,
   className,
@@ -189,7 +182,6 @@ export function Footer({
   trustLine,
   copyright,
   email,
-  phone,
   address,
   social,
 }: {
@@ -199,14 +191,9 @@ export function Footer({
   trustLine: string;
   copyright: string;
   email: string;
-  /** Falls back to the WhatsApp number when blank. */
-  phone: string;
   address: string;
   social: FooterSocial[];
 }) {
-  const phoneLabel = phone || formatPakistanNumber(WHATSAPP_NUMBER);
-  const phoneHref = `tel:${phone ? phone.replace(/[^\d+]/g, '') : `+${WHATSAPP_NUMBER}`}`;
-
   return (
     <footer className="bg-navy-950 w-full text-slate-300">
       <div className="mx-auto max-w-7xl px-6 pt-16 pb-10 lg:px-12 lg:pt-20">
@@ -229,9 +216,6 @@ export function Footer({
             ) : null}
 
             <ul className="mt-8 space-y-3">
-              <ContactRow icon="call" href={phoneHref}>
-                {phoneLabel}
-              </ContactRow>
               {email ? (
                 <ContactRow icon="mail" href={`mailto:${email}`}>
                   {email}
