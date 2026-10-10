@@ -3,8 +3,9 @@ import { cache } from 'react';
 import { getCategories, getCities } from '@/lib/queries';
 import { BROWSE_PER_PAGE, browseListings, type BrowseRow } from '@/lib/browse';
 import { ListingRow } from '@/components/browse/listing-row';
-import { Breadcrumbs, Button, EmptyState } from '@/components/ui';
+import { Button, EmptyState } from '@/components/ui';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
+import { PageHero } from '@/components/page-hero';
 import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 600;
@@ -46,50 +47,53 @@ export default async function FeaturedBusinessesPage() {
   const trail = [{ label: 'Home', href: '/' }, { label: 'Featured businesses' }];
 
   return (
-    <div className="container-page py-12">
+    <>
       <JsonLd data={breadcrumbSchema(trail, '/featured-businesses')} />
       {rows.length > 0 ? (
         <JsonLd data={itemListSchema('Featured business listings', rows)} />
       ) : null}
-      <Breadcrumbs trail={trail} />
-      <div className="max-w-3xl">
-        <h1 className="font-headline-lg text-headline-lg">Featured businesses</h1>
-        <p className="mt-4 text-lg text-[var(--text-muted)]">
-          A featured business listing is a directory listing that has been given extra visibility.
-          Featured businesses are shown first in the business directory, ahead of other listings, so
-          customers see them before they scroll. Featuring changes where a listing appears, not how
-          it is reviewed: every listing is checked before it goes live.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
+      <PageHero
+        trail={trail}
+        eyebrow="Promoted listings"
+        heading={
+          <>
+            <span className="text-hero-green-light">Featured</span> businesses
+          </>
+        }
+        subheading="A featured business listing is a directory listing that has been given extra visibility. Featured businesses are shown first in the business directory, ahead of other listings, so customers see them before they scroll. Featuring changes where a listing appears, not how it is reviewed: every listing is checked before it goes live."
+        stats={rows.length > 0 ? [{ value: rows.length, label: 'Featured listings' }] : undefined}
+      >
+        <div className="flex flex-wrap gap-3">
           <Button href="/pricing">Get featured</Button>
           <Button href="/business-directory" variant="ghost">
             Browse businesses
           </Button>
         </div>
+      </PageHero>
+      <div className="container-page py-10 md:py-12">
+        <section aria-labelledby="featured-heading">
+          <h2 id="featured-heading" className="font-headline-md text-headline-md">
+            Featured business listings
+          </h2>
+          {rows.length > 0 ? (
+            <ol className="mt-6 space-y-4">
+              {rows.map((row, i) => (
+                <li key={row.id}>
+                  <ListingRow row={row} rank={i + 1} />
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="mt-6">
+              <EmptyState
+                title="No featured businesses yet"
+                body="No listing is featured at the moment. Browse the full directory, or find out how to get your business featured."
+                action={<Button href="/business-directory">Browse businesses</Button>}
+              />
+            </div>
+          )}
+        </section>
       </div>
-
-      <section aria-labelledby="featured-heading" className="mt-12">
-        <h2 id="featured-heading" className="font-headline-md text-headline-md">
-          Featured business listings
-        </h2>
-        {rows.length > 0 ? (
-          <ol className="mt-6 space-y-4">
-            {rows.map((row, i) => (
-              <li key={row.id}>
-                <ListingRow row={row} rank={i + 1} />
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <div className="mt-6">
-            <EmptyState
-              title="No featured businesses yet"
-              body="No listing is featured at the moment. Browse the full directory, or find out how to get your business featured."
-              action={<Button href="/business-directory">Browse businesses</Button>}
-            />
-          </div>
-        )}
-      </section>
-    </div>
+    </>
   );
 }

@@ -11,7 +11,7 @@ import {
   INDUSTRIES_TITLE,
   SERVICE_TAGS,
 } from '@/lib/services-hub';
-import { HubHero } from '@/components/services-hub/hub-hero';
+import { PageHero } from '@/components/page-hero';
 import { HubSectionHeader } from '@/components/services-hub/hub-section-header';
 import { ServiceCard } from '@/components/services-hub/service-card';
 import { IndustryTile } from '@/components/services-hub/industry-tile';
@@ -82,7 +82,7 @@ export default async function ServicesPage() {
     <>
       <JsonLd data={breadcrumbSchema(trail, '/seo-services')} />
       <JsonLd data={offerCatalog} />
-      <HubHero
+      <PageHero
         trail={trail}
         eyebrow="Complete SEO Services"
         heading={heading}
