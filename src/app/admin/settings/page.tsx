@@ -51,6 +51,8 @@ const HELP: Record<string, string> = {
     'The line above the newsletter email box. {brand} becomes the brand name.',
   'footer.newsletter_placeholder': 'Placeholder text inside the newsletter email box.',
   'footer.newsletter_button': 'Label of the newsletter subscribe button.',
+  'footer.trust_line':
+    'Text after the five stars in the pill under the footer blurb, such as "5.0 Google Rating · 500+ Clients Ranked". Leave it blank to hide the pill.',
   'footer.copyright': 'Follows the year in the footer bottom bar. {brand} becomes the brand name.',
   'contact.email': 'Rendered in the footer and on the contact page.',
   'contact.phone': 'Phone number shown in the footer. Leave it blank to show none.',

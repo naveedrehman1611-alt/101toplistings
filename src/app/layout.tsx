@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/header';
-import { Footer } from '@/components/footer';
+import { Footer, type FooterSocial } from '@/components/footer';
 import { BackToTop } from '@/components/back-to-top';
 import { WhatsAppButton } from '@/components/whatsapp-button';
-import { getCities, getMenu, getSettings, settingText } from '@/lib/queries';
+import { getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
 import { jsonLdHtml } from '@/lib/json-ld';
 import { serviceNavItems } from '@/lib/service-pages';
@@ -48,21 +48,19 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [settings, nav, mobileNav, explore, company, featuredCities] = await Promise.all([
+  const [settings, nav, mobileNav] = await Promise.all([
     getSettings(),
     getMenu('header', 'Primary'),
     getMenu('mobile', 'Mobile'),
-    getMenu('footer', 'Explore'),
-    getMenu('footer', 'Company'),
-    getCities(true),
   ]);
 
   const brand = settingText(settings, 'brand.name', 'RankYouSite');
   const email = settingText(settings, 'contact.email');
   // Social profiles from Settings, so the Organization entity links to them.
-  const sameAs = ['facebook', 'instagram', 'linkedin', 'x', 'youtube']
-    .map((k) => settingText(settings, `social.${k}`))
-    .filter((u) => /^https?:\/\//.test(u));
+  const social: FooterSocial[] = (['facebook', 'instagram', 'linkedin', 'x', 'youtube'] as const)
+    .map((network) => ({ network, href: settingText(settings, `social.${network}`).trim() }))
+    .filter((s) => /^https?:\/\//.test(s.href));
+  const sameAs = social.map((s) => s.href);
 
   // Site-wide Organization + WebSite schema; the SearchAction lets Google
   // offer a sitelinks search box that lands on /search.
@@ -118,11 +116,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             'footer.about',
             'A business directory and SEO services for businesses worldwide. Connecting customers with trusted local businesses.',
           )}
+          trustLine={settingText(settings, 'footer.trust_line').trim()}
           copyright={settingText(settings, 'footer.copyright', brand)}
-          email={settingText(settings, 'contact.email')}
-          cities={featuredCities}
-          explore={explore}
-          company={company}
+          email={email}
+          phone={settingText(settings, 'contact.phone').trim()}
+          address={settingText(settings, 'contact.address').trim()}
+          social={social}
         />
         <BackToTop />
         <WhatsAppButton brand={brand} />

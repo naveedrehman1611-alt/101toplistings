@@ -7,6 +7,21 @@ import { arrowUpIcon } from '@/components/icon-nodes';
 /** How far down the page (px) before the button appears. */
 const THRESHOLD = 500;
 
+function toTop() {
+  // Keyboard users carry on from the start of the content (the skip link's
+  // target), not from this button at the end of the page.
+  const main = document.getElementById('main');
+  if (main) {
+    if (!main.hasAttribute('tabindex')) {
+      main.setAttribute('tabindex', '-1');
+      main.addEventListener('blur', () => main.removeAttribute('tabindex'), { once: true });
+    }
+    main.focus({ preventScroll: true });
+  }
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+}
+
 export function BackToTop() {
   const [visible, setVisible] = useState(false);
 
@@ -28,21 +43,6 @@ export function BackToTop() {
     };
   }, []);
 
-  function toTop() {
-    // Keyboard users carry on from the start of the content (the skip link's
-    // target), not from this button at the end of the page.
-    const main = document.getElementById('main');
-    if (main) {
-      if (!main.hasAttribute('tabindex')) {
-        main.setAttribute('tabindex', '-1');
-        main.addEventListener('blur', () => main.removeAttribute('tabindex'), { once: true });
-      }
-      main.focus({ preventScroll: true });
-    }
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
-  }
-
   return (
     <button
       type="button"
@@ -57,6 +57,15 @@ export function BackToTop() {
       }`}
     >
       <SvgIcon node={arrowUpIcon} size={20} strokeWidth={2} />
+    </button>
+  );
+}
+
+/** The footer's inline "Back to Top" button: always visible, same scroll and focus handling. */
+export function BackToTopLink({ className = '' }: { className?: string }) {
+  return (
+    <button type="button" onClick={toTop} className={className}>
+      <span aria-hidden>↑</span> Back to Top
     </button>
   );
 }
