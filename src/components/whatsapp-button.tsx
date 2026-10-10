@@ -7,8 +7,11 @@ const WHATSAPP_NUMBER = '923077139528';
 /** Floating bottom-right link that opens a WhatsApp chat with a pre-filled greeting. */
 export function WhatsAppButton({ brand }: { brand: string }) {
   const pathname = usePathname();
-  // Not for the admin panel: staff don't need to message themselves.
-  if (pathname === '/admin' || pathname.startsWith('/admin/')) return null;
+  // Not inside the admin panel or the user dashboard, only on the public site.
+  const hidden = ['/admin', '/dashboard'].some(
+    (base) => pathname === base || pathname.startsWith(`${base}/`),
+  );
+  if (hidden) return null;
 
   const message = `Hi ${brand} team! 👋 I found you through your website and would love to know more about getting my business listed and growing it online. Could you help me out?`;
   const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
