@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Icon } from '@/components/icon';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
-import { HubHero } from '@/components/services-hub/hub-hero';
+import { PageHero } from '@/components/page-hero';
 import { HubSectionHeader } from '@/components/services-hub/hub-section-header';
 import { HubCtaBand, HUB_BUTTON } from '@/components/services-hub/hub-cta-band';
 import { ServiceCard } from '@/components/services-hub/service-card';
@@ -72,7 +72,7 @@ export function ServicePageView({
     <>
       <JsonLd data={breadcrumbSchema(trail, page.path)} />
       <JsonLd data={service} />
-      <HubHero
+      <PageHero
         trail={trail}
         eyebrow={eyebrow}
         heading={page.h1}
@@ -83,36 +83,35 @@ export function ServicePageView({
           { value: steps.length, label: 'Step process' },
           { value: page.faq.length, label: 'FAQs answered' },
         ]}
-        actions={
-          <>
+      >
+        <div className="mt-2 flex flex-wrap gap-3">
+          <Link
+            href={page.ctaHref}
+            className={`${HUB_BUTTON} bg-primary-container hover:bg-primary text-white`}
+          >
+            <Icon name={isAudit ? 'fact_check' : 'mail'} size={18} />
+            {page.ctaLabel}
+          </Link>
+          {/* The second button offers whichever of audit and quote the first one doesn't. */}
+          {isAudit ? (
             <Link
-              href={page.ctaHref}
-              className={`${HUB_BUTTON} bg-primary-container hover:bg-primary text-white`}
+              href={quoteHref(page.name)}
+              className={`${HUB_BUTTON} border border-white/40 text-white hover:bg-white/10`}
             >
-              <Icon name={isAudit ? 'fact_check' : 'mail'} size={18} />
-              {page.ctaLabel}
+              <Icon name="mail" size={18} />
+              Request a quote
             </Link>
-            {/* The second button offers whichever of audit and quote the first one doesn't. */}
-            {isAudit ? (
-              <Link
-                href={quoteHref(page.name)}
-                className={`${HUB_BUTTON} border border-white/40 text-white hover:bg-white/10`}
-              >
-                <Icon name="mail" size={18} />
-                Request a quote
-              </Link>
-            ) : (
-              <Link
-                href="/seo-audit"
-                className={`${HUB_BUTTON} border border-white/40 text-white hover:bg-white/10`}
-              >
-                <Icon name="fact_check" size={18} />
-                Free SEO audit
-              </Link>
-            )}
-          </>
-        }
-      />
+          ) : (
+            <Link
+              href="/seo-audit"
+              className={`${HUB_BUTTON} border border-white/40 text-white hover:bg-white/10`}
+            >
+              <Icon name="fact_check" size={18} />
+              Free SEO audit
+            </Link>
+          )}
+        </div>
+      </PageHero>
 
       <div className="bg-white py-16 lg:py-20">
         <div className="container-page">

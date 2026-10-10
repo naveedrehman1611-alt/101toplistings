@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { findSection, getPageSections, getSettings, settingText } from '@/lib/queries';
-import { Breadcrumbs } from '@/components/ui';
+import { PageHero } from '@/components/page-hero';
 import { submitContact } from '@/lib/public-actions';
 import { seoMetadata } from '@/lib/seo';
 
@@ -179,24 +179,19 @@ export default async function ContactPage({
 
   return (
     <>
-      <section className="border-b border-[var(--border)] bg-[var(--surface)]">
-        <div className="container-page pt-8 pb-16 sm:pb-20">
-          <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label }]} />
-          <div className="mx-auto max-w-2xl pt-4 text-center">
-            <span className="border-brand-200 text-brand-700 inline-flex items-center gap-2 rounded-full border bg-[var(--surface)] px-4 py-1.5 text-sm font-medium shadow-sm">
-              <span aria-hidden className="bg-brand-500 size-1.5 rounded-full" />
-              {label}
-            </span>
-            <h1 className="font-display-hero text-display-hero-mobile sm:text-display-hero mt-5">
-              Get in <span className="text-brand-700">touch</span>
-            </h1>
-            <p className="mt-4 text-lg leading-relaxed text-[var(--text-muted)]">
-              {header?.subheading ||
-                "Have a question, a listing issue, or a partnership idea? Send us a message and we'll get back to you."}
-            </p>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        trail={[{ label: 'Home', href: '/' }, { label }]}
+        eyebrow="We reply by email"
+        heading={
+          <>
+            Get in <span className="text-hero-green-light">touch</span>
+          </>
+        }
+        subheading={
+          header?.subheading ||
+          "Have a question, a listing issue, or a partnership idea? Send us a message and we'll get back to you."
+        }
+      />
 
       <div className="container-page grid grid-cols-1 items-start gap-8 py-12 sm:py-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,11fr)]">
         <aside className="space-y-8 lg:sticky lg:top-24">

@@ -3,7 +3,8 @@ import { findSection, getCategories, getCities, getPageSections } from '@/lib/qu
 import { BROWSE_PER_PAGE, browseListings, getDirectoryFacets, parseBrowseSort } from '@/lib/browse';
 import { ListingFilters } from '@/components/listing-filters';
 import { MAX_PAGE, parsePage } from '@/components/results';
-import { Breadcrumbs, Button, EmptyState } from '@/components/ui';
+import { Button, EmptyState } from '@/components/ui';
+import { PageHero } from '@/components/page-hero';
 import { DirectorySummary } from '@/components/browse/directory-summary';
 import { listingsHref, type ListingsParams } from '@/components/browse/href';
 import { ListingRow } from '@/components/browse/listing-row';
@@ -85,84 +86,95 @@ export default async function ListingsPage({
   const heading = header?.heading ?? 'All listings';
 
   return (
-    <div className="container-page py-12">
-      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: heading }]} />
-      <h1 className="font-headline-lg text-headline-lg">{heading}</h1>
-      {header?.subheading ? (
-        <p className="mt-3 max-w-2xl text-[var(--text-muted)]">{header.subheading}</p>
-      ) : null}
-
-      <div className="mt-8">
-        <ListingFilters
-          action="/business-directory"
-          q={q}
-          category={cat?.slug}
-          city={city?.slug}
-          sort={sort}
-          defaultSort="featured"
-          categories={categories}
-          cities={cities}
-          nearMe
-        />
-      </div>
-
-      {facets ? (
-        <div className="mt-10">
-          <DirectorySummary facets={facets} params={params} />
+    <>
+      <PageHero
+        trail={[{ label: 'Home', href: '/' }, { label: heading }]}
+        eyebrow="Business directory"
+        heading={heading}
+        subheading={header?.subheading}
+        stats={
+          filtered
+            ? undefined
+            : [
+                { value: total, label: 'Listings' },
+                { value: categories.length, label: 'Categories' },
+                { value: cities.length, label: 'Cities' },
+              ]
+        }
+      />
+      <div className="container-page py-10 md:py-12">
+        <div>
+          <ListingFilters
+            action="/business-directory"
+            q={q}
+            category={cat?.slug}
+            city={city?.slug}
+            sort={sort}
+            defaultSort="featured"
+            categories={categories}
+            cities={cities}
+            nearMe
+          />
         </div>
-      ) : null}
 
-      <section aria-labelledby="results-heading" className="mt-10">
-        <h2 id="results-heading" className="sr-only">
-          Listings
-        </h2>
-        {rows.length > 0 ? (
-          <>
-            <ResultsToolbar
-              total={total}
-              page={page}
-              perPage={BROWSE_PER_PAGE}
-              sort={sort}
-              params={params}
+        {facets ? (
+          <div className="mt-10">
+            <DirectorySummary facets={facets} params={params} />
+          </div>
+        ) : null}
+
+        <section aria-labelledby="results-heading" className="mt-10">
+          <h2 id="results-heading" className="sr-only">
+            Listings
+          </h2>
+          {rows.length > 0 ? (
+            <>
+              <ResultsToolbar
+                total={total}
+                page={page}
+                perPage={BROWSE_PER_PAGE}
+                sort={sort}
+                params={params}
+              />
+              <ol start={offset + 1} className="mt-6 space-y-4">
+                {rows.map((row, i) => (
+                  <li key={row.id}>
+                    <ListingRow row={row} rank={offset + i + 1} />
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-10">
+                <Pager page={page} pages={pages} params={params} />
+              </div>
+            </>
+          ) : page > 1 ? (
+            // A page number past the end of the list, usually from an old link.
+            <EmptyState
+              title="Nothing on this page"
+              body="The list is shorter than this page number. Start again from the first page."
+              action={
+                <Button href={listingsHref({ ...params, page: undefined })}>Go to page 1</Button>
+              }
             />
-            <ol start={offset + 1} className="mt-6 space-y-4">
-              {rows.map((row, i) => (
-                <li key={row.id}>
-                  <ListingRow row={row} rank={offset + i + 1} />
-                </li>
-              ))}
-            </ol>
-            <div className="mt-10">
-              <Pager page={page} pages={pages} params={params} />
-            </div>
-          </>
-        ) : page > 1 ? (
-          // A page number past the end of the list, usually from an old link.
-          <EmptyState
-            title="Nothing on this page"
-            body="The list is shorter than this page number. Start again from the first page."
-            action={
-              <Button href={listingsHref({ ...params, page: undefined })}>Go to page 1</Button>
-            }
-          />
-        ) : (
-          <EmptyState
-            title={filtered ? 'No matches' : 'No listings yet'}
-            body={
-              filtered
-                ? 'Nothing matches these filters. Try another city or category, or clear the filters.'
-                : 'Nothing has been approved for this view.'
-            }
-            action={
-              filtered ? (
-                <Button href="/business-directory" variant="ghost">
-                  Clear filters
-                </Button>
-              ) : undefined
-            }
-          />
-        )}
-      </section>
-    </div>
+          ) : (
+            <EmptyState
+              title={filtered ? 'No matches' : 'No listings yet'}
+              body={
+                filtered
+                  ? 'Nothing matches these filters. Try another city or category, or clear the filters.'
+                  : 'Nothing has been approved for this view.'
+              }
+              action={
+                filtered ? (
+                  <Button href="/business-directory" variant="ghost">
+                    Clear filters
+                  </Button>
+                ) : undefined
+              }
+            />
+          )}
+        </section>
+      </div>
+    </>
   );
 }
