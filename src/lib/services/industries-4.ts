@@ -602,7 +602,7 @@ export const INDUSTRY_PAGES_4: ServicePage[] = [
     ],
     ctaLabel: 'Get a Free SEO Audit',
     ctaHref: '/seo-audit',
-    related: ['restaurant-seo', 'seo-for-online-stores', 'google-business-profile'],
+    related: ['restaurant-seo', 'ecommerce-seo', 'google-business-profile'],
     guides: [SEO_GUIDES],
   },
   {
@@ -772,7 +772,7 @@ export const INDUSTRY_PAGES_4: ServicePage[] = [
     ],
     ctaLabel: 'Get a Free SEO Audit',
     ctaHref: '/seo-audit',
-    related: ['ecommerce-seo', 'seo-for-online-stores', 'content-marketing'],
+    related: ['ecommerce-seo', 'retail-seo', 'content-marketing'],
     guides: [SEO_GUIDES],
   },
   {
@@ -1197,7 +1197,7 @@ export const INDUSTRY_PAGES_4: ServicePage[] = [
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['white-label-seo', 'seo-reseller', 'professional-firms-seo'],
+    related: ['white-label-seo', 'outsourced-seo', 'professional-firms-seo'],
     guides: [SEO_GUIDES],
   },
   {

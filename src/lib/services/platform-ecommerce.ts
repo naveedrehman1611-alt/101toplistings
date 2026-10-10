@@ -175,7 +175,7 @@ export const PLATFORM_ECOMMERCE_PAGES: ServicePage[] = [
     ],
     ctaLabel: 'Get a Free SEO Audit',
     ctaHref: '/seo-audit',
-    related: ['ecommerce-seo', 'seo-for-online-stores', 'woocommerce-seo'],
+    related: ['ecommerce-seo', 'small-business-seo', 'woocommerce-seo'],
     guides: [
       SEO_GUIDES,
       { label: 'Schema Markup Generator', href: '/free-tools/schema-markup-generator' },
@@ -445,7 +445,7 @@ export const PLATFORM_ECOMMERCE_PAGES: ServicePage[] = [
       'Full-store ecommerce SEO for any platform: category and product architecture, faceted navigation, product schema and feeds that turn organic search into sales.',
     h1: 'Ecommerce SEO services',
     intro:
-      'Ecommerce SEO is the strategy behind how a store with hundreds or thousands of pages gets found in search. It covers site architecture, category and product page templates, faceted navigation, structured data and product feeds. The goal is more qualified organic visitors and orders, on any platform. We tailor everything to your catalogue.',
+      'Ecommerce SEO is the strategy behind how an online store, from a new shop to a catalogue of thousands of pages, gets found in search. It covers site architecture, category and product page templates, faceted navigation, structured data and product feeds. The goal is more qualified organic visitors and orders, on any platform. We tailor everything to your catalogue.',
     icon: 'sell',
     category: 'seo',
     hub: 'ecommerce',
@@ -474,6 +474,14 @@ export const PLATFORM_ECOMMERCE_PAGES: ServicePage[] = [
       {
         title: 'Technical health and speed',
         body: 'We audit crawling, indexing, internal duplicates, pagination, mobile speed and checkout friction at scale, with fixes written so your developers can act on them. Each ticket includes examples, expected outcomes and a way to check the work once it ships.',
+      },
+      {
+        title: 'Launch checklist for new stores',
+        body: 'For new or small shops, we first confirm the store is indexable, has a sitemap, uses HTTPS, loads reasonably on mobile and tracks sales, so early traffic is not wasted on a store with basic faults.',
+      },
+      {
+        title: 'Original product descriptions',
+        body: 'We write or coach on original descriptions covering who a product is for, sizes, materials, care, delivery and returns, instead of reusing supplier text that other sellers already publish. Best sellers come first.',
       },
     ],
     steps: [
@@ -515,99 +523,22 @@ export const PLATFORM_ECOMMERCE_PAGES: ServicePage[] = [
         q: 'How long until an ecommerce site sees results?',
         a: 'It varies with competition, site health and catalogue size. Technical fixes can show in weeks, while new content and authority usually take months. We cannot guarantee timing, but we report progress against agreed measures along the way. Honest expectations help planning.',
       },
+      {
+        q: 'Is SEO worth it for a new or small store?',
+        a: 'Often, yes, because organic traffic does not need ad spend for every visit. It builds slowly, though, so it works best alongside other ways of finding first customers, and specific long-tail searches with clear buying intent tend to convert earlier than broad ones.',
+      },
+      {
+        q: 'Do I need a blog for my online store?',
+        a: 'Not at the start. Get categories and products right first. A blog helps later by capturing research-stage searches, such as how to choose or compare products, and by giving you pages that can link to your range.',
+      },
     ],
     ctaLabel: 'Get a Free SEO Audit',
     ctaHref: '/seo-audit',
-    related: ['seo-for-online-stores', 'shopify-seo', 'technical-seo'],
+    related: ['woocommerce-seo', 'shopify-seo', 'technical-seo'],
     guides: [
       SEO_GUIDES,
       { label: 'Schema Markup Generator', href: '/free-tools/schema-markup-generator' },
     ],
-  },
-  {
-    slug: 'seo-for-online-stores',
-    path: '/seo-services/seo-for-online-stores',
-    name: 'SEO for Online Stores',
-    title: 'SEO for Online Stores | First Organic Sales',
-    description:
-      'SEO for small and new online stores: launch basics, product copy that sells, low-competition keywords and affordable steps to win your first organic sales.',
-    h1: 'SEO for online stores',
-    intro:
-      'SEO for online stores is a focused starting plan for small or new shops that need their first organic sales without a large budget. Rather than fighting for the biggest terms, we get the basics right, write product copy that answers shopper questions and target searches you can win. Small gains add up.',
-    icon: 'add_business',
-    category: 'seo',
-    hub: 'ecommerce',
-    tag: 'Online Stores',
-    includes: [
-      {
-        title: 'Launch checklist',
-        body: 'Before promoting anything, we confirm that the store is indexable, has a sitemap, uses HTTPS, loads reasonably on mobile and tracks sales, so early traffic is not wasted on a store with basic faults.',
-      },
-      {
-        title: 'Realistic keyword targets',
-        body: 'New shops rarely outrank established brands for broad terms. We look for specific, lower-competition phrases such as product types, materials, uses and problems your products solve, with clear buying intent.',
-      },
-      {
-        title: 'Product description writing',
-        body: 'We write or coach on original descriptions covering who a product is for, sizes, materials, care, delivery and returns, instead of copying supplier text that other sellers already use. Original wording gives you an edge.',
-      },
-      {
-        title: 'Priority pages first',
-        body: 'With a small team, effort has to count. We choose your homepage, main categories and a handful of best sellers to improve first, rather than spreading effort thinly over every product.',
-      },
-      {
-        title: 'Simple trust and conversion fixes',
-        body: 'We review shipping and return pages, contact details, product photos and review prompts, because organic visitors only buy when the store looks reliable and answers their last questions. Trust is part of SEO here.',
-      },
-      {
-        title: 'Low-cost early links and listings',
-        body: 'We suggest practical, honest ways to earn early mentions: supplier and maker pages, local or niche directories, partners and helpful content, avoiding paid link schemes that put a young store at risk.',
-      },
-    ],
-    steps: [
-      {
-        title: 'Quick store review',
-        body: 'We check your platform, structure, speed and product pages to find the basic faults holding back a new store. Most are quick to fix.',
-      },
-      {
-        title: 'Pick your battles',
-        body: 'We choose a short list of categories and products with realistic search demand, so effort and budget go where they can pay back.',
-      },
-      {
-        title: 'Optimize and write',
-        body: 'We improve titles, category intros and product copy for the priority pages, and set simple templates you can reuse as you add stock.',
-      },
-      {
-        title: 'Grow what works',
-        body: 'We watch which pages start getting impressions and orders, then extend the same approach to more products and supporting guides.',
-      },
-    ],
-    faq: [
-      {
-        q: 'Is SEO worth it for a brand-new store?',
-        a: 'Often, yes, because organic traffic does not need ad spend for every visit. But it builds slowly, so it works best alongside other ways of getting first customers. We help you judge how much to invest at this stage. Budget is considered carefully.',
-      },
-      {
-        q: 'How soon can I expect my first organic sales?',
-        a: 'It depends on competition, products and how much content is already indexed. New stores usually need patience, and we cannot promise a date. Specific long-tail searches tend to convert earlier than broad ones. Their lower competition and clearer intent give a small store its best early chance of winning.',
-      },
-      {
-        q: 'Can I use manufacturer product descriptions?',
-        a: 'You can, but they rarely help. Many retailers publish the same text, so there is little reason for search engines to prefer your page. Rewriting at least your top products with real detail gives you a clearer edge. Start with your best sellers.',
-      },
-      {
-        q: 'Do I need a blog for my online store?',
-        a: 'Not at the start. First get categories and products right. A blog helps later by capturing research-stage searches, such as how to choose or compare products, and by giving you pages that can link to your range. Add it once the core pages are in good shape.',
-      },
-      {
-        q: 'Which platform is best for SEO on a small budget?',
-        a: 'Shopify, WooCommerce, BigCommerce and similar platforms can all work. The better choice depends on your skills, budget and growth plans. Whichever you pick, solid structure and original content matter more than the platform label. Switching platforms is rarely the first fix; most early gains come from structure, copy and clean setup.',
-      },
-    ],
-    ctaLabel: 'Get a Free SEO Audit',
-    ctaHref: '/seo-audit',
-    related: ['ecommerce-seo', 'small-business-seo', 'shopify-seo'],
-    guides: [SEO_GUIDES],
   },
   {
     slug: 'b2c-seo',

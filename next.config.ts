@@ -20,8 +20,28 @@ const siteHost = (() => {
     return '';
   }
 })();
+const siteIsLocal =
+  siteHost === '' || ['localhost', '127.0.0.1', '[::1]'].includes(siteHost.replace(/:\d+$/, ''));
 const redirectVercelHost =
-  process.env.VERCEL_ENV === 'production' && siteHost !== '' && !siteHost.endsWith('.vercel.app');
+  process.env.VERCEL_ENV === 'production' && !siteIsLocal && !siteHost.endsWith('.vercel.app');
+
+// SITE_URL (src/lib/supabase.ts) falls back to http://localhost:3000, which a
+// production build would bake into the sitemap, canonicals and JSON-LD. Warn
+// loudly in the Vercel build log rather than failing the build.
+if (process.env.VERCEL_ENV === 'production' && siteIsLocal) {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL;
+  console.warn(
+    [
+      '',
+      `⚠️  NEXT_PUBLIC_SITE_URL is ${raw ? `"${raw}"` : 'not set'} in this production build.`,
+      `    The sitemap, canonical URLs and JSON-LD will be built from ${raw ? `"${raw}"` : 'http://localhost:3000'}.`,
+      '    Fix: Vercel → Project → Settings → Environment Variables, set',
+      '    NEXT_PUBLIC_SITE_URL to the live domain (e.g. https://www.rankyousite.com)',
+      '    for the Production environment, then redeploy.',
+      '',
+    ].join('\n'),
+  );
+}
 
 const nextConfig: NextConfig = {
   images: {
@@ -73,6 +93,38 @@ const nextConfig: NextConfig = {
       { source: '/submission', destination: '/dashboard/listings/new', permanent: true },
       { source: '/about-us', destination: '/about', permanent: true },
       { source: '/contact-us', destination: '/contact', permanent: true },
+      // Service pages merged into the page with the same search intent, and one
+      // slug renamed; the old URLs are no longer generated (dynamicParams=false).
+      {
+        source: '/seo-services/global-seo',
+        destination: '/seo-services/international-seo',
+        permanent: true,
+      },
+      {
+        source: '/seo-services/multilingual-seo',
+        destination: '/seo-services/international-seo',
+        permanent: true,
+      },
+      {
+        source: '/seo-services/seo-reseller',
+        destination: '/seo-services/white-label-seo',
+        permanent: true,
+      },
+      {
+        source: '/seo-services/bespoke-seo',
+        destination: '/seo-services/custom-seo',
+        permanent: true,
+      },
+      {
+        source: '/seo-services/seo-for-online-stores',
+        destination: '/seo-services/ecommerce-seo',
+        permanent: true,
+      },
+      {
+        source: '/seo-services/nationwide-seo',
+        destination: '/seo-services/multi-location-seo',
+        permanent: true,
+      },
     ];
   },
   experimental: {
