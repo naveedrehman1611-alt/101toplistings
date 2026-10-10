@@ -102,14 +102,11 @@ export function ListingHero({
             </span>
           ) : null}
           {phone ? (
-            <a
-              href={`tel:${phone.replace(/\s+/g, '')}`}
-              className="font-label-md text-label-md text-primary-container inline-flex items-center gap-1.5 hover:underline"
-            >
+            <span className="font-label-md text-label-md text-primary-container inline-flex items-center gap-1.5">
               <Icon name="call" size={16} />
-              <span className="sr-only">Call </span>
+              <span className="sr-only">Phone: </span>
               {phone}
-            </a>
+            </span>
           ) : null}
           {cityName ? (
             <span className="font-body-sm text-body-sm text-secondary inline-flex items-center gap-1.5">

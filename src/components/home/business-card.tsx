@@ -17,12 +17,6 @@ import { FavouriteButton } from './favourite-button';
 const CIRCLE =
   'relative z-10 grid size-9 place-items-center rounded-full bg-[var(--surface-2)] transition-colors before:absolute before:-inset-1 hover:bg-brand-50 hover:text-brand-700';
 
-/** Digits only, keeping a leading + so international numbers still dial. */
-function telHref(phone: string): string | null {
-  const digits = phone.replace(/\D/g, '');
-  return digits ? `tel:${phone.trim().startsWith('+') ? '+' : ''}${digits}` : null;
-}
-
 export function BusinessCard({
   card,
   showPhone,
@@ -34,7 +28,7 @@ export function BusinessCard({
 }) {
   const summary = card.excerpt ?? card.tagline;
   const tagline = card.excerpt ? card.tagline : null;
-  const tel = showPhone && card.phone ? telHref(card.phone) : null;
+  const phone = showPhone ? card.phone : null;
   const rating = card.rating?.toFixed(1);
 
   return (
@@ -98,17 +92,14 @@ export function BusinessCard({
               </span>
             </p>
           ) : null}
-          {tel || card.city ? (
+          {phone || card.city ? (
             <div className="text-ink-500 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem]">
-              {tel ? (
-                <a
-                  href={tel}
-                  aria-label={`Call ${card.name} on ${card.phone}`}
-                  className="hover:text-brand-700 relative z-10 -my-3 inline-flex items-center gap-1.5 py-3 transition-colors"
-                >
+              {phone ? (
+                <span className="inline-flex items-center gap-1.5">
                   <Icon name="phone" size={14} />
-                  {card.phone}
-                </a>
+                  <span className="sr-only">Phone: </span>
+                  {phone}
+                </span>
               ) : null}
               {card.city ? (
                 <Link

@@ -153,13 +153,9 @@ export function ListingInformation({
           {phones.length > 0 ? (
             <Row label={phones.length > 1 ? 'Phone numbers' : 'Phone'} icon={phoneIcon}>
               {phones.map((p) => (
-                <a
-                  key={p}
-                  href={`tel:${p.replace(/\s+/g, '')}`}
-                  className={`${linkClass} block w-fit`}
-                >
+                <span key={p} className="block w-fit">
                   {p}
-                </a>
+                </span>
               ))}
             </Row>
           ) : null}

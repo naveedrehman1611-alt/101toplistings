@@ -26,18 +26,6 @@ const META_LINK = 'hover:text-primary-container hover:underline';
 const ACTION =
   'font-label-md text-label-md inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-4 whitespace-nowrap transition-colors sm:flex-none';
 
-// Only characters that appear in written phone numbers. Counting digits alone
-// would dial an address that has a house number and a postcode in it.
-const PHONE_CHARS = /^[\d\s()+.‐-―-]+$/;
-
-/** The number to dial, or null when the phone field holds free text. */
-function dialable(phone: string | null): string | null {
-  if (!phone || !PHONE_CHARS.test(phone)) return null;
-  const stripped = phone.replace(/[^\d+]/g, '');
-  const digits = stripped.replace(/\D/g, '').length;
-  return digits >= 7 && digits <= 15 ? stripped : null;
-}
-
 /** First letter or digit, so "(The) Barber" shows "T" rather than "(". */
 function initial(name: string): string {
   return (name.match(/[\p{L}\p{N}]/u)?.[0] ?? '').toUpperCase();
@@ -46,7 +34,6 @@ function initial(name: string): string {
 export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
   const headingId = `listing-${row.id}`;
   const href = `/listing/${row.slug}`;
-  const tel = dialable(row.phone);
   const date = row.publishedAt ? new Date(row.publishedAt) : null;
   const published = date && !Number.isNaN(date.getTime()) ? date : null;
 
@@ -125,16 +112,9 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
             <span className="flex min-w-0 items-start gap-1.5">
               <Icon name="call" size={16} className="text-primary-container mt-0.5" />
               <span className="sr-only">Phone: </span>
-              {tel ? (
-                <a
-                  href={`tel:${tel}`}
-                  className="text-on-surface hover:text-primary-container font-semibold"
-                >
-                  {row.phone}
-                </a>
-              ) : (
-                <span className="min-w-0 wrap-break-word">{row.phone}</span>
-              )}
+              <span className="text-on-surface min-w-0 font-semibold wrap-break-word">
+                {row.phone}
+              </span>
             </span>
           ) : null}
           {published ? (
@@ -146,8 +126,9 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
         </div>
       </div>
 
-      {/* Below the text on phones, where Call is the main action, and a
-          column on the right from sm up. */}
+      {/* Below the text on phones, and a column on the right from sm up. The
+          public site shows only a masked number, so Contact opens the
+          listing's message form instead of dialling. */}
       <div className="flex w-full gap-2 sm:w-auto sm:shrink-0 sm:flex-col">
         <Link
           href={href}
@@ -157,16 +138,14 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
           View details
           <Icon name="arrow_forward" size={16} />
         </Link>
-        {tel ? (
-          <a
-            href={`tel:${tel}`}
-            aria-label={`Call ${row.name}`}
-            className={`${ACTION} border border-[var(--border)] hover:bg-[var(--surface-2)]`}
-          >
-            <Icon name="call" size={16} />
-            Call
-          </a>
-        ) : null}
+        <Link
+          href={`${href}#contact-author`}
+          aria-label={`Contact ${row.name}`}
+          className={`${ACTION} border border-[var(--border)] hover:bg-[var(--surface-2)]`}
+        >
+          <Icon name="mail" size={16} />
+          Contact
+        </Link>
       </div>
     </article>
   );

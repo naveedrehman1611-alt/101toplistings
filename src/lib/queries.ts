@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache';
 import { READ_REVALIDATE_SECONDS, SEARCH_TAG, supabase } from './supabase';
 import { mediaUrl, type MediaItem } from './media';
 import { isMissingColumnError } from './review-criteria';
+import { maskPhone } from './phone';
 
 /**
  * Every read below used to end in `data ?? []`, which makes a failed request
@@ -414,7 +415,14 @@ export const getListing = cache(async function getListing(
       .eq('slug', slug)
       .maybeSingle(),
   );
-  return (data as ListingDetail | null) ?? null;
+  const listing = (data as ListingDetail | null) ?? null;
+  return listing
+    ? {
+        ...listing,
+        phone_primary: maskPhone(listing.phone_primary),
+        phone_secondary: maskPhone(listing.phone_secondary),
+      }
+    : null;
 });
 
 export async function getOpeningHours(listingId: string): Promise<OpeningHour[]> {
@@ -587,7 +595,7 @@ export async function getSimilarListings(
         a.index - b.index,
     )
     .slice(0, limit)
-    .map(({ row }) => row);
+    .map(({ row }) => ({ ...row, phone_primary: maskPhone(row.phone_primary) }));
   if (picked.length === 0) return [];
 
   const [hours, withCovers] = await Promise.all([
@@ -652,7 +660,7 @@ export async function getListingHighlights(ids: string[]): Promise<Map<string, L
   for (const row of rows) {
     out.set(row.id, {
       description: row.description,
-      phone: row.phone_primary,
+      phone: maskPhone(row.phone_primary),
       verified: row.verification === 'verified',
     });
   }
@@ -834,14 +842,15 @@ export type CardExtras = { id: string; phone_primary: string | null; excerpt: st
 /** Phone and a 200-character excerpt per card, from the public_listing_cards view (0021). */
 export async function getCardExtras(ids: string[]): Promise<CardExtras[]> {
   if (ids.length === 0) return [];
-  return readList(
+  const rows = (await readList(
     'public_listing_cards.select',
     supabase
       .from('public_listing_cards')
       .select('id, phone_primary, excerpt')
       .in('id', ids)
       .limit(ids.length),
-  );
+  )) as CardExtras[];
+  return rows.map((row) => ({ ...row, phone_primary: maskPhone(row.phone_primary) }));
 }
 
 /** Logo per listing, for the round badge on a card. Covers come from attachCovers. */

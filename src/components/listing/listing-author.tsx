@@ -41,12 +41,7 @@ export function ListingAuthor({
         <div className="min-w-0">
           <h3 className="font-title-md text-title-md text-on-surface">{listing.name}</h3>
           {phone ? (
-            <a
-              href={`tel:${phone.replace(/\s+/g, '')}`}
-              className="font-body-sm text-body-sm text-primary-container hover:underline"
-            >
-              {phone}
-            </a>
+            <p className="font-body-sm text-body-sm text-primary-container">{phone}</p>
           ) : null}
         </div>
       </div>
