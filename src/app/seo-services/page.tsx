@@ -1,14 +1,25 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { findSection, getPageSections, getSettings, settingText } from '@/lib/queries';
-import { Breadcrumbs } from '@/components/ui';
-import { Icon } from '@/components/icon';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { SERVICE_PAGES } from '@/lib/service-pages';
 import { SITE_URL } from '@/lib/supabase';
 import { seoMetadata } from '@/lib/seo';
+import {
+  HUB_CATEGORIES,
+  INDUSTRIES,
+  INDUSTRIES_ICON,
+  INDUSTRIES_TITLE,
+  SERVICE_TAGS,
+} from '@/lib/services-hub';
+import { HubHero } from '@/components/services-hub/hub-hero';
+import { HubSectionHeader } from '@/components/services-hub/hub-section-header';
+import { ServiceCard } from '@/components/services-hub/service-card';
+import { IndustryTile } from '@/components/services-hub/industry-tile';
+import { HubCtaBand } from '@/components/services-hub/hub-cta-band';
 
 export const revalidate = 3600;
+
+const QUOTE_HREF = '/contact?subject=SEO%20services';
 
 const TITLE = 'SEO Services | Rank Higher & Grow Online';
 const DESCRIPTION =
@@ -23,29 +34,26 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-const STEPS: { title: string; body: string }[] = [
-  {
-    title: 'Free audit',
-    body: 'Tell us about your business and website. We look at where you rank today and what is holding you back.',
-  },
-  {
-    title: 'A plan you can read',
-    body: 'You get a short, prioritised plan: what we will fix, what it is for, and what you can expect.',
-  },
-  {
-    title: 'Work and reporting',
-    body: 'We do the work and report on rankings, enquiries and visits, so you can see what your budget is doing.',
-  },
-];
-
 export default async function ServicesPage() {
   const [sections, settings] = await Promise.all([getPageSections('services'), getSettings()]);
   const header = findSection(sections, 'header');
   const brand = settingText(settings, 'brand.name', 'RankYouSite');
-  const heading = header?.heading ?? 'SEO services';
+  // An admin-set heading renders as plain text; the default carries a green accent.
+  const heading = header?.heading ?? (
+    <>
+      Every <span className="text-hero-green-light">Professional SEO Service</span> Your Business
+      Needs to Rank, Grow, and Get Found.
+    </>
+  );
   const subheading =
     header?.subheading ??
     `${brand} is an SEO agency and SEO company offering professional, affordable SEO services for small business and growing brands worldwide. We help you rank higher, earn more organic traffic and turn visits into leads.`;
+
+  // Categories in HUB_CATEGORIES order; one with no services yet is skipped.
+  const categories = HUB_CATEGORIES.map((c) => ({
+    ...c,
+    services: SERVICE_PAGES.filter((s) => s.category === c.id),
+  })).filter((c) => c.services.length > 0);
 
   const trail = [{ label: 'Home', href: '/' }, { label: 'SEO services' }];
   // Built from SERVICE_PAGES so the structured data always matches the cards.
@@ -71,78 +79,71 @@ export default async function ServicesPage() {
   };
 
   return (
-    <div className="container-page py-12">
+    <>
       <JsonLd data={breadcrumbSchema(trail, '/seo-services')} />
       <JsonLd data={offerCatalog} />
-      <Breadcrumbs trail={trail} />
-      <div className="max-w-3xl">
-        <h1 className="font-headline-lg text-headline-lg">{heading}</h1>
-        <p className="mt-4 text-lg text-[var(--text-muted)]">{subheading}</p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href="/seo-audit"
-            className="bg-primary-container text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex items-center gap-2 rounded-xl px-6 py-3.5 font-semibold shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
-          >
-            <Icon name="fact_check" size={20} />
-            Get an SEO audit
-          </Link>
-          <Link
-            href="/contact?subject=SEO%20services"
-            className="bg-surface-card text-on-surface hover:border-primary-container inline-flex items-center gap-2 rounded-xl border border-[var(--border)] px-6 py-3.5 font-semibold transition-colors"
-          >
-            <Icon name="mail" size={20} />
-            Request a quote
-          </Link>
+      <HubHero
+        trail={trail}
+        eyebrow="Complete SEO Services"
+        heading={heading}
+        subheading={subheading}
+        stats={[
+          { value: SERVICE_PAGES.length, label: 'SEO Services' },
+          {
+            value: (
+              <>
+                {INDUSTRIES.length}
+                <sup className="text-base">+</sup>
+              </>
+            ),
+            label: 'Industries Served',
+          },
+          { value: 'Free', label: 'SEO Audit' },
+        ]}
+      />
+
+      <div className="bg-white py-20 lg:py-[100px]">
+        <div className="container-page">
+          {categories.map(({ id, title, icon, services }) => (
+            <section key={id} aria-labelledby={`hub-${id}`} className="mb-16">
+              <HubSectionHeader
+                id={`hub-${id}`}
+                icon={icon}
+                title={title}
+                count={`${services.length} ${services.length === 1 ? 'Service' : 'Services'}`}
+              />
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {services.map((s, i) => (
+                  <ServiceCard
+                    key={s.slug}
+                    service={s}
+                    tag={SERVICE_TAGS[s.slug]}
+                    featured={i === 0}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+
+          <section aria-labelledby="hub-industries">
+            <HubSectionHeader
+              id="hub-industries"
+              icon={INDUSTRIES_ICON}
+              title={INDUSTRIES_TITLE}
+              count={`${INDUSTRIES.length}+ Industries`}
+            />
+            <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+              {INDUSTRIES.map((ind) => (
+                <li key={ind.name}>
+                  <IndustryTile name={ind.name} icon={ind.icon} />
+                </li>
+              ))}
+            </ul>
+          </section>
         </div>
       </div>
 
-      <h2 className="font-headline-md text-headline-md mt-16">What we do</h2>
-      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {SERVICE_PAGES.map((s) => (
-          <Link
-            key={s.slug}
-            href={s.path}
-            className="surface-card hover:border-primary-container flex flex-col p-6 transition-colors"
-          >
-            <div className="bg-surface-container-low text-primary-container mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
-              <Icon name={s.icon} size={26} />
-            </div>
-            <h3 className="font-title-md text-title-md">{s.name}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{s.description}</p>
-            <span className="text-primary-container mt-4 inline-flex items-center gap-1 text-sm font-semibold">
-              Learn more
-              <Icon name="arrow_forward" size={16} />
-            </span>
-          </Link>
-        ))}
-      </div>
-
-      <h2 className="font-headline-md text-headline-md mt-16">How it works</h2>
-      <ol className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-        {STEPS.map((s, i) => (
-          <li key={s.title} className="surface-card p-6">
-            <span className="text-primary-container font-semibold">Step {i + 1}</span>
-            <h3 className="font-title-md text-title-md mt-1">{s.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{s.body}</p>
-          </li>
-        ))}
-      </ol>
-
-      <div className="surface-card mt-16 flex flex-col items-start justify-between gap-6 p-8 md:flex-row md:items-center">
-        <div className="max-w-2xl">
-          <h2 className="font-headline-sm text-headline-sm">Want more traffic from search?</h2>
-          <p className="mt-2 text-[var(--text-muted)]">
-            Send us your website. We will reply with what we would fix first.
-          </p>
-        </div>
-        <Link
-          href="/contact?subject=SEO%20services"
-          className="bg-primary-container text-on-primary hover:bg-primary inline-flex shrink-0 items-center gap-2 rounded-xl px-6 py-3.5 font-semibold shadow-md transition-colors"
-        >
-          Request a quote
-          <Icon name="arrow_forward" size={20} />
-        </Link>
-      </div>
-    </div>
+      <HubCtaBand quoteHref={QUOTE_HREF} />
+    </>
   );
 }
