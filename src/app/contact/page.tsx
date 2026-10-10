@@ -43,6 +43,16 @@ function presetSubject(param: string | string[] | undefined): string {
   return SUBJECTS.find((s) => s.toLowerCase() === wanted) ?? '';
 }
 
+/**
+ * ?service=Plumber%20SEO (the service pages' quote links) prefills the message
+ * with "I'm interested in Plumber SEO." Trimmed, capped at 100 characters, and
+ * used only as a textarea default value, which React escapes.
+ */
+function presetMessage(param: string | string[] | undefined): string {
+  const name = (Array.isArray(param) ? param[0] : param)?.trim().slice(0, 100).trim();
+  return name ? `I'm interested in ${name}.` : '';
+}
+
 const FAQ: { q: string; a: string; link?: { label: string; href: string } }[] = [
   {
     q: 'How do I list my business?',
@@ -151,11 +161,17 @@ function ArrowLink({ href, children }: { href: string; children: ReactNode }) {
 export default async function ContactPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sent?: string; error?: string; subject?: string | string[] }>;
+  searchParams: Promise<{
+    sent?: string;
+    error?: string;
+    subject?: string | string[];
+    service?: string | string[];
+  }>;
 }) {
   // Reading ?sent / ?error / ?subject makes this page render per request.
   const sp = await searchParams;
   const subject = presetSubject(sp.subject);
+  const message = presetMessage(sp.service);
   const [sections, settings] = await Promise.all([getPageSections('contact'), getSettings()]);
   const header = findSection(sections, 'header');
   const email = settingText(settings, 'contact.email');
@@ -336,11 +352,14 @@ export default async function ContactPage({
               </div>
               <div className="relative">
                 <textarea
+                  // Same as the select: a new ?service on this route must remount the textarea.
+                  key={message}
                   id="contact-message"
                   name="message"
                   required
                   rows={7}
                   maxLength={5000}
+                  defaultValue={message}
                   placeholder=" "
                   className={`${field} resize-y pt-7`}
                 />
