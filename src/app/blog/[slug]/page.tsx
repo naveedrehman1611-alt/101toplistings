@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getBlogPost, getBlogPosts } from '@/lib/queries';
-import { Breadcrumbs } from '@/components/ui';
+import { PageHero } from '@/components/page-hero';
 import { SITE_URL } from '@/lib/supabase';
 import { SHARE_IMAGE } from '@/lib/seo';
 import { Markdown } from '@/components/markdown';
@@ -62,46 +62,50 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   ];
 
   return (
-    <div className="container-page py-12">
+    <>
       <JsonLd data={breadcrumbSchema(trail, `/blog/${post.slug}`)} />
       {/* The title is editor-written: escape "<" so a "</script>" in it cannot close the tag. */}
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(jsonLd)} />
-      <Breadcrumbs trail={trail} />
-      <article className="mx-auto max-w-2xl">
-        <h1 className="font-headline-lg text-headline-lg">{post.title}</h1>
-        {post.standfirst ? (
-          <p className="mt-4 text-lg text-[var(--text-muted)]">{post.standfirst}</p>
-        ) : null}
+      <PageHero
+        trail={trail}
+        eyebrow="From the blog"
+        heading={post.title}
+        subheading={post.standfirst || undefined}
+      >
         {post.read_minutes ? (
-          <p className="mt-3 text-sm text-[var(--text-muted)]">{post.read_minutes} min read</p>
+          <p className="text-sm text-white/70">{post.read_minutes} min read</p>
         ) : null}
-        <div className="mt-8">{post.body ? <Markdown source={post.body} /> : null}</div>
-        <p className="border-border-subtle mt-10 border-t pt-6 text-[var(--text-muted)]">
-          <Link href="/seo-services" className="text-brand-700 font-semibold hover:underline">
-            Need help with SEO?
-          </Link>{' '}
-          or{' '}
-          <Link href="/add-business" className="text-brand-700 font-semibold hover:underline">
-            list your business
-          </Link>
-          .
-        </p>
-      </article>
+      </PageHero>
+      <div className="container-page py-10 md:py-12">
+        <article className="mx-auto max-w-2xl">
+          <div>{post.body ? <Markdown source={post.body} /> : null}</div>
+          <p className="border-border-subtle mt-10 border-t pt-6 text-[var(--text-muted)]">
+            <Link href="/seo-services" className="text-brand-700 font-semibold hover:underline">
+              Need help with SEO?
+            </Link>{' '}
+            or{' '}
+            <Link href="/add-business" className="text-brand-700 font-semibold hover:underline">
+              list your business
+            </Link>
+            .
+          </p>
+        </article>
 
-      {related.length > 0 ? (
-        <section className="mx-auto mt-16 max-w-2xl">
-          <h2 className="font-headline-sm text-headline-sm">Related articles</h2>
-          <ul className="mt-4 space-y-2">
-            {related.map((p) => (
-              <li key={p.id}>
-                <Link href={`/blog/${p.slug}`} className="text-brand-700 hover:underline">
-                  {p.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-    </div>
+        {related.length > 0 ? (
+          <section className="mx-auto mt-16 max-w-2xl">
+            <h2 className="font-headline-sm text-headline-sm">Related articles</h2>
+            <ul className="mt-4 space-y-2">
+              {related.map((p) => (
+                <li key={p.id}>
+                  <Link href={`/blog/${p.slug}`} className="text-brand-700 hover:underline">
+                    {p.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+      </div>
+    </>
   );
 }

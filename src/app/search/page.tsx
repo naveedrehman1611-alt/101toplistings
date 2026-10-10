@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { getCategories, getCities, searchListings } from '@/lib/queries';
 import { ListingFilters } from '@/components/listing-filters';
 import { Results, parsePage, parseSort } from '@/components/results';
-import { Breadcrumbs } from '@/components/ui';
+import { PageHero } from '@/components/page-hero';
 import { seoMetadata } from '@/lib/seo';
 
 // SSR — query-dependent, never cached (§1.5 rendering table).
@@ -72,76 +72,80 @@ export default async function SearchPage({
     : {};
 
   return (
-    <div className="container-page py-12">
-      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: 'Search' }]} />
-      <h1 className="font-headline-lg text-headline-lg">{heading}</h1>
-
-      <div className="mt-6">
-        <ListingFilters
-          action="/search"
-          q={q}
-          category={cat?.slug}
-          city={city?.slug}
-          sort={effectiveSort}
-          categories={categories}
-          cities={cities}
-          nearMe
-          near={near ?? undefined}
-        />
-      </div>
-
-      {near ? (
-        <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-[var(--text-muted)]">Distance:</span>
-          {RADII.map((r) => (
-            <Link
-              key={r}
-              href={`/search?${new URLSearchParams({
-                ...(q ? { q } : {}),
-                ...(cat ? { category: cat.slug } : {}),
-                ...(city ? { city: city.slug } : {}),
-                ...nearParams,
-                radius: String(r),
-                sort: effectiveSort,
-              }).toString()}`}
-              className={`rounded-lg border px-3 py-1 ${
-                near.radius === r
-                  ? 'border-brand-500 bg-brand-50 text-brand-800'
-                  : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-              }`}
-            >
-              {r} km
-            </Link>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="mt-10">
-        {active ? (
-          <Results
-            listings={listings}
-            basePath="/search"
-            page={page}
-            perPage={PER_PAGE}
+    <>
+      <PageHero
+        trail={[{ label: 'Home', href: '/' }, { label: 'Search' }]}
+        eyebrow="Search the directory"
+        heading={heading}
+      />
+      <div className="container-page py-10 md:py-12">
+        <div>
+          <ListingFilters
+            action="/search"
+            q={q}
+            category={cat?.slug}
+            city={city?.slug}
             sort={effectiveSort}
-            query={q || undefined}
-            params={{ category: cat?.slug, city: city?.slug, ...nearParams }}
-            nearest={Boolean(near)}
-            cityNames={new Map(cities.map((c) => [c.id, c.name]))}
-            emptyTitle={near ? 'Nothing nearby yet' : 'No matches'}
-            emptyBody={
-              near
-                ? `Nothing within ${near.radius} km of you matches. Try a wider distance, or browse by city.`
-                : 'Nothing matched. Try a shorter keyword, another city, or clear a filter.'
-            }
+            categories={categories}
+            cities={cities}
+            nearMe
+            near={near ?? undefined}
           />
-        ) : (
-          <p className="text-[var(--text-muted)]">
-            Type a keyword, pick a category or city, or press Near me to see what&apos;s close by.
-          </p>
-        )}
+        </div>
+
+        {near ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-[var(--text-muted)]">Distance:</span>
+            {RADII.map((r) => (
+              <Link
+                key={r}
+                href={`/search?${new URLSearchParams({
+                  ...(q ? { q } : {}),
+                  ...(cat ? { category: cat.slug } : {}),
+                  ...(city ? { city: city.slug } : {}),
+                  ...nearParams,
+                  radius: String(r),
+                  sort: effectiveSort,
+                }).toString()}`}
+                className={`rounded-lg border px-3 py-1 ${
+                  near.radius === r
+                    ? 'border-brand-500 bg-brand-50 text-brand-800'
+                    : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
+                }`}
+              >
+                {r} km
+              </Link>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-10">
+          {active ? (
+            <Results
+              listings={listings}
+              basePath="/search"
+              page={page}
+              perPage={PER_PAGE}
+              sort={effectiveSort}
+              query={q || undefined}
+              params={{ category: cat?.slug, city: city?.slug, ...nearParams }}
+              nearest={Boolean(near)}
+              cityNames={new Map(cities.map((c) => [c.id, c.name]))}
+              emptyTitle={near ? 'Nothing nearby yet' : 'No matches'}
+              emptyBody={
+                near
+                  ? `Nothing within ${near.radius} km of you matches. Try a wider distance, or browse by city.`
+                  : 'Nothing matched. Try a shorter keyword, another city, or clear a filter.'
+              }
+            />
+          ) : (
+            <p className="text-[var(--text-muted)]">
+              Type a keyword, pick a category or city, or press Near me to see what&apos;s close by.
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

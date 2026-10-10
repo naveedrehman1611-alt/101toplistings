@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { getSettings, settingText } from '@/lib/queries';
-import { Breadcrumbs, Button } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { Icon, type IconName } from '@/components/icon';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
+import { PageHero } from '@/components/page-hero';
 import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -55,18 +56,26 @@ export default async function AddBusinessPage() {
   const trail = [{ label: 'Home', href: '/' }, { label: 'Add your business' }];
 
   return (
-    <div className="container-page py-12">
+    <>
       <JsonLd data={breadcrumbSchema(trail, '/add-business')} />
-      <Breadcrumbs trail={trail} />
-      <div className="max-w-3xl">
-        <h1 className="font-headline-lg text-headline-lg">Add your business online</h1>
-        <p className="mt-4 text-lg text-[var(--text-muted)]">
-          Adding your business to {brand} creates a free business listing: a page with your
-          description, services, location, contact details and website that customers can find by
-          category or city. Want to list your business online? You will need an account, and the
-          form takes a few minutes.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
+      <PageHero
+        trail={trail}
+        eyebrow="Free business listing"
+        heading={
+          <>
+            Add your business <span className="text-hero-green-light">online</span>
+          </>
+        }
+        subheading={
+          <>
+            Adding your business to {brand} creates a free business listing: a page with your
+            description, services, location, contact details and website that customers can find by
+            category or city. Want to list your business online? You will need an account, and the
+            form takes a few minutes.
+          </>
+        }
+      >
+        <div className="flex flex-wrap gap-3">
           <Button href="/dashboard/listings/new">
             <Icon name="add_business" size={20} />
             Create listing
@@ -75,45 +84,46 @@ export default async function AddBusinessPage() {
             Claim an existing listing
           </Button>
         </div>
-      </div>
-
-      <h2 className="font-headline-md text-headline-md mt-16">Why add a business listing</h2>
-      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-        {WHY.map((w) => (
-          <div key={w.title} className="surface-card flex flex-col p-6">
-            <div className="bg-surface-container-low text-primary-container mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
-              <Icon name={w.icon} size={26} />
+      </PageHero>
+      <div className="container-page py-10 md:py-12">
+        <h2 className="font-headline-md text-headline-md">Why add a business listing</h2>
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {WHY.map((w) => (
+            <div key={w.title} className="surface-card flex flex-col p-6">
+              <div className="bg-surface-container-low text-primary-container mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
+                <Icon name={w.icon} size={26} />
+              </div>
+              <h3 className="font-title-md text-title-md">{w.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{w.body}</p>
             </div>
-            <h3 className="font-title-md text-title-md">{w.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{w.body}</p>
-          </div>
-        ))}
+          ))}
+        </div>
+
+        <h2 className="font-headline-md text-headline-md mt-16">What a good listing contains</h2>
+        <p className="mt-3 max-w-3xl text-[var(--text-muted)]">
+          The more complete your submit business listing form is, the easier it is for customers to
+          trust and contact you.
+        </p>
+        <ul className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+          {GOOD_LISTING.map((item) => (
+            <li key={item} className="surface-card flex items-start gap-3 p-4 text-sm">
+              <Icon
+                name="check_circle"
+                size={20}
+                className="text-primary-container mt-0.5 shrink-0"
+              />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+
+        <h2 className="font-headline-md text-headline-md mt-16">How review works</h2>
+        <p className="mt-3 max-w-3xl leading-relaxed text-[var(--text-muted)]">
+          Every listing is reviewed before it goes live. You can edit your listing afterwards, but
+          its published status is decided by our team, not by the owner. If the business already
+          appears in the directory, claim it instead of adding a duplicate.
+        </p>
       </div>
-
-      <h2 className="font-headline-md text-headline-md mt-16">What a good listing contains</h2>
-      <p className="mt-3 max-w-3xl text-[var(--text-muted)]">
-        The more complete your submit business listing form is, the easier it is for customers to
-        trust and contact you.
-      </p>
-      <ul className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
-        {GOOD_LISTING.map((item) => (
-          <li key={item} className="surface-card flex items-start gap-3 p-4 text-sm">
-            <Icon
-              name="check_circle"
-              size={20}
-              className="text-primary-container mt-0.5 shrink-0"
-            />
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-
-      <h2 className="font-headline-md text-headline-md mt-16">How review works</h2>
-      <p className="mt-3 max-w-3xl leading-relaxed text-[var(--text-muted)]">
-        Every listing is reviewed before it goes live. You can edit your listing afterwards, but its
-        published status is decided by our team, not by the owner. If the business already appears
-        in the directory, claim it instead of adding a duplicate.
-      </p>
-    </div>
+    </>
   );
 }
