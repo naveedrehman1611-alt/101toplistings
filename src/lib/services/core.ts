@@ -87,7 +87,7 @@ export const CORE_PAGES: ServicePage[] = [
     ],
     ctaLabel: 'Get a Free SEO Audit',
     ctaHref: '/seo-audit',
-    related: ['nationwide-seo', 'lead-generation-seo', 'content-marketing'],
+    related: ['multi-location-seo', 'lead-generation-seo', 'content-marketing'],
     guides: [SEO_GUIDES],
   },
   {
@@ -96,7 +96,7 @@ export const CORE_PAGES: ServicePage[] = [
     name: 'International SEO',
     title: 'International SEO Services | Hreflang & Global Setup',
     description:
-      'International SEO for sites that serve several countries or languages: hreflang, site structure, geotargeting and localized content so the right page ranks.',
+      'International SEO for multilingual and multi-country sites: hreflang, site structure, geotargeting and localized content so the right page ranks.',
     h1: 'International SEO services',
     intro:
       'International SEO is the technical and content setup that lets search engines show the right version of your site to people in each country and language. It covers hreflang annotations, domain or folder structure, geotargeting and localization, so your French, German or Brazilian pages do not compete with each other or get ignored.',
@@ -129,6 +129,14 @@ export const CORE_PAGES: ServicePage[] = [
         title: 'Per-market reporting',
         body: 'Visibility, traffic and conversions are segmented by country and language, including markets where Google is not the leading engine, so you can see which versions are performing and which need work.',
       },
+      {
+        title: 'Market prioritisation',
+        body: 'Countries and languages are scored on search demand, competition, buying power, delivery capability and legal fit, then put into a launch order, so effort goes first to the markets where returns look likeliest.',
+      },
+      {
+        title: 'Translated metadata and schema',
+        body: 'Titles, descriptions, headings, image alt text and structured data are written for each language version, because untranslated snippets are a common reason local pages underperform. We also check how snippets display in each market’s results.',
+      },
     ],
     steps: [
       {
@@ -159,7 +167,7 @@ export const CORE_PAGES: ServicePage[] = [
       },
       {
         q: 'Is translating my site enough?',
-        a: 'Rarely. Direct translation often misses local search terms, units, currency, legal wording and buying habits. We recommend localized pages for markets that matter and lighter treatment for the rest. We usually start with your top two or three markets and extend from there as results justify it.',
+        a: 'Rarely. Direct translation often misses local search terms, units, currency, legal wording and buying habits. We recommend localized pages for markets that matter and lighter treatment for the rest.',
       },
       {
         q: 'What about markets where Google is not dominant?',
@@ -169,10 +177,22 @@ export const CORE_PAGES: ServicePage[] = [
         q: 'How long does international SEO take?',
         a: 'Technical fixes can be reflected within weeks of re-crawling, while building authority in a new market takes longer. We cannot promise specific results, but we will report progress for each country separately. Large sites can take longer because search engines revisit pages at their own pace.',
       },
+      {
+        q: 'Do we need to launch in every country at once?',
+        a: 'Rarely. Starting with the strongest few markets and expanding in phases usually works better. We set out an order based on opportunity and your ability to serve each market properly, and early progress in a few markets also builds the case for further investment.',
+      },
+      {
+        q: 'Who should own SEO in each market?',
+        a: 'That depends on your organisation. Some brands keep a central team that owns templates, standards and tracking, with local reviewers for language and offers; others give each country a specialist. We help you choose a model and write down responsibilities so nothing falls between teams.',
+      },
+      {
+        q: 'Is machine translation acceptable?',
+        a: 'It can help as a first draft, but unreviewed machine output tends to be stiff or wrong and can read as low-effort content. We recommend native-speaker review, especially for pages that sell or carry legal weight, because mistakes in meaning can damage trust and lose sales.',
+      },
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['multilingual-seo', 'global-seo', 'technical-seo'],
+    related: ['enterprise-seo', 'national-seo', 'technical-seo'],
     guides: [SEO_GUIDES],
   },
   {
@@ -431,15 +451,15 @@ export const CORE_PAGES: ServicePage[] = [
     guides: [SEO_GUIDES],
   },
   {
-    slug: 'nationwide-seo',
-    path: '/seo-services/nationwide-seo',
-    name: 'Nationwide SEO',
-    title: 'Nationwide SEO | SEO for Multi-Location Brands',
+    slug: 'multi-location-seo',
+    path: '/seo-services/multi-location-seo',
+    name: 'Multi-Location SEO',
+    title: 'Multi-Location SEO | SEO for Brands With Many Branches',
     description:
-      'Nationwide SEO for brands with many branches or service areas: location pages at scale, consistent listings and reporting for each location and the whole brand.',
-    h1: 'Nationwide SEO services',
+      'Multi-location SEO for brands with many branches or service areas: location pages at scale, consistent listings and reporting for each location and the whole brand.',
+    h1: 'Multi-location SEO services',
     intro:
-      'Nationwide SEO is search optimization for brands that serve customers through many branches, stores or service areas. It combines a strong brand site with a large set of location pages, consistent listings and local profiles, so each branch can appear for nearby searches while the business builds authority as a whole.',
+      'Multi-location SEO is search optimization for brands that serve customers through many branches, stores or service areas. It combines a strong brand site with a large set of location pages, consistent listings and local profiles, so each branch can appear for nearby searches while the business builds authority as a whole.',
     icon: 'lan',
     category: 'seo',
     hub: 'core',
@@ -490,8 +510,8 @@ export const CORE_PAGES: ServicePage[] = [
     ],
     faq: [
       {
-        q: 'How is nationwide SEO different from national SEO?',
-        a: 'National SEO ranks one site for broad terms across a country. Nationwide SEO is about being present in many individual places at once, through location pages, listings and local signals for each branch or service area. It is a question of scope.',
+        q: 'How is multi-location SEO different from national SEO?',
+        a: 'National SEO ranks one site for broad terms across a country. Multi-location SEO is about being present in many individual places at once, through location pages, listings and local signals for each branch or service area. It is a question of scope.',
       },
       {
         q: 'Does every branch need its own page?',
@@ -554,6 +574,14 @@ export const CORE_PAGES: ServicePage[] = [
         title: 'Scheduled scope reviews',
         body: 'Every few months we revisit the plan, retire finished work, add new priorities and rebalance effort as results come in and the business changes. You are never locked into work that has stopped helping.',
       },
+      {
+        title: 'A named lead',
+        body: 'One accountable person who knows your business and brings issues and opportunities to you before you ask. They are the person you contact when something unexpected happens.',
+      },
+      {
+        title: 'Deep technical and data work',
+        body: 'Log file analysis, rendering checks, large-scale crawl segmentation and custom data pulls for problems standard audits are not designed to catch. These take time and experience, so we add them to the scope only where the likely payoff justifies it.',
+      },
     ],
     steps: [
       {
@@ -591,13 +619,21 @@ export const CORE_PAGES: ServicePage[] = [
         a: 'No. Small sites often benefit most, since a narrow, well-chosen scope avoids wasted work. The approach is the same at any size; only the number of workstreams and the amount of detail change. Budget also shapes the scope, and we will tell you what fits.',
       },
       {
-        q: 'How is this different from bespoke or consulting work?',
-        a: 'Custom SEO means we deliver the work in a tailored scope. Consulting is advice for your team to carry out. Both start with analysis, and we can combine them if you want guidance on some tasks and hands-on help on others.',
+        q: 'Is custom SEO the same as bespoke SEO, and how does it differ from consulting?',
+        a: 'Custom and bespoke SEO describe the same thing here: we deliver the work in a scope tailored to your site. Consulting is advice for your team to carry out. Both start with analysis, and we can combine them if you want guidance on some tasks and hands-on help on others.',
+      },
+      {
+        q: 'Who will work on my account?',
+        a: 'Experienced specialists lead the strategy and key decisions, supported by other team members for routine tasks. You are told who works on your account and what each person is responsible for.',
+      },
+      {
+        q: 'Do you guarantee results?',
+        a: 'No. A tailored plan buys focus, expertise and accountability, not a promised ranking. We commit to clear goals, honest reporting and regular reviews of whether the work is paying off, so you can decide whether the investment is justified.',
       },
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['bespoke-seo', 'seo-consulting', 'seo-audit-services'],
+    related: ['seo-strategy', 'seo-consulting', 'seo-audit-services'],
     guides: [SEO_GUIDES],
   },
 ];

@@ -436,7 +436,7 @@ export const INDUSTRY_PAGES_1: ServicePage[] = [
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['travel-seo', 'local-seo', 'multilingual-seo'],
+    related: ['travel-seo', 'local-seo', 'international-seo'],
     guides: [SEO_GUIDES, SCHEMA_TOOL],
   },
   {
@@ -776,7 +776,7 @@ export const INDUSTRY_PAGES_1: ServicePage[] = [
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['ecommerce-seo', 'seo-for-online-stores', 'content-marketing'],
+    related: ['ecommerce-seo', 'retail-seo', 'content-marketing'],
     guides: [SEO_GUIDES, SPEED_TOOL],
   },
   {
@@ -861,7 +861,7 @@ export const INDUSTRY_PAGES_1: ServicePage[] = [
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['hotel-seo', 'multilingual-seo', 'content-marketing'],
+    related: ['hotel-seo', 'international-seo', 'content-marketing'],
     guides: [SEO_GUIDES, SCHEMA_TOOL],
   },
   {
@@ -1116,7 +1116,7 @@ export const INDUSTRY_PAGES_1: ServicePage[] = [
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['multilingual-seo', 'enterprise-seo', 'content-marketing'],
+    related: ['international-seo', 'enterprise-seo', 'content-marketing'],
     guides: [SEO_GUIDES, SCHEMA_TOOL],
   },
   {

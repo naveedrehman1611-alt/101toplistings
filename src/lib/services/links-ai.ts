@@ -4,7 +4,7 @@ const SEO_QUOTE = '/contact?subject=SEO%20services';
 const SEO_GUIDES = { label: 'SEO guides and how-tos', href: '/blog/seo' };
 
 /**
- * Link-and-partnership service pages (white hat, white label, reseller, outsourced)
+ * Link-and-partnership service pages (white hat, white label, outsourced)
  * and the AI and new-search pages (AI SEO, AEO, GEO, voice search, video).
  */
 export const LINKS_AI_PAGES: ServicePage[] = [
@@ -132,6 +132,14 @@ export const LINKS_AI_PAGES: ServicePage[] = [
         title: 'Confidentiality terms',
         body: 'We agree not to contact your clients or mention the arrangement, and we sign a non-disclosure agreement before receiving any client access or data. We work through accounts you control, and can describe our security practices on request.',
       },
+      {
+        title: 'Packaged service tiers',
+        body: 'Clear starter, growth and custom tiers, each with a defined list of deliverables, so you can put SEO on your price list and explain it in a sentence. Each tier states what is and is not included.',
+      },
+      {
+        title: 'Pitch-ready prospect audits',
+        body: 'A short audit of a prospect’s site you can use in a sales meeting, showing concrete issues and opportunities and pointing naturally to the package that fits. We keep these honest, so prospects see real findings, not a scare list.',
+      },
     ],
     steps: [
       {
@@ -172,95 +180,18 @@ export const LINKS_AI_PAGES: ServicePage[] = [
         q: 'Can you guarantee results for my clients?',
         a: 'No agency can guarantee rankings or traffic, and you should avoid promising them to your clients. We provide a documented plan, honest reporting and well-executed work that you can stand behind in client meetings. Careful wording in your proposals protects both your reputation and your client relationships, and we are happy to review your contract language if that would help.',
       },
-    ],
-    ctaLabel: 'Request a quote',
-    ctaHref: SEO_QUOTE,
-    related: ['seo-reseller', 'outsourced-seo', 'agency-seo'],
-    guides: [SEO_GUIDES],
-  },
-  {
-    slug: 'seo-reseller',
-    path: '/seo-services/seo-reseller',
-    name: 'SEO Reseller',
-    title: 'SEO Reseller Services | Packaged SEO to Resell',
-    description:
-      'Add SEO to your catalogue with ready-to-sell packages, pitch audits and fulfilment handled for you, so you can set your own prices and margin.',
-    h1: 'SEO reseller services',
-    intro:
-      'SEO reselling is when a web design, marketing or IT firm sells SEO as a product under its own name and fulfils it through a delivery partner. The reseller owns the pricing, the sales conversation and the client, while the partner does the work. It suits firms whose customers already ask about search but who want a defined offer rather than one-off projects.',
-    icon: 'handshake',
-    category: 'seo',
-    hub: 'links',
-    tag: 'Reseller',
-    includes: [
       {
-        title: 'Packaged service tiers',
-        body: 'Clear starter, growth and custom tiers, each with a defined list of deliverables, so you can put SEO on a price list and explain it in a single sentence. Each tier states what is and is not included.',
+        q: 'Is white label SEO the same as SEO reselling?',
+        a: 'They overlap. Reselling is about packaging, pricing and selling SEO as part of your own catalogue, while white label describes us delivering the work unbranded behind you. Many partners do both, and we can set it up either way.',
       },
       {
-        title: 'Pitch-ready prospect audits',
-        body: 'A short audit of a prospect’s site that you can use in a sales meeting, showing concrete issues and opportunities and pointing naturally to the package that fits. We keep these audits short and honest, so prospects see real findings, not a scare list.',
-      },
-      {
-        title: 'Sales and scoping material',
-        body: 'Plain-English service descriptions, answers to common objections, and scoping questions that help you quote correctly and avoid promising things SEO cannot deliver. We also share a short glossary and example client emails, so your sales team can answer common questions without improvising.',
-      },
-      {
-        title: 'Margin-friendly pricing structure',
-        body: 'A wholesale rate card per package, so you can calculate your margin before you quote and add your own fees for account management or related services. We keep the rate card simple, so quoting takes minutes.',
-      },
-      {
-        title: 'Fulfilment and quality control',
-        body: 'Our team carries out the work behind each package and checks it before delivery, with a named contact who handles your queries and escalations. Deliverables are reviewed against the package definition, and anything unclear is flagged to you before it reaches the client.',
-      },
-      {
-        title: 'Renewal and upsell prompts',
-        body: 'Each report highlights the next logical step, such as content, local or technical work, giving you a natural reason to expand the account. Suggestions are based on what the data shows, not on pressure to sell more, so you can recommend them to clients with confidence.',
-      },
-    ],
-    steps: [
-      {
-        title: 'Choose your offer',
-        body: 'We help you pick the packages that fit your customers and agree what is included in each, so nothing is vague when you sell.',
-      },
-      {
-        title: 'Equip your sales team',
-        body: 'You receive audit templates, scope sheets and explanations that let non-specialists talk about SEO with confidence. We also run a short walkthrough call for your sales staff.',
-      },
-      {
-        title: 'Fulfil each sale',
-        body: 'When a client signs, you send us the brief and access. We deliver the work to the agreed package and report back to you.',
-      },
-      {
-        title: 'Review and expand',
-        body: 'We go over results with you periodically and suggest where an existing client could use more, or where a new package would help.',
-      },
-    ],
-    faq: [
-      {
-        q: 'How much margin can I make reselling SEO?',
-        a: 'That depends on the package and the price you set for your clients. We give you a wholesale rate, and you decide the retail price, so your margin is the difference minus your own account management time. We do not dictate what you charge.',
-      },
-      {
-        q: 'Do I need SEO knowledge to resell it?',
-        a: 'Not deep knowledge. You need to understand what each package includes and what SEO can and cannot promise. We provide briefing notes and talking points, and we can join a client call if a technical question comes up. Most partners learn the basics within a few client conversations.',
-      },
-      {
-        q: 'How is reselling different from white label work?',
-        a: 'They overlap. Reselling is about packaging, pricing and selling SEO as part of your catalogue, while white label is about us delivering the work unbranded. Many partners do both, and we can set it up either way. Which setup suits you mostly depends on whether clients know we exist.',
-      },
-      {
-        q: 'Can I customise packages for different clients?',
-        a: 'Yes. Packages are a starting point. If a client needs more content, a heavier technical focus or support in several languages, we can adjust the scope and the wholesale rate to match it. Custom work is quoted before it starts, so you can price it into your own proposal without surprises.',
-      },
-      {
-        q: 'What should I tell clients about timing and results?',
-        a: 'Be honest that SEO takes time and depends on competition, site history and budget. We never guarantee rankings, and we recommend you do not either. Instead, set expectations around the work done each month and the measures we will report.',
+        q: 'Do I need SEO knowledge to offer it?',
+        a: 'Not deep knowledge. You need to understand what each package includes and what SEO can and cannot promise. We provide briefing notes and talking points, and we can join a client call under your brand if a technical question comes up.',
       },
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['white-label-seo', 'agency-seo', 'outsourced-seo'],
+    related: ['offshore-seo', 'outsourced-seo', 'agency-seo'],
     guides: [SEO_GUIDES],
   },
   {
