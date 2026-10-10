@@ -41,6 +41,11 @@ function isServicesLink(item: MenuItem): boolean {
   return item.url.replace(/\/+$/, '') === SERVICES_BASE;
 }
 
+/** Likewise, an admin link to the tools hub becomes the Free SEO Tools menu. */
+function isToolsLink(item: MenuItem): boolean {
+  return item.url.replace(/\/+$/, '') === TOOLS_BASE;
+}
+
 export function Header({
   brand,
   nav,
@@ -79,12 +84,138 @@ export function Header({
 
   const close = () => setOpen(false);
   const primary = withHome(nav);
-  // Without an admin link to the hub, the Services menu sits just before the tools.
+  // Without an admin link to its hub, the Services menu sits just before the
+  // tools, and the tools menu goes last.
   const servicesLink = primary.find(isServicesLink);
+  const toolsLink = primary.find(isToolsLink);
   // Login (or the account link) and Add Listing have their own buttons at the
-  // foot of the drawer, and the services hub its own section.
+  // foot of the drawer. The services and tools sections take the place of the
+  // first link to their hub, or follow the links when there is none.
   const drawerItems = withHome(mobileNav).filter(
-    (item) => item.url !== '/login' && item.url !== ADD_LISTING && !isServicesLink(item),
+    (item) => item.url !== '/login' && item.url !== ADD_LISTING,
+  );
+  const drawerServicesLink = drawerItems.find(isServicesLink);
+  const drawerToolsLink = drawerItems.find(isToolsLink);
+
+  // Drawer sections for the services and tools hubs, under the admin's label
+  // when they replace a menu link.
+  const servicesSection = (label = 'SEO Services') => (
+    <li key="mobile-services">
+      <button
+        type="button"
+        aria-expanded={servicesOpen}
+        aria-controls="mobile-services"
+        onClick={() => setServicesOpen((v) => !v)}
+        className={`font-label-md text-label-md flex w-full items-center justify-between rounded-lg px-3 py-3 transition-colors ${focusRing} ${
+          isServicePath(pathname, services)
+            ? 'text-primary-container font-semibold'
+            : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+        }`}
+      >
+        {label}
+        <Icon
+          name="expand_more"
+          size={20}
+          className={`transition-transform ${servicesOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      <div id="mobile-services" hidden={!servicesOpen} className="px-3 pb-2">
+        <ul className="mt-1 flex flex-col">
+          {services.map((service) => (
+            <li key={service.slug}>
+              <Link
+                href={service.path}
+                onClick={close}
+                aria-current={pathname === service.path ? 'page' : undefined}
+                className={`font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2 rounded-lg px-2 py-2 transition-colors ${focusRing}`}
+              >
+                <Icon name={service.icon} size={18} className="text-primary-container shrink-0" />
+                <span className="min-w-0 flex-1">{service.name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <Link
+          href={SERVICES_BASE}
+          onClick={close}
+          className={`font-label-md text-label-md text-primary-container mt-1 inline-flex items-center gap-1 rounded-sm px-2 py-2 font-semibold ${focusRing}`}
+        >
+          View all SEO services
+          <Icon name="north_east" size={16} />
+        </Link>
+      </div>
+    </li>
+  );
+
+  const toolsSection = (label = 'Free SEO Tools') => (
+    <li key="mobile-free-tools">
+      <button
+        type="button"
+        aria-expanded={toolsOpen}
+        aria-controls="mobile-free-tools"
+        onClick={() => setToolsOpen((v) => !v)}
+        className={`font-label-md text-label-md flex w-full items-center justify-between rounded-lg px-3 py-3 transition-colors ${focusRing} ${
+          isActive(pathname, TOOLS_BASE)
+            ? 'text-primary-container font-semibold'
+            : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+        }`}
+      >
+        {label}
+        <Icon
+          name="expand_more"
+          size={20}
+          className={`transition-transform ${toolsOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      <div id="mobile-free-tools" hidden={!toolsOpen} className="px-3 pb-2">
+        {TOOL_CATEGORIES.map((category) => (
+          <div key={category.id} className="mt-3">
+            <p className="font-label-sm text-label-sm text-secondary mb-1 tracking-wider uppercase">
+              {category.label}
+            </p>
+            <ul className="flex flex-col">
+              {category.tools.map((tool) => (
+                <li key={tool.slug}>
+                  {tool.status === 'live' ? (
+                    <Link
+                      href={toolHref(tool)}
+                      onClick={close}
+                      aria-current={pathname === toolHref(tool) ? 'page' : undefined}
+                      className={`font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2 rounded-lg px-2 py-2 transition-colors ${focusRing}`}
+                    >
+                      <Icon
+                        name={tool.icon}
+                        size={18}
+                        className="text-primary-container shrink-0"
+                      />
+                      <span className="min-w-0 flex-1">{tool.name}</span>
+                      {tool.isNew ? <NewPill /> : null}
+                    </Link>
+                  ) : (
+                    <span
+                      aria-disabled="true"
+                      className="font-body-sm text-body-sm text-secondary flex items-center gap-2 px-2 py-2 opacity-70"
+                    >
+                      <Icon name={tool.icon} size={18} className="shrink-0" />
+                      <span className="min-w-0 flex-1">{tool.name}</span>
+                      <SoonPill />
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        <Link
+          href={TOOLS_BASE}
+          onClick={close}
+          className={`font-label-md text-label-md text-primary-container mt-3 inline-flex items-center gap-1 rounded-sm px-2 py-2 font-semibold ${focusRing}`}
+        >
+          View all free tools
+          <Icon name="north_east" size={16} />
+        </Link>
+      </div>
+    </li>
   );
 
   return (
@@ -109,6 +240,9 @@ export function Header({
                     />
                   );
                 }
+                if (item === toolsLink) {
+                  return <ToolsMegaMenu key={`${item.url}|${item.label}`} label={item.label} />;
+                }
                 const active = isActive(pathname, item.url);
                 return (
                   <Link
@@ -126,7 +260,7 @@ export function Header({
                 );
               })}
               {servicesLink ? null : <ServicesMegaMenu services={services} />}
-              <ToolsMegaMenu />
+              {toolsLink ? null : <ToolsMegaMenu />}
             </nav>
 
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
@@ -213,6 +347,8 @@ export function Header({
 
               <ul className="flex flex-col gap-1">
                 {drawerItems.map((item) => {
+                  if (item === drawerServicesLink) return servicesSection(item.label);
+                  if (item === drawerToolsLink) return toolsSection(item.label);
                   const active = isActive(pathname, item.url);
                   return (
                     <li key={`${item.url}|${item.label}`}>
@@ -231,123 +367,8 @@ export function Header({
                     </li>
                   );
                 })}
-                <li>
-                  <button
-                    type="button"
-                    aria-expanded={servicesOpen}
-                    aria-controls="mobile-services"
-                    onClick={() => setServicesOpen((v) => !v)}
-                    className={`font-label-md text-label-md flex w-full items-center justify-between rounded-lg px-3 py-3 transition-colors ${focusRing} ${
-                      isServicePath(pathname, services)
-                        ? 'text-primary-container font-semibold'
-                        : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
-                    }`}
-                  >
-                    SEO Services
-                    <Icon
-                      name="expand_more"
-                      size={20}
-                      className={`transition-transform ${servicesOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  <div id="mobile-services" hidden={!servicesOpen} className="px-3 pb-2">
-                    <ul className="mt-1 flex flex-col">
-                      {services.map((service) => (
-                        <li key={service.slug}>
-                          <Link
-                            href={service.path}
-                            onClick={close}
-                            aria-current={pathname === service.path ? 'page' : undefined}
-                            className={`font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2 rounded-lg px-2 py-2 transition-colors ${focusRing}`}
-                          >
-                            <Icon
-                              name={service.icon}
-                              size={18}
-                              className="text-primary-container shrink-0"
-                            />
-                            <span className="min-w-0 flex-1">{service.name}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                    <Link
-                      href={SERVICES_BASE}
-                      onClick={close}
-                      className={`font-label-md text-label-md text-primary-container mt-1 inline-flex items-center gap-1 rounded-sm px-2 py-2 font-semibold ${focusRing}`}
-                    >
-                      View all SEO services
-                      <Icon name="north_east" size={16} />
-                    </Link>
-                  </div>
-                </li>
-                <li>
-                  <button
-                    type="button"
-                    aria-expanded={toolsOpen}
-                    aria-controls="mobile-free-tools"
-                    onClick={() => setToolsOpen((v) => !v)}
-                    className={`font-label-md text-label-md flex w-full items-center justify-between rounded-lg px-3 py-3 transition-colors ${focusRing} ${
-                      isActive(pathname, TOOLS_BASE)
-                        ? 'text-primary-container font-semibold'
-                        : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
-                    }`}
-                  >
-                    Free SEO Tools
-                    <Icon
-                      name="expand_more"
-                      size={20}
-                      className={`transition-transform ${toolsOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  <div id="mobile-free-tools" hidden={!toolsOpen} className="px-3 pb-2">
-                    {TOOL_CATEGORIES.map((category) => (
-                      <div key={category.id} className="mt-3">
-                        <p className="font-label-sm text-label-sm text-secondary mb-1 tracking-wider uppercase">
-                          {category.label}
-                        </p>
-                        <ul className="flex flex-col">
-                          {category.tools.map((tool) => (
-                            <li key={tool.slug}>
-                              {tool.status === 'live' ? (
-                                <Link
-                                  href={toolHref(tool)}
-                                  onClick={close}
-                                  aria-current={pathname === toolHref(tool) ? 'page' : undefined}
-                                  className={`font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low flex items-center gap-2 rounded-lg px-2 py-2 transition-colors ${focusRing}`}
-                                >
-                                  <Icon
-                                    name={tool.icon}
-                                    size={18}
-                                    className="text-primary-container shrink-0"
-                                  />
-                                  <span className="min-w-0 flex-1">{tool.name}</span>
-                                  {tool.isNew ? <NewPill /> : null}
-                                </Link>
-                              ) : (
-                                <span
-                                  aria-disabled="true"
-                                  className="font-body-sm text-body-sm text-secondary flex items-center gap-2 px-2 py-2 opacity-70"
-                                >
-                                  <Icon name={tool.icon} size={18} className="shrink-0" />
-                                  <span className="min-w-0 flex-1">{tool.name}</span>
-                                  <SoonPill />
-                                </span>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                    <Link
-                      href={TOOLS_BASE}
-                      onClick={close}
-                      className={`font-label-md text-label-md text-primary-container mt-3 inline-flex items-center gap-1 rounded-sm px-2 py-2 font-semibold ${focusRing}`}
-                    >
-                      View all free tools
-                      <Icon name="north_east" size={16} />
-                    </Link>
-                  </div>
-                </li>
+                {drawerServicesLink ? null : servicesSection()}
+                {drawerToolsLink ? null : toolsSection()}
               </ul>
 
               <div className="border-border-subtle mt-6 flex flex-col gap-3 border-t pt-6">
