@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
 // Up to ~165 links to per-request pages: prefetch on intent only.
 import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
-import { getCategories, getCategoryBySlug, getCities, searchListings } from '@/lib/queries';
+import {
+  getCategories,
+  getCategoryBySlug,
+  getCategoryListingCounts,
+  getCities,
+  searchListings,
+} from '@/lib/queries';
 import { Results, parsePage, parseSort } from '@/components/results';
 import { ListingFilters } from '@/components/listing-filters';
 import { SITE_URL } from '@/lib/supabase';
-import { SHARE_IMAGE } from '@/lib/seo';
+import { MIN_CATEGORY_LISTINGS_TO_INDEX, SHARE_IMAGE } from '@/lib/seo';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { redirectOrNotFound } from '@/lib/redirects';
@@ -28,10 +34,16 @@ export async function generateMetadata({
   if (!cat) return { title: 'Not found' };
   const title = `${cat.name} businesses`;
   const description = cat.description ?? `Browse ${cat.name.toLowerCase()} businesses.`;
+  // A failed count leaves the page indexable rather than noindex it on a blip.
+  const count = (await getCategoryListingCounts([cat.id])).get(cat.id);
   return {
     title,
     description,
     alternates: { canonical: `${SITE_URL}/category/${cat.slug}` },
+    robots:
+      count !== undefined && count < MIN_CATEGORY_LISTINGS_TO_INDEX
+        ? { index: false, follow: true }
+        : undefined,
     openGraph: {
       title,
       description,

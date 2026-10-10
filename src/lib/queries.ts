@@ -454,6 +454,24 @@ export async function getAllListingSlugs(limit = 5000): Promise<string[]> {
   return rows.map((r) => (r as { slug: string }).slug);
 }
 
+/**
+ * The sitemap's listing entries: the slug plus updated_at for <lastmod>. The
+ * touch trigger (0007) keeps updated_at current, so the date moves only when
+ * the listing itself changes. Bounded for the same reason as above.
+ */
+export async function getSitemapListings(
+  limit = 5000,
+): Promise<{ slug: string; updated_at: string | null }[]> {
+  return (await readList(
+    'public_listings.sitemap',
+    supabase
+      .from('public_listings')
+      .select('slug, updated_at')
+      .order('published_at', { ascending: false })
+      .limit(limit),
+  )) as { slug: string; updated_at: string | null }[];
+}
+
 export type BlogPost = {
   id: string;
   slug: string;
@@ -491,6 +509,26 @@ export const getBlogPosts = cache(async function getBlogPosts(
       .limit(limit),
   )) as BlogPostSummary[];
 });
+
+/**
+ * Every published post for the sitemap, with the dates <lastmod> needs.
+ * getBlogPosts() stops at 50 for the index pages, which silently dropped
+ * older posts from the sitemap; this selects two short columns, so a much
+ * higher bound stays cheap.
+ */
+export async function getSitemapPosts(
+  limit = 5000,
+): Promise<{ slug: string; updated_at: string | null; published_at: string | null }[]> {
+  return (await readList(
+    'blog_posts.sitemap',
+    supabase
+      .from('blog_posts')
+      .select('slug, updated_at, published_at')
+      .eq('is_published', true)
+      .order('published_at', { ascending: false })
+      .limit(limit),
+  )) as { slug: string; updated_at: string | null; published_at: string | null }[];
+}
 
 export type BlogPostDetail = BlogPost & {
   seo_title: string | null;
@@ -715,6 +753,49 @@ export async function getCityListingCounts(cityIds: string[]): Promise<Map<strin
   const counts = await Promise.all(cityIds.map((id) => countCityListings(id)));
   const out = new Map<string, number>();
   cityIds.forEach((id, i) => {
+    const n = counts[i];
+    if (n !== null) out.set(id, n);
+  });
+  return out;
+}
+
+/**
+ * Per category, so cache() can deduplicate it within a render. Matches the
+ * same rows as search_listings (0021): a parent also counts listings filed
+ * under its children. `childIds` is comma-joined so the cache key is a string.
+ */
+const countCategoryListings = cache(async function countCategoryListings(
+  categoryId: string,
+  childIds: string,
+): Promise<number | null> {
+  const ids = childIds ? `${categoryId},${childIds}` : categoryId;
+  return readCount(
+    'public_listings.countByCategory',
+    supabase
+      .from('public_listings')
+      .select('id', HEAD_COUNT)
+      .or(`category_id.in.(${ids}),subcategory_id.eq.${categoryId}`),
+  );
+});
+
+/** Published listings per category. A category whose count failed is left out of the map. */
+export async function getCategoryListingCounts(
+  categoryIds: string[],
+): Promise<Map<string, number>> {
+  const all = await getCategories();
+  const counts = await Promise.all(
+    categoryIds.map((id) =>
+      countCategoryListings(
+        id,
+        all
+          .filter((c) => c.parent_id === id)
+          .map((c) => c.id)
+          .join(','),
+      ),
+    ),
+  );
+  const out = new Map<string, number>();
+  categoryIds.forEach((id, i) => {
     const n = counts[i];
     if (n !== null) out.set(id, n);
   });

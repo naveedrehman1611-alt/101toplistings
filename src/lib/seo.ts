@@ -62,6 +62,13 @@ export type SeoOverride = {
 export const MIN_CITY_LISTINGS_TO_INDEX = 3;
 
 /**
+ * The same rule for category pages: one with no approved listings renders
+ * only an empty state, so it is noindex and out of the sitemap until a
+ * listing is approved into it (or any of its subcategories).
+ */
+export const MIN_CATEGORY_LISTINGS_TO_INDEX = 1;
+
+/**
  * The site-wide share image (src/app/opengraph-image.tsx). The root file only
  * reaches pages that set no openGraph of their own: Next.js replaces the whole
  * openGraph object per page, so every page that sets one lists this again.
