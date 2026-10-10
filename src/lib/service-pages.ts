@@ -786,3 +786,8 @@ export function serviceNavItems(): ServiceNavItem[] {
     category,
   }));
 }
+
+/** The contact form with the SEO services subject and this service named in the message. */
+export function quoteHref(name: string): string {
+  return `/contact?subject=SEO%20services&service=${encodeURIComponent(name)}`;
+}

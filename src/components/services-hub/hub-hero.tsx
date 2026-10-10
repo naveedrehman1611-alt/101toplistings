@@ -7,7 +7,8 @@ export type HubStat = { value: ReactNode; label: string };
 /**
  * Full-bleed navy hero for the /seo-services hub: breadcrumb, eyebrow, h1 and
  * intro on the left, a column of stat tiles on the right (a row below lg).
- * The shared Breadcrumbs is styled for light surfaces, so the trail here is a
+ * `actions` (CTA buttons) render under the intro; with no `stats` the right
+ * column is left out. The shared Breadcrumbs is styled for light surfaces, so the trail here is a
  * light-on-navy copy of it.
  */
 export function HubHero({
@@ -16,12 +17,14 @@ export function HubHero({
   heading,
   subheading,
   stats,
+  actions,
 }: {
   trail: { label: string; href?: string }[];
   eyebrow: string;
   heading: ReactNode;
   subheading: string;
-  stats: HubStat[];
+  stats?: HubStat[];
+  actions?: ReactNode;
 }) {
   return (
     <section className="bg-hero-navy relative isolate overflow-hidden pt-12 pb-14 sm:pt-[72px] sm:pb-20">
@@ -63,21 +66,24 @@ export function HubHero({
             {heading}
           </h1>
           <p className="mt-5 max-w-[580px] text-base leading-[1.75] text-white/60">{subheading}</p>
+          {actions ? <div className="mt-8 flex flex-wrap gap-3">{actions}</div> : null}
         </div>
-        <dl className="grid grid-cols-3 gap-3 lg:grid-cols-1">
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              className="flex flex-col-reverse items-center justify-center rounded-[10px] border border-white/10 bg-white/5 px-3 py-4 text-center sm:px-[22px] lg:min-w-[140px]"
-            >
-              {/* white/60: white/45 on navy is about 4.2:1, under AA for 12px text. */}
-              <dt className="mt-1 text-xs leading-snug text-white/60">{s.label}</dt>
-              <dd className="font-display text-hero-green-light text-[28px] leading-none font-extrabold">
-                {s.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        {stats?.length ? (
+          <dl className="grid grid-cols-3 gap-3 lg:grid-cols-1">
+            {stats.map((s) => (
+              <div
+                key={s.label}
+                className="flex flex-col-reverse items-center justify-center rounded-[10px] border border-white/10 bg-white/5 px-3 py-4 text-center sm:px-[22px] lg:min-w-[140px]"
+              >
+                {/* white/60: white/45 on navy is about 4.2:1, under AA for 12px text. */}
+                <dt className="mt-1 text-xs leading-snug text-white/60">{s.label}</dt>
+                <dd className="font-display text-hero-green-light text-[28px] leading-none font-extrabold">
+                  {s.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
       </div>
     </section>
   );
