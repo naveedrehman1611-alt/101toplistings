@@ -139,12 +139,10 @@ export function ListingCard({
               <span className="bg-surface-container text-primary-container flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
                 <Icon name="call" size={18} />
               </span>
-              <a
-                href={`tel:${phone.replace(/\s+/g, '')}`}
-                className="font-label-md text-label-md text-on-surface hover:text-primary-container focus-visible:ring-primary-container relative z-10 rounded-sm font-semibold whitespace-nowrap focus-visible:ring-2 focus-visible:outline-hidden"
-              >
+              <span className="font-label-md text-label-md text-on-surface font-semibold whitespace-nowrap">
+                <span className="sr-only">Phone: </span>
                 {phone}
-              </a>
+              </span>
             </div>
           ) : null}
           <Link
