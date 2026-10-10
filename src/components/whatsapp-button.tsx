@@ -1,8 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-
-const WHATSAPP_NUMBER = '923077139528';
+import { whatsappHref } from '@/lib/whatsapp';
 
 /** Floating bottom-right link that opens a WhatsApp chat with a pre-filled greeting. */
 export function WhatsAppButton({ brand }: { brand: string }) {
@@ -14,7 +13,7 @@ export function WhatsAppButton({ brand }: { brand: string }) {
   if (hidden) return null;
 
   const message = `Hi ${brand} team! 👋 I found you through your website and would love to know more about getting my business listed and growing it online. Could you help me out?`;
-  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  const href = whatsappHref(message);
 
   return (
     <a

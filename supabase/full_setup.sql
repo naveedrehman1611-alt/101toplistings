@@ -1,4 +1,4 @@
--- full_setup.sql — every migration in supabase/migrations/, 0001 through 0024, in order.
+-- full_setup.sql — every migration in supabase/migrations/, 0001 through 0025, in order.
 --
 -- For rebuilding an EMPTY database in one step (paste into the Supabase SQL Editor
 -- and Run). It is not a migration and must not be run on a database that already
@@ -3430,3 +3430,20 @@ select p.id, n.label, n.url, n.sort_order
   ) as n(label, url, sort_order);
 
 commit;
+
+
+-- =====================================================================
+-- 0025_footer_trust_line.sql
+-- =====================================================================
+
+-- 0025 — footer trust line
+--
+-- The text in the pill under the footer blurb, after the five stars, such as
+-- "5.0 Google Rating · 500+ Clients Ranked". Blank hides the pill. Seeded
+-- blank so the site never claims a rating nobody entered.
+--
+-- Safe to re-run: an existing value is left alone.
+
+insert into settings (key, value, "group") values
+  ('footer.trust_line', to_jsonb(''::text), 'footer')
+on conflict (key) do nothing;

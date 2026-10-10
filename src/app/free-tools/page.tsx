@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Breadcrumbs } from '@/components/ui';
 import { Icon, type IconName } from '@/components/icon';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
+import { PageHero } from '@/components/page-hero';
 import { SITE_URL } from '@/lib/supabase';
 import { SHARE_IMAGE } from '@/lib/seo';
 import { LIVE_TOOLS, TOOLS_BASE, toolHref, toolsByCategory, type FreeTool } from '@/lib/free-tools';
@@ -109,7 +109,7 @@ export default function FreeToolsPage() {
   const categories = toolsByCategory();
 
   return (
-    <div className="container-page py-10 md:py-12">
+    <>
       <JsonLd data={breadcrumbSchema(TRAIL, TOOLS_BASE)} />
       <JsonLd
         data={{
@@ -126,77 +126,88 @@ export default function FreeToolsPage() {
         }}
       />
 
-      <Breadcrumbs trail={TRAIL} />
-
-      <header className="max-w-3xl">
-        <span className="bg-brand-50 font-label-sm text-label-sm text-primary-container inline-flex items-center gap-1.5 rounded-full px-3 py-1">
+      <PageHero
+        trail={TRAIL}
+        eyebrow="Browser-Based SEO Tools"
+        heading={
+          <>
+            Free <span className="text-hero-green-light">SEO Tools</span>
+          </>
+        }
+        subheading="Quick, practical checks and generators for small businesses and SEOs. Every tool runs in your browser, so there is no account to create, no limit to hit and nothing saved on our side. Test a page’s speed, preview how it looks in Google, check keyword use or generate schema and robots.txt in seconds."
+        stats={[
+          { value: LIVE_TOOLS.length, label: 'Live Tools' },
+          { value: categories.length, label: 'Categories' },
+          { value: 'Free', label: 'No Signup' },
+        ]}
+      >
+        <span className="font-label-sm text-label-sm inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
           <Icon name="rocket_launch" size={16} />
           Free · No signup · Nothing stored
         </span>
-        <h1 className="font-headline-lg text-headline-lg-mobile text-on-surface md:text-headline-lg mt-4">
-          Free SEO Tools
-        </h1>
-        <p className="font-body-lg text-body-lg text-on-surface-variant mt-3">
-          Quick, practical checks and generators for small businesses and SEOs. Every tool runs in
-          your browser, so there is no account to create, no limit to hit and nothing saved on our
-          side. Test a page’s speed, preview how it looks in Google, check keyword use or generate
-          schema and robots.txt in seconds.
-        </p>
-      </header>
+      </PageHero>
 
-      {categories.map((category) => (
-        <section key={category.id} aria-labelledby={`cat-${category.id}`} className="mt-14">
-          <h2
-            id={`cat-${category.id}`}
-            className="font-headline-md text-headline-md text-on-surface"
+      <div className="container-page py-10 md:py-12">
+        {categories.map((category, i) => (
+          <section
+            key={category.id}
+            aria-labelledby={`cat-${category.id}`}
+            className={i === 0 ? '' : 'mt-14'}
           >
-            {category.label}
+            <h2
+              id={`cat-${category.id}`}
+              className="font-headline-md text-headline-md text-on-surface"
+            >
+              {category.label}
+            </h2>
+            <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {category.tools.map((tool) => (
+                <li key={tool.slug}>
+                  <ToolCard tool={tool} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+
+        <section aria-labelledby="why-free" className="mt-16">
+          <h2 id="why-free" className="font-headline-md text-headline-md text-on-surface">
+            Why these tools are free and private
           </h2>
-          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {category.tools.map((tool) => (
-              <li key={tool.slug}>
-                <ToolCard tool={tool} />
+          <ul className="mt-6 grid gap-4 md:grid-cols-3">
+            {WHY.map((item) => (
+              <li key={item.title} className="surface-card p-6">
+                <span className="bg-brand-50 text-primary-container grid size-10 place-items-center rounded-xl">
+                  <Icon name={item.icon} size={20} />
+                </span>
+                <h3 className="font-title-md text-title-md text-on-surface mt-4">{item.title}</h3>
+                <p className="font-body-md text-body-md text-on-surface-variant mt-2">
+                  {item.body}
+                </p>
               </li>
             ))}
           </ul>
         </section>
-      ))}
 
-      <section aria-labelledby="why-free" className="mt-16">
-        <h2 id="why-free" className="font-headline-md text-headline-md text-on-surface">
-          Why these tools are free and private
-        </h2>
-        <ul className="mt-6 grid gap-4 md:grid-cols-3">
-          {WHY.map((item) => (
-            <li key={item.title} className="surface-card p-6">
-              <span className="bg-brand-50 text-primary-container grid size-10 place-items-center rounded-xl">
-                <Icon name={item.icon} size={20} />
-              </span>
-              <h3 className="font-title-md text-title-md text-on-surface mt-4">{item.title}</h3>
-              <p className="font-body-md text-body-md text-on-surface-variant mt-2">{item.body}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="surface-card mt-16 flex flex-col items-start gap-6 p-8 md:flex-row md:items-center md:justify-between">
-        <div className="max-w-2xl">
-          <h2 className="font-headline-md text-headline-md text-on-surface">
-            Want the fixes done for you?
-          </h2>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-2">
-            The tools show what needs attention. Our SEO services handle the rest — technical fixes,
-            on-page optimisation and local SEO for businesses worldwide.
-          </p>
-        </div>
-        <Link
-          href="/seo-services"
-          className="bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary focus-visible:outline-primary-container inline-flex h-11 shrink-0 items-center gap-2 rounded-lg px-5 shadow-xs transition-all hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2"
-        >
-          See SEO services
-          <Icon name="arrow_forward" size={18} />
-        </Link>
-      </section>
-    </div>
+        <section className="surface-card mt-16 flex flex-col items-start gap-6 p-8 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-2xl">
+            <h2 className="font-headline-md text-headline-md text-on-surface">
+              Want the fixes done for you?
+            </h2>
+            <p className="font-body-md text-body-md text-on-surface-variant mt-2">
+              The tools show what needs attention. Our SEO services handle the rest — technical
+              fixes, on-page optimisation and local SEO for businesses worldwide.
+            </p>
+          </div>
+          <Link
+            href="/seo-services"
+            className="bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary focus-visible:outline-primary-container inline-flex h-11 shrink-0 items-center gap-2 rounded-lg px-5 shadow-xs transition-all hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            See SEO services
+            <Icon name="arrow_forward" size={18} />
+          </Link>
+        </section>
+      </div>
+    </>
   );
 }

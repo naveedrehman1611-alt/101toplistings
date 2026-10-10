@@ -12,6 +12,7 @@
 import { coverUrls, reportError, type Category, type City } from './queries';
 import { openStatus, type HoursRow } from './open-status';
 import { supabase } from './supabase';
+import { maskPhone } from './phone';
 
 export const BROWSE_PER_PAGE = 15;
 
@@ -174,7 +175,7 @@ export async function browseListings(args: BrowseArgs): Promise<BrowseResult> {
       excerpt: toExcerpt(l.tagline, l.description),
       category: (l.category_id && categories.get(l.category_id)) || null,
       city: (l.city_id && cities.get(l.city_id)) || null,
-      phone: l.phone_primary?.trim() || null,
+      phone: maskPhone(l.phone_primary),
       isFeatured: l.is_featured,
       publishedAt: l.published_at,
       rating: l.rating_average === null ? null : Number(l.rating_average),

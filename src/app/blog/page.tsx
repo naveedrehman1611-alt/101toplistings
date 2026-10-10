@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { findSection, getBlogPosts, getPageSections } from '@/lib/queries';
-import { Breadcrumbs, EmptyState } from '@/components/ui';
+import { EmptyState } from '@/components/ui';
+import { PageHero } from '@/components/page-hero';
 import { seoMetadata } from '@/lib/seo';
 import { BLOG_CLUSTERS } from '@/lib/blog-clusters';
 
@@ -23,24 +24,30 @@ export default async function BlogIndex() {
   const [sections, posts] = await Promise.all([getPageSections('blog'), getBlogPosts()]);
   const header = findSection(sections, 'header');
   return (
-    <div className="container-page py-12">
-      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: header?.heading ?? 'Blog' }]} />
-      <h1 className="font-headline-lg text-headline-lg">{header?.heading}</h1>
-      {header?.subheading ? (
-        <p className="mt-3 text-[var(--text-muted)]">{header.subheading}</p>
-      ) : null}
-      <nav aria-label="Guides" className="mt-5 flex flex-wrap gap-2">
-        {BLOG_CLUSTERS.map((c) => (
-          <Link
-            key={c.slug}
-            href={c.path}
-            className="border-border-subtle hover:border-brand-500 text-brand-700 rounded-full border px-4 py-1.5 text-sm font-semibold"
-          >
-            {c.name}
-          </Link>
-        ))}
-      </nav>
-      <div className="mt-10">
+    <>
+      <PageHero
+        trail={[{ label: 'Home', href: '/' }, { label: header?.heading ?? 'Blog' }]}
+        eyebrow="Guides & insights"
+        heading={header?.heading}
+        subheading={header?.subheading || undefined}
+        stats={[
+          { value: posts.length, label: posts.length === 1 ? 'Article' : 'Articles' },
+          { value: BLOG_CLUSTERS.length, label: 'Guide Hubs' },
+        ]}
+      >
+        <nav aria-label="Guides" className="flex flex-wrap gap-2">
+          {BLOG_CLUSTERS.map((c) => (
+            <Link
+              key={c.slug}
+              href={c.path}
+              className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-semibold text-white/80 transition-colors hover:border-white/30 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              {c.name}
+            </Link>
+          ))}
+        </nav>
+      </PageHero>
+      <div className="container-page py-10 md:py-12">
         {posts.length === 0 ? (
           <EmptyState title="No articles yet" body="Nothing has been published so far." />
         ) : (
@@ -65,6 +72,6 @@ export default async function BlogIndex() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

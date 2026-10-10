@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { getCategories, getCities, getCityBySlug, searchListings } from '@/lib/queries';
 import { Results, parsePage, parseSort } from '@/components/results';
-import { Breadcrumbs } from '@/components/ui';
 import { ListingFilters } from '@/components/listing-filters';
 import { SITE_URL } from '@/lib/supabase';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
+import { PageHero } from '@/components/page-hero';
 import { redirectOrNotFound } from '@/lib/redirects';
 import { MIN_CITY_LISTINGS_TO_INDEX, SHARE_IMAGE } from '@/lib/seo';
 
@@ -67,46 +67,57 @@ export default async function CityPage({
   const trail = [{ label: 'Home', href: '/' }, { label: city.name }];
   const path = `/city/${city.slug}`;
 
+  // Shown only for the unfiltered city, so the figure is the city's own total.
+  const total = filtered ? 0 : Number(listings[0]?.total_count ?? 0);
+
   return (
-    <div className="container-page py-12">
+    <>
       <JsonLd data={breadcrumbSchema(trail, path)} />
       {listings.length > 0 ? (
         <JsonLd
           data={itemListSchema(`Businesses in ${city.name}`, listings, (page - 1) * PER_PAGE)}
         />
       ) : null}
-      <Breadcrumbs trail={trail} />
-      <h1 className="font-headline-lg text-headline-lg">Businesses in {city.name}</h1>
-      {city.intro_copy ? (
-        <p className="mt-3 max-w-2xl text-[var(--text-muted)]">{city.intro_copy}</p>
-      ) : null}
-      <div className="mt-8">
-        <ListingFilters
-          action={`/city/${city.slug}`}
-          q={q}
-          category={cat?.slug}
-          sort={sort}
-          categories={categories}
-        />
+      <PageHero
+        trail={trail}
+        eyebrow="Local business directory"
+        heading={
+          <>
+            Businesses in <span className="text-hero-green-light">{city.name}</span>
+          </>
+        }
+        subheading={city.intro_copy}
+        stats={total > 0 ? [{ value: total, label: 'Listings' }] : undefined}
+      />
+      <div className="container-page py-10 md:py-12">
+        <div>
+          <ListingFilters
+            action={`/city/${city.slug}`}
+            q={q}
+            category={cat?.slug}
+            sort={sort}
+            categories={categories}
+          />
+        </div>
+        <div className="mt-8">
+          <Results
+            listings={listings}
+            basePath={`/city/${city.slug}`}
+            page={page}
+            perPage={PER_PAGE}
+            sort={sort}
+            query={q}
+            params={{ category: cat?.slug }}
+            cityNames={new Map(cities.map((c) => [c.id, c.name]))}
+            emptyTitle={filtered ? 'No matches' : `Nothing listed in ${city.name} yet`}
+            emptyBody={
+              filtered
+                ? `Nothing in ${city.name} matches these filters. Try another category or clear them.`
+                : 'Be the first to add a business here.'
+            }
+          />
+        </div>
       </div>
-      <div className="mt-8">
-        <Results
-          listings={listings}
-          basePath={`/city/${city.slug}`}
-          page={page}
-          perPage={PER_PAGE}
-          sort={sort}
-          query={q}
-          params={{ category: cat?.slug }}
-          cityNames={new Map(cities.map((c) => [c.id, c.name]))}
-          emptyTitle={filtered ? 'No matches' : `Nothing listed in ${city.name} yet`}
-          emptyBody={
-            filtered
-              ? `Nothing in ${city.name} matches these filters. Try another category or clear them.`
-              : 'Be the first to add a business here.'
-          }
-        />
-      </div>
-    </div>
+    </>
   );
 }

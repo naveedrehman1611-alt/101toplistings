@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache';
 import { READ_REVALIDATE_SECONDS, SEARCH_TAG, supabase } from './supabase';
 import { mediaUrl, type MediaItem } from './media';
 import { isMissingColumnError } from './review-criteria';
+import { maskPhone } from './phone';
 
 /**
  * Every read below used to end in `data ?? []`, which makes a failed request
@@ -414,7 +415,14 @@ export const getListing = cache(async function getListing(
       .eq('slug', slug)
       .maybeSingle(),
   );
-  return (data as ListingDetail | null) ?? null;
+  const listing = (data as ListingDetail | null) ?? null;
+  return listing
+    ? {
+        ...listing,
+        phone_primary: maskPhone(listing.phone_primary),
+        phone_secondary: maskPhone(listing.phone_secondary),
+      }
+    : null;
 });
 
 export async function getOpeningHours(listingId: string): Promise<OpeningHour[]> {
@@ -444,6 +452,24 @@ export async function getAllListingSlugs(limit = 5000): Promise<string[]> {
       .limit(limit),
   );
   return rows.map((r) => (r as { slug: string }).slug);
+}
+
+/**
+ * The sitemap's listing entries: the slug plus updated_at for <lastmod>. The
+ * touch trigger (0007) keeps updated_at current, so the date moves only when
+ * the listing itself changes. Bounded for the same reason as above.
+ */
+export async function getSitemapListings(
+  limit = 5000,
+): Promise<{ slug: string; updated_at: string | null }[]> {
+  return (await readList(
+    'public_listings.sitemap',
+    supabase
+      .from('public_listings')
+      .select('slug, updated_at')
+      .order('published_at', { ascending: false })
+      .limit(limit),
+  )) as { slug: string; updated_at: string | null }[];
 }
 
 export type BlogPost = {
@@ -483,6 +509,26 @@ export const getBlogPosts = cache(async function getBlogPosts(
       .limit(limit),
   )) as BlogPostSummary[];
 });
+
+/**
+ * Every published post for the sitemap, with the dates <lastmod> needs.
+ * getBlogPosts() stops at 50 for the index pages, which silently dropped
+ * older posts from the sitemap; this selects two short columns, so a much
+ * higher bound stays cheap.
+ */
+export async function getSitemapPosts(
+  limit = 5000,
+): Promise<{ slug: string; updated_at: string | null; published_at: string | null }[]> {
+  return (await readList(
+    'blog_posts.sitemap',
+    supabase
+      .from('blog_posts')
+      .select('slug, updated_at, published_at')
+      .eq('is_published', true)
+      .order('published_at', { ascending: false })
+      .limit(limit),
+  )) as { slug: string; updated_at: string | null; published_at: string | null }[];
+}
 
 export type BlogPostDetail = BlogPost & {
   seo_title: string | null;
@@ -587,7 +633,7 @@ export async function getSimilarListings(
         a.index - b.index,
     )
     .slice(0, limit)
-    .map(({ row }) => row);
+    .map(({ row }) => ({ ...row, phone_primary: maskPhone(row.phone_primary) }));
   if (picked.length === 0) return [];
 
   const [hours, withCovers] = await Promise.all([
@@ -652,7 +698,7 @@ export async function getListingHighlights(ids: string[]): Promise<Map<string, L
   for (const row of rows) {
     out.set(row.id, {
       description: row.description,
-      phone: row.phone_primary,
+      phone: maskPhone(row.phone_primary),
       verified: row.verification === 'verified',
     });
   }
@@ -707,6 +753,49 @@ export async function getCityListingCounts(cityIds: string[]): Promise<Map<strin
   const counts = await Promise.all(cityIds.map((id) => countCityListings(id)));
   const out = new Map<string, number>();
   cityIds.forEach((id, i) => {
+    const n = counts[i];
+    if (n !== null) out.set(id, n);
+  });
+  return out;
+}
+
+/**
+ * Per category, so cache() can deduplicate it within a render. Matches the
+ * same rows as search_listings (0021): a parent also counts listings filed
+ * under its children. `childIds` is comma-joined so the cache key is a string.
+ */
+const countCategoryListings = cache(async function countCategoryListings(
+  categoryId: string,
+  childIds: string,
+): Promise<number | null> {
+  const ids = childIds ? `${categoryId},${childIds}` : categoryId;
+  return readCount(
+    'public_listings.countByCategory',
+    supabase
+      .from('public_listings')
+      .select('id', HEAD_COUNT)
+      .or(`category_id.in.(${ids}),subcategory_id.eq.${categoryId}`),
+  );
+});
+
+/** Published listings per category. A category whose count failed is left out of the map. */
+export async function getCategoryListingCounts(
+  categoryIds: string[],
+): Promise<Map<string, number>> {
+  const all = await getCategories();
+  const counts = await Promise.all(
+    categoryIds.map((id) =>
+      countCategoryListings(
+        id,
+        all
+          .filter((c) => c.parent_id === id)
+          .map((c) => c.id)
+          .join(','),
+      ),
+    ),
+  );
+  const out = new Map<string, number>();
+  categoryIds.forEach((id, i) => {
     const n = counts[i];
     if (n !== null) out.set(id, n);
   });
@@ -834,14 +923,15 @@ export type CardExtras = { id: string; phone_primary: string | null; excerpt: st
 /** Phone and a 200-character excerpt per card, from the public_listing_cards view (0021). */
 export async function getCardExtras(ids: string[]): Promise<CardExtras[]> {
   if (ids.length === 0) return [];
-  return readList(
+  const rows = (await readList(
     'public_listing_cards.select',
     supabase
       .from('public_listing_cards')
       .select('id, phone_primary, excerpt')
       .in('id', ids)
       .limit(ids.length),
-  );
+  )) as CardExtras[];
+  return rows.map((row) => ({ ...row, phone_primary: maskPhone(row.phone_primary) }));
 }
 
 /** Logo per listing, for the round badge on a card. Covers come from attachCovers. */

@@ -3,11 +3,13 @@ import Image from 'next/image';
 /**
  * The RankYouSite logo, drawn as SVG in /public (text is outlined, so it needs
  * no web font). `full` is the whole lockup with the LIST • RANK • GROW line;
- * `compact` drops that line, which is unreadable at header size.
+ * `compact` drops that line, which is unreadable at header size. `dark` is the
+ * full lockup recoloured white for dark backgrounds such as the footer.
  */
 const LOGOS = {
   full: { src: '/logo.svg', width: 471, height: 126 },
   compact: { src: '/logo-header.svg', width: 464, height: 91 },
+  dark: { src: '/logo-dark.svg', width: 471, height: 126 },
 } as const;
 
 export function SiteLogo({

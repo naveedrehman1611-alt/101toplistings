@@ -3,8 +3,9 @@ import type { Metadata } from 'next';
 import { HoverPrefetchLink as Link } from '@/components/hover-prefetch-link';
 import { getCityListingCounts } from '@/lib/queries';
 import { getCitiesByCountry } from '@/lib/locations';
-import { Breadcrumbs, Button, EmptyState } from '@/components/ui';
+import { Button, EmptyState } from '@/components/ui';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
+import { PageHero } from '@/components/page-hero';
 import { MIN_CITY_LISTINGS_TO_INDEX, seoMetadata } from '@/lib/seo';
 
 export const revalidate = 600;
@@ -28,69 +29,83 @@ export default async function LocationsPage() {
 
   const trail = [{ label: 'Home', href: '/' }, { label: 'Locations' }];
 
+  const cityCount = groups.reduce((n, g) => n + g.cities.length, 0);
+
   return (
-    <div className="container-page py-12">
+    <>
       <JsonLd data={breadcrumbSchema(trail, '/locations')} />
-      <Breadcrumbs trail={trail} />
-      <div className="max-w-3xl">
-        <h1 className="font-headline-lg text-headline-lg">Business directory by location</h1>
-        <p className="mt-4 text-lg text-[var(--text-muted)]">
-          Use this business directory by country and city to find companies near you or in the
-          market you are researching. Choose a city to see the businesses listed there.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
+      <PageHero
+        trail={trail}
+        eyebrow="Browse by location"
+        heading={
+          <>
+            Business directory by <span className="text-hero-green-light">location</span>
+          </>
+        }
+        subheading="Use this business directory by country and city to find companies near you or in the market you are researching. Choose a city to see the businesses listed there."
+        stats={
+          groups.length
+            ? [
+                { value: groups.length, label: groups.length === 1 ? 'Country' : 'Countries' },
+                { value: cityCount, label: cityCount === 1 ? 'City' : 'Cities' },
+              ]
+            : undefined
+        }
+      >
+        <div className="flex flex-wrap gap-3">
           <Button href="/add-business">List your business</Button>
           <Button href="/business-directory" variant="ghost">
             Browse all businesses
           </Button>
         </div>
+      </PageHero>
+      <div className="container-page pb-10 md:pb-12">
+        {groups.length === 0 ? (
+          <div className="mt-12">
+            <EmptyState
+              title="No locations yet"
+              body="Cities will appear here once they are added to the directory."
+              action={<Button href="/business-directory">Browse businesses</Button>}
+            />
+          </div>
+        ) : (
+          groups.map((g) => (
+            <section key={g.country.slug} aria-labelledby={`country-${g.country.slug}`}>
+              <h2
+                id={`country-${g.country.slug}`}
+                className="font-headline-md text-headline-md mt-12"
+              >
+                Business directory in {g.country.name}
+              </h2>
+              <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {g.cities.map((c) => {
+                  const n = counts.get(c.id);
+                  const indexed = (n ?? 0) >= MIN_CITY_LISTINGS_TO_INDEX;
+                  return (
+                    <li key={c.id}>
+                      <Link
+                        href={`/city/${c.slug}`}
+                        className={
+                          indexed
+                            ? 'surface-card hover:border-primary-container flex items-center justify-between gap-3 p-4 font-semibold transition-colors'
+                            : 'hover:border-primary-container flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] px-4 py-3 text-sm text-[var(--text-muted)] transition-colors'
+                        }
+                      >
+                        <span>{c.name}</span>
+                        {n !== undefined ? (
+                          <span className="text-sm font-normal text-[var(--text-muted)]">
+                            {n} {n === 1 ? 'listing' : 'listings'}
+                          </span>
+                        ) : null}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))
+        )}
       </div>
-
-      {groups.length === 0 ? (
-        <div className="mt-12">
-          <EmptyState
-            title="No locations yet"
-            body="Cities will appear here once they are added to the directory."
-            action={<Button href="/business-directory">Browse businesses</Button>}
-          />
-        </div>
-      ) : (
-        groups.map((g) => (
-          <section key={g.country.slug} aria-labelledby={`country-${g.country.slug}`}>
-            <h2
-              id={`country-${g.country.slug}`}
-              className="font-headline-md text-headline-md mt-12"
-            >
-              Business directory in {g.country.name}
-            </h2>
-            <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {g.cities.map((c) => {
-                const n = counts.get(c.id);
-                const indexed = (n ?? 0) >= MIN_CITY_LISTINGS_TO_INDEX;
-                return (
-                  <li key={c.id}>
-                    <Link
-                      href={`/city/${c.slug}`}
-                      className={
-                        indexed
-                          ? 'surface-card hover:border-primary-container flex items-center justify-between gap-3 p-4 font-semibold transition-colors'
-                          : 'hover:border-primary-container flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] px-4 py-3 text-sm text-[var(--text-muted)] transition-colors'
-                      }
-                    >
-                      <span>{c.name}</span>
-                      {n !== undefined ? (
-                        <span className="text-sm font-normal text-[var(--text-muted)]">
-                          {n} {n === 1 ? 'listing' : 'listings'}
-                        </span>
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ))
-      )}
-    </div>
+    </>
   );
 }

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Breadcrumbs, Button } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { Icon, type IconName } from '@/components/icon';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
+import { PageHero } from '@/components/page-hero';
 import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -84,71 +85,78 @@ export default function PricingPage() {
   const trail = [{ label: 'Home', href: '/' }, { label: 'Pricing' }];
 
   return (
-    <div className="container-page py-12">
+    <>
       <JsonLd data={breadcrumbSchema(trail, '/pricing')} />
-      <Breadcrumbs trail={trail} />
-      <div className="max-w-3xl">
-        <h1 className="font-headline-lg text-headline-lg">Business listing and SEO pricing</h1>
-        <p className="mt-4 text-lg text-[var(--text-muted)]">
-          Listing your business in the directory is free. Featured placement and SEO services are
-          priced by quote, because the right scope depends on your business and website. There are
-          no fixed prices published here.
+      <PageHero
+        trail={trail}
+        eyebrow="Plans & Pricing"
+        heading={
+          <>
+            Business listing and <span className="text-hero-green-light">SEO pricing</span>
+          </>
+        }
+        subheading="Listing your business in the directory is free. Featured placement and SEO services are priced by quote, because the right scope depends on your business and website. There are no fixed prices published here."
+        stats={[
+          { value: PLANS.length, label: 'Plans' },
+          { value: 'Free', label: 'Business Listing' },
+        ]}
+      />
+
+      <div className="container-page py-12">
+        <h2 className="font-headline-md text-headline-md">Choose a plan</h2>
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {PLANS.map((p) => (
+            <div key={p.name} className="surface-card flex flex-col p-6">
+              <div className="bg-surface-container-low text-primary-container mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
+                <Icon name={p.icon} size={26} />
+              </div>
+              <h3 className="font-title-md text-title-md">{p.name}</h3>
+              <p className="font-headline-sm text-headline-sm mt-1">{p.price}</p>
+              <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">{p.body}</p>
+              <ul className="mt-4 space-y-2 text-sm">
+                {p.points.map((pt) => (
+                  <li key={pt} className="flex items-start gap-2">
+                    <Icon
+                      name="check_circle"
+                      size={18}
+                      className="text-primary-container mt-0.5 shrink-0"
+                    />
+                    <span>{pt}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6 flex flex-wrap gap-3 pt-2 lg:mt-auto">
+                {p.actions.map((a) => (
+                  <Button key={a.href} href={a.href} variant={a.ghost ? 'ghost' : 'primary'}>
+                    {a.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <h2 className="font-headline-md text-headline-md mt-16">What affects SEO pricing</h2>
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          {FACTORS.map((f) => (
+            <div key={f.title} className="surface-card p-6">
+              <h3 className="font-title-md text-title-md">{f.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{f.body}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 text-sm text-[var(--text-muted)]">
+          Not sure where to start? See{' '}
+          <Link href="/featured-businesses" className="text-brand-700 hover:underline">
+            featured businesses
+          </Link>{' '}
+          or{' '}
+          <Link href="/contact" className="text-brand-700 hover:underline">
+            contact us
+          </Link>
+          .
         </p>
       </div>
-
-      <h2 className="font-headline-md text-headline-md mt-12">Choose a plan</h2>
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {PLANS.map((p) => (
-          <div key={p.name} className="surface-card flex flex-col p-6">
-            <div className="bg-surface-container-low text-primary-container mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
-              <Icon name={p.icon} size={26} />
-            </div>
-            <h3 className="font-title-md text-title-md">{p.name}</h3>
-            <p className="font-headline-sm text-headline-sm mt-1">{p.price}</p>
-            <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">{p.body}</p>
-            <ul className="mt-4 space-y-2 text-sm">
-              {p.points.map((pt) => (
-                <li key={pt} className="flex items-start gap-2">
-                  <Icon
-                    name="check_circle"
-                    size={18}
-                    className="text-primary-container mt-0.5 shrink-0"
-                  />
-                  <span>{pt}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-6 flex flex-wrap gap-3 pt-2 lg:mt-auto">
-              {p.actions.map((a) => (
-                <Button key={a.href} href={a.href} variant={a.ghost ? 'ghost' : 'primary'}>
-                  {a.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <h2 className="font-headline-md text-headline-md mt-16">What affects SEO pricing</h2>
-      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-        {FACTORS.map((f) => (
-          <div key={f.title} className="surface-card p-6">
-            <h3 className="font-title-md text-title-md">{f.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{f.body}</p>
-          </div>
-        ))}
-      </div>
-      <p className="mt-6 text-sm text-[var(--text-muted)]">
-        Not sure where to start? See{' '}
-        <Link href="/featured-businesses" className="text-brand-700 hover:underline">
-          featured businesses
-        </Link>{' '}
-        or{' '}
-        <Link href="/contact" className="text-brand-700 hover:underline">
-          contact us
-        </Link>
-        .
-      </p>
-    </div>
+    </>
   );
 }

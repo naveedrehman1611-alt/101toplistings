@@ -2,26 +2,29 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { Icon } from '@/components/icon';
 
-export type HubStat = { value: ReactNode; label: string };
+export type HeroStat = { value: ReactNode; label: string };
 
 /**
- * Full-bleed navy hero for the /seo-services hub: breadcrumb, eyebrow, h1 and
- * intro on the left, a column of stat tiles on the right (a row below lg).
- * The shared Breadcrumbs is styled for light surfaces, so the trail here is a
- * light-on-navy copy of it.
+ * Full-bleed navy hero shared by every public page: breadcrumb, eyebrow, h1,
+ * intro and optional extras (buttons, a search box, post meta) on the left, a
+ * column of stat tiles on the right (a row below lg). Stats are optional; pass
+ * only real figures. The shared Breadcrumbs is styled for light surfaces, so
+ * the trail here is a light-on-navy copy of it.
  */
-export function HubHero({
+export function PageHero({
   trail,
   eyebrow,
   heading,
   subheading,
   stats,
+  children,
 }: {
   trail: { label: string; href?: string }[];
-  eyebrow: string;
+  eyebrow?: string;
   heading: ReactNode;
-  subheading: string;
-  stats: HubStat[];
+  subheading?: ReactNode;
+  stats?: HeroStat[];
+  children?: ReactNode;
 }) {
   return (
     <section className="bg-hero-navy relative isolate overflow-hidden pt-12 pb-14 sm:pt-[72px] sm:pb-20">
@@ -55,29 +58,38 @@ export function HubHero({
               ))}
             </ol>
           </nav>
-          <p className="text-hero-green-light mb-4 inline-flex items-center gap-2.5 text-xs font-bold tracking-[2px] uppercase">
-            <span aria-hidden="true" className="bg-hero-green-light h-0.5 w-7" />
-            {eyebrow}
-          </p>
+          {eyebrow ? (
+            <p className="text-hero-green-light mb-4 inline-flex items-center gap-2.5 text-xs font-bold tracking-[2px] uppercase">
+              <span aria-hidden="true" className="bg-hero-green-light h-0.5 w-7" />
+              {eyebrow}
+            </p>
+          ) : null}
           <h1 className="font-display text-[length:clamp(30px,4vw,50px)] leading-[1.15] font-extrabold tracking-tight text-balance text-white">
             {heading}
           </h1>
-          <p className="mt-5 max-w-[580px] text-base leading-[1.75] text-white/60">{subheading}</p>
+          {subheading ? (
+            <p className="mt-5 max-w-[580px] text-base leading-[1.75] text-white/60">
+              {subheading}
+            </p>
+          ) : null}
+          {children ? <div className="mt-6">{children}</div> : null}
         </div>
-        <dl className="grid grid-cols-3 gap-3 lg:grid-cols-1">
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              className="flex flex-col-reverse items-center justify-center rounded-[10px] border border-white/10 bg-white/5 px-3 py-4 text-center sm:px-[22px] lg:min-w-[140px]"
-            >
-              {/* white/60: white/45 on navy is about 4.2:1, under AA for 12px text. */}
-              <dt className="mt-1 text-xs leading-snug text-white/60">{s.label}</dt>
-              <dd className="font-display text-hero-green-light text-[28px] leading-none font-extrabold">
-                {s.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        {stats?.length ? (
+          <dl className="grid grid-cols-3 gap-3 lg:grid-cols-1">
+            {stats.map((s) => (
+              <div
+                key={s.label}
+                className="flex flex-col-reverse items-center justify-center rounded-[10px] border border-white/10 bg-white/5 px-3 py-4 text-center sm:px-[22px] lg:min-w-[140px]"
+              >
+                {/* white/60: white/45 on navy is about 4.2:1, under AA for 12px text. */}
+                <dt className="mt-1 text-xs leading-snug text-white/60">{s.label}</dt>
+                <dd className="font-display text-hero-green-light text-[28px] leading-none font-extrabold">
+                  {s.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
       </div>
     </section>
   );

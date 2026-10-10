@@ -1,25 +1,30 @@
 import type { MetadataRoute } from 'next';
 import {
-  getAllListingSlugs,
-  getBlogPosts,
   getCategories,
+  getCategoryListingCounts,
   getCities,
   getCityListingCounts,
+  getSitemapListings,
+  getSitemapPosts,
 } from '@/lib/queries';
 import { SITE_URL, supabase } from '@/lib/supabase';
 import { LIVE_TOOLS, TOOLS_BASE, toolHref } from '@/lib/free-tools';
-import { MIN_CITY_LISTINGS_TO_INDEX, getSitemapExclusions } from '@/lib/seo';
+import {
+  MIN_CATEGORY_LISTINGS_TO_INDEX,
+  MIN_CITY_LISTINGS_TO_INDEX,
+  getSitemapExclusions,
+} from '@/lib/seo';
 import { SERVICE_PAGES } from '@/lib/service-pages';
 import { BLOG_CLUSTERS, getClusterPostCounts } from '@/lib/blog-clusters';
 
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [slugs, cats, cities, posts, excluded] = await Promise.all([
-    getAllListingSlugs(),
+  const [listings, cats, cities, posts, excluded] = await Promise.all([
+    getSitemapListings(),
     getCategories(),
     getCities(),
-    getBlogPosts(),
+    getSitemapPosts(),
     getSitemapExclusions(),
   ]);
   // A guide cluster with no published posts is noindex (see blog-clusters.ts),
@@ -60,9 +65,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // City pages below the listing threshold are noindex (see city/[slug]), so
   // they stay out until they have enough listings to be indexed. A city whose
   // count could not be read is left out too rather than risk a noindex URL.
-  const cityCounts = await getCityListingCounts(cities.map((c) => c.id));
+  const [cityCounts, catCounts] = await Promise.all([
+    getCityListingCounts(cities.map((c) => c.id)),
+    getCategoryListingCounts(cats.map((c) => c.id)),
+  ]);
   const indexableCities = cities.filter(
     (c) => (cityCounts.get(c.id) ?? 0) >= MIN_CITY_LISTINGS_TO_INDEX,
+  );
+  // Empty categories are noindex (see category/[slug]); same rule as cities.
+  const indexableCats = cats.filter(
+    (c) => (catCounts.get(c.id) ?? 0) >= MIN_CATEGORY_LISTINGS_TO_INDEX,
   );
 
   return [
@@ -78,7 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
               ? 0.3
               : 0.7,
     })),
-    ...cats.map((c) => ({
+    ...indexableCats.map((c) => ({
       url: `${SITE_URL}/category/${c.slug}`,
       changeFrequency: 'weekly' as const,
       priority: 0.8,
@@ -88,13 +100,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     })),
-    ...slugs.map((s) => ({
-      url: `${SITE_URL}/listing/${s}`,
+    ...listings.map((l) => ({
+      url: `${SITE_URL}/listing/${l.slug}`,
+      lastModified: l.updated_at ?? undefined,
       changeFrequency: 'monthly' as const,
       priority: 0.6,
     })),
     ...posts.map((p) => ({
       url: `${SITE_URL}/blog/${p.slug}`,
+      lastModified: p.updated_at ?? p.published_at ?? undefined,
       changeFrequency: 'monthly' as const,
       priority: 0.5,
     })),

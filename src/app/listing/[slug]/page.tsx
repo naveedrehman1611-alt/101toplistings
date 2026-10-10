@@ -183,7 +183,6 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
     url,
   };
   if (listing.description) business.description = listing.description;
-  if (listing.phone_primary) business.telephone = listing.phone_primary;
   if (listing.email) business.email = listing.email.toLowerCase();
   if (listing.address) {
     business.address = {

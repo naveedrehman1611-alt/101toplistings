@@ -1,5 +1,5 @@
-import { Breadcrumbs } from '@/components/ui';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
+import { PageHero } from '@/components/page-hero';
 
 export type LegalSection = { heading: string; body: string[] };
 
@@ -19,24 +19,25 @@ export function LegalPage({
 }) {
   const trail = [{ label: 'Home', href: '/' }, { label: title }];
   return (
-    <div className="container-page py-12">
+    <>
       <JsonLd data={breadcrumbSchema(trail, path)} />
-      <Breadcrumbs trail={trail} />
-      <div className="max-w-2xl">
-        <h1 className="font-headline-lg text-headline-lg">{title}</h1>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">Last updated {updated}</p>
-        <p className="mt-6 leading-relaxed text-[var(--text-muted)]">{intro}</p>
-        {sections.map((s) => (
-          <section key={s.heading}>
-            <h2 className="font-headline-md text-headline-md mt-10">{s.heading}</h2>
-            {s.body.map((p) => (
-              <p key={p} className="mt-4 leading-relaxed text-[var(--text-muted)]">
-                {p}
-              </p>
-            ))}
-          </section>
-        ))}
+      <PageHero trail={trail} eyebrow="Legal & policies" heading={title} subheading={intro}>
+        <p className="text-sm text-white/70">Last updated {updated}</p>
+      </PageHero>
+      <div className="container-page py-10 md:py-12">
+        <div className="max-w-2xl">
+          {sections.map((s) => (
+            <section key={s.heading} className="mt-10 first:mt-0">
+              <h2 className="font-headline-md text-headline-md">{s.heading}</h2>
+              {s.body.map((p) => (
+                <p key={p} className="mt-4 leading-relaxed text-[var(--text-muted)]">
+                  {p}
+                </p>
+              ))}
+            </section>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
