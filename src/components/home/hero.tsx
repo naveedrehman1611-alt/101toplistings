@@ -16,10 +16,11 @@ export function categoryHref(slugs: ReadonlySet<string>, slug: string, keyword: 
  * The strip left of the photo. In the mockup the skyline carries on, darkened,
  * behind the heading, but the photo asset stops at its left edge; this paints
  * the mockup's colours there (top to bottom) under a navy fade from the left
- * and the bottom. The photo's masked left 60px blend into the strip's last 60px.
+ * and the bottom. The bottom fade matches the photo's, so both sink into the
+ * navy together. The photo's masked left 60px blend into the strip's last 60px.
  */
 const SKYLINE_FADE = [
-  'linear-gradient(to top, var(--color-hero-navy), transparent 6%)',
+  'linear-gradient(to top, var(--color-hero-navy), var(--color-hero-navy) 8%, transparent 45%)',
   'linear-gradient(to right, var(--color-hero-navy), transparent 380px)',
   'linear-gradient(to bottom, #0c5285, #135a8e 10%, #206194 20%, #396d97 30%, #4f7699 37%, #597796 46%, #5a6a80 52%, #576071 59%, #364b66 64%, #283c55 71%, #1c3036 79%, #11252a 85%, #33495f 91%, #2a4b6d)',
 ].join(', ');
@@ -106,7 +107,10 @@ export function Hero({
           sizes="(min-width: 1024px) 563px, 100vw"
           className="object-cover object-right-top lg:[mask-image:linear-gradient(to_right,transparent,black_60px)]"
         />
-        <div className="from-hero-navy absolute inset-x-0 bottom-0 h-2/5 bg-linear-to-t to-transparent lg:h-[6%]" />
+        <div className="from-hero-navy via-hero-navy/60 absolute inset-x-0 bottom-0 h-2/5 bg-linear-to-t from-8% via-35% to-transparent lg:h-[45%]" />
+        {/* The box ends on a fractional pixel, which leaves a faint 1px seam under the
+            strip; a navy band across strip and photo covers it. */}
+        <div className="bg-hero-navy absolute -bottom-1 hidden h-2 lg:right-0 lg:-left-[380px] lg:block" />
       </div>
 
       <div className="container-page relative pt-10 pb-14 lg:pt-[73px]">
