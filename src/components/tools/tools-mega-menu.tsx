@@ -59,12 +59,23 @@ function ToolRow({ tool }: { tool: FreeTool }) {
 }
 
 /** Desktop "Free SEO Tools" trigger and its panel. */
-export function ToolsMegaMenu() {
+export function ToolsMegaMenu({
+  label,
+}: {
+  /** The admin's label when the menu replaces their link to the tools hub. */
+  label?: string;
+} = {}) {
   const pathname = usePathname();
   const active = pathname === TOOLS_BASE || pathname.startsWith(`${TOOLS_BASE}/`);
+  const full = label ?? 'Free SEO Tools';
 
   return (
-    <MegaMenu label="Free SEO Tools" shortLabel="Tools" active={active}>
+    <MegaMenu
+      label={full}
+      // The default label still shortens to "Tools" from lg to xl, where the bar is tight.
+      shortLabel={full === 'Free SEO Tools' ? 'Tools' : full}
+      active={active}
+    >
       <div className="grid grid-cols-4 gap-6 p-6">
         {CATEGORIES.map((category) => (
           <div key={category.id}>
