@@ -9,6 +9,7 @@ import { getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
 import { jsonLdHtml } from '@/lib/json-ld';
 import { serviceNavItems } from '@/lib/service-pages';
+import GoogleAnalytics from "./google-analytics";
 
 // Criterion 36: critical fonts preloaded.
 const inter = Inter({
@@ -124,6 +125,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
         <BackToTop />
         <WhatsAppButton brand={brand} />
+        <GoogleAnalytics />
       </body>
     </html>
   );
