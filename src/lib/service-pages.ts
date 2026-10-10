@@ -49,7 +49,12 @@ export type ServicePage = {
   /** Slugs of sibling services. */
   related: string[];
   guides: { label: string; href: string }[];
+  /** schema.org areaServed; omit for remote services offered worldwide. */
+  areaServed?: string | string[];
 };
+
+/** areaServed for pages that set none: the services are delivered remotely. */
+export const DEFAULT_AREA_SERVED = 'Worldwide';
 
 const SEO_QUOTE = '/contact?subject=SEO%20services';
 const SEO_GUIDES = { label: 'SEO guides and how-tos', href: '/blog/seo' };

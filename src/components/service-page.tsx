@@ -6,7 +6,7 @@ import { PageHero } from '@/components/page-hero';
 import { HubSectionHeader } from '@/components/services-hub/hub-section-header';
 import { HubCtaBand, HUB_BUTTON } from '@/components/services-hub/hub-cta-band';
 import { ServiceCard } from '@/components/services-hub/service-card';
-import { quoteHref, servicePage, type ServicePage } from '@/lib/service-pages';
+import { DEFAULT_AREA_SERVED, quoteHref, servicePage, type ServicePage } from '@/lib/service-pages';
 import { HUB_CATEGORIES } from '@/lib/services-hub';
 import { SITE_URL } from '@/lib/supabase';
 
@@ -61,7 +61,7 @@ export function ServicePageView({
     description: page.description,
     url: `${SITE_URL}${page.path}`,
     provider: { '@id': `${SITE_URL}/#organization` },
-    areaServed: 'Worldwide',
+    areaServed: page.areaServed ?? DEFAULT_AREA_SERVED,
   };
   const steps = page.steps ?? DEFAULT_STEPS;
   const related = page.related.flatMap((slug) => servicePage(slug) ?? []);

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { findSection, getPageSections, getSettings, settingText } from '@/lib/queries';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
-import { SERVICE_PAGES } from '@/lib/service-pages';
+import { DEFAULT_AREA_SERVED, SERVICE_PAGES } from '@/lib/service-pages';
 import { SITE_URL } from '@/lib/supabase';
 import { seoMetadata } from '@/lib/seo';
 import { HUB_CATEGORIES, UNFEATURED_HUBS } from '@/lib/services-hub';
@@ -70,7 +70,7 @@ export default async function ServicesPage() {
           serviceType: s.name,
           description: s.description,
           url: `${SITE_URL}${s.path}`,
-          areaServed: 'Worldwide',
+          areaServed: s.areaServed ?? DEFAULT_AREA_SERVED,
         },
       })),
     },
