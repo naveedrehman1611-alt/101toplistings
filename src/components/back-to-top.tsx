@@ -52,7 +52,7 @@ export function BackToTop() {
       inert={!visible}
       aria-hidden={visible ? undefined : true}
       tabIndex={visible ? undefined : -1}
-      className={`bg-brand-700 hover:bg-brand-800 fixed right-5 bottom-5 z-40 grid size-11 place-items-center rounded-md text-white shadow-[var(--shadow-raised)] transition duration-300 ${
+      className={`bg-brand-700 hover:bg-brand-800 fixed right-8 bottom-24 z-40 grid size-11 place-items-center rounded-md text-white shadow-[var(--shadow-raised)] transition duration-300 ${
         visible ? 'opacity-100' : 'pointer-events-none opacity-0 motion-safe:translate-y-3'
       }`}
     >

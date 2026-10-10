@@ -4,6 +4,7 @@ import './globals.css';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { BackToTop } from '@/components/back-to-top';
+import { WhatsAppButton } from '@/components/whatsapp-button';
 import { getCities, getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
 import { jsonLdHtml } from '@/lib/json-ld';
@@ -124,6 +125,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           company={company}
         />
         <BackToTop />
+        <WhatsAppButton brand={brand} />
       </body>
     </html>
   );
