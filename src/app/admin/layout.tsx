@@ -22,6 +22,7 @@ const NAV = [
   { href: '/admin/locations', label: 'Locations' },
   { href: '/admin/blog', label: 'Blog' },
   { href: '/admin/media', label: 'Media' },
+  { href: '/admin/content', label: 'Content' },
   { href: '/admin/menus', label: 'Menus' },
   { href: '/admin/pages', label: 'Pages & sections' },
   { href: '/admin/seo', label: 'SEO' },
