@@ -5,6 +5,7 @@ import { Header } from '@/components/header';
 import { Footer, type FooterSocial } from '@/components/footer';
 import { BackToTop } from '@/components/back-to-top';
 import { WhatsAppButton } from '@/components/whatsapp-button';
+import { WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import { getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
 import { jsonLdHtml } from '@/lib/json-ld';
@@ -62,9 +63,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     .map((network) => ({ network, href: settingText(settings, `social.${network}`).trim() }))
     .filter((s) => /^https?:\/\//.test(s.href));
   const sameAs = social.map((s) => s.href);
+  // The phone in Settings, else the WhatsApp number the site already shows.
+  const telephone = settingText(settings, 'contact.phone').trim() || `+${WHATSAPP_NUMBER}`;
+  // Only a real stored address: the footer's fallback city is not one.
+  const address = settingText(settings, 'contact.address').trim();
 
-  // Site-wide Organization + WebSite schema; the SearchAction lets Google
-  // offer a sitelinks search box that lands on /search.
+  // Site-wide Organization + WebSite schema. The logo is a square PNG (Google
+  // wants at least 112px, in a raster format) so the brand can show in results;
+  // the SearchAction lets Google offer a search box that lands on /search.
   const siteJsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -73,7 +79,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         '@id': `${SITE_URL}/#organization`,
         name: brand,
         url: SITE_URL,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${SITE_URL}/logo-512.png`,
+          width: 512,
+          height: 512,
+        },
         ...(email ? { email } : {}),
+        telephone,
+        contactPoint: {
+          '@type': 'ContactPoint',
+          contactType: 'customer support',
+          telephone,
+          ...(email ? { email } : {}),
+        },
+        ...(address ? { address } : {}),
         ...(sameAs.length ? { sameAs } : {}),
       },
       {

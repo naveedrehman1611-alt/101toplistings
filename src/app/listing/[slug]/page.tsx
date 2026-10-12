@@ -31,6 +31,7 @@ import { ContactAuthorForm } from '@/components/listing/contact-author-form';
 import { SimilarListings } from '@/components/listing/similar-listings';
 import { SubmitListingCta } from '@/components/listing/submit-listing-cta';
 import { jsonLdHtml } from '@/lib/json-ld';
+import { getCityCountry } from '@/lib/locations';
 
 export const revalidate = 600;
 
@@ -153,6 +154,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
     images,
     similar,
     settings,
+    country,
   ] = await Promise.all([
     taxonomyFor(listing),
     getOpeningHours(listing.id),
@@ -160,6 +162,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
     getListingImages(listing.id),
     getSimilarListings(listing),
     getSettings(),
+    getCityCountry(listing.city_id),
   ]);
 
   const url = `${SITE_URL}/listing/${listing.slug}`;
@@ -190,6 +193,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
       streetAddress: listing.address,
       addressLocality: city?.name,
       postalCode: listing.postal_code ?? undefined,
+      addressCountry: country?.iso2 ?? country?.name,
     };
   }
   if (listing.latitude !== null && listing.longitude !== null) {
@@ -275,7 +279,11 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
         </div>
 
         <aside className="space-y-5">
-          <ListingInformation listing={listing} cityName={city?.name ?? null} />
+          <ListingInformation
+            listing={listing}
+            cityName={city?.name ?? null}
+            countryName={country?.name ?? null}
+          />
           <ListingHours hours={hours} />
           <ListingCategories
             categories={[category, subcategory].flatMap((c) =>

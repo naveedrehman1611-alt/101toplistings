@@ -2,13 +2,15 @@ import { cache } from 'react';
 import { reportError, type City } from './queries';
 import { supabase } from './supabase';
 
+export type Country = { slug: string; name: string; iso2: string | null };
+
 export type CountryCities = {
-  country: { slug: string; name: string };
+  country: Country;
   cities: City[];
 };
 
 type Row = City & {
-  regions: { countries: { slug: string; name: string } | null } | null;
+  regions: { countries: Country | null } | null;
 };
 
 /**
@@ -22,7 +24,7 @@ export const getCitiesByCountry = cache(async function getCitiesByCountry(): Pro
   const { data, error } = await supabase
     .from('cities')
     .select(
-      'id, slug, name, latitude, longitude, intro_copy, is_featured, regions(countries(slug, name))',
+      'id, slug, name, latitude, longitude, intro_copy, is_featured, regions(countries(slug, name, iso2))',
     )
     .order('name');
   reportError('cities.byCountry', error);
@@ -37,3 +39,10 @@ export const getCitiesByCountry = cache(async function getCitiesByCountry(): Pro
   }
   return [...groups.values()].sort((a, b) => a.country.name.localeCompare(b.country.name));
 });
+
+/** The country a city sits in, or null when the city or its country is unknown. */
+export async function getCityCountry(cityId: string | null): Promise<Country | null> {
+  if (!cityId) return null;
+  const groups = await getCitiesByCountry();
+  return groups.find((g) => g.cities.some((c) => c.id === cityId))?.country ?? null;
+}
