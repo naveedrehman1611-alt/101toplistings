@@ -50,13 +50,13 @@ export async function generateMetadata(
 }
 
 /**
- * The Stitch home page. Copy lives in the section components; every figure,
- * card and city count comes from Supabase and is hidden when it is missing.
+ * The Stitch home page. Copy, links and images come from Admin → Content
+ * (src/lib/content/pages/home.ts holds the defaults); every figure, card and
+ * city count comes from Supabase and is hidden when it is missing.
  */
 export default async function HomePage() {
-  const [content, settings, categories, cities, topRated, stats, reviews] = await Promise.all([
+  const [content, categories, cities, topRated, stats, reviews] = await Promise.all([
     getPageContent('home'),
-    getSettings(),
     getCategories(),
     getCities(),
     searchListings({ sort: 'rating', limit: 3 }),
@@ -64,7 +64,6 @@ export default async function HomePage() {
     getReviewSummary(),
   ]);
 
-  const brand = settingText(settings, 'brand.name', 'RankYouSite');
   const cityMarkets = pickHomeCities(cities);
   const [highlights, cityCounts] = await Promise.all([
     getListingHighlights(topRated.map((l) => l.id)),
@@ -78,23 +77,36 @@ export default async function HomePage() {
   return (
     <>
       <Hero content={content.hero} categories={categories} cities={cities} />
-      <HeroStats stats={stats} reviews={reviews} />
-      <TopRated
-        listings={topRated}
-        highlights={highlights}
-        categoryNames={categoryNames}
-        cityNames={cityNames}
-      />
-      <Story stats={stats} />
-      <WhyChoose brand={brand} />
-      <Cities markets={cityMarkets} counts={cityCounts} />
-      <Services categorySlugs={categorySlugs} />
-      <HowItWorks brand={brand} />
-      <GrowVisibility brand={brand} />
-      <HelpingCustomers brand={brand} />
-      <CtaBanner brand={brand} />
-      <Faq brand={brand} />
-      <FinalCta brand={brand} />
+      {content.stats.visible ? (
+        <HeroStats content={content.stats} stats={stats} reviews={reviews} />
+      ) : null}
+      {content.top_rated.visible ? (
+        <TopRated
+          content={content.top_rated}
+          listings={topRated}
+          highlights={highlights}
+          categoryNames={categoryNames}
+          cityNames={cityNames}
+        />
+      ) : null}
+      {content.story.visible ? <Story content={content.story} stats={stats} /> : null}
+      {content.why_choose.visible ? <WhyChoose content={content.why_choose} /> : null}
+      {content.cities.visible ? (
+        <Cities content={content.cities} markets={cityMarkets} counts={cityCounts} />
+      ) : null}
+      {content.services.visible ? (
+        <Services content={content.services} categorySlugs={categorySlugs} />
+      ) : null}
+      {content.how_it_works.visible ? <HowItWorks content={content.how_it_works} /> : null}
+      {content.grow_visibility.visible ? (
+        <GrowVisibility content={content.grow_visibility} />
+      ) : null}
+      {content.helping_customers.visible ? (
+        <HelpingCustomers content={content.helping_customers} />
+      ) : null}
+      {content.cta_banner.visible ? <CtaBanner content={content.cta_banner} /> : null}
+      {content.faq.visible ? <Faq content={content.faq} /> : null}
+      {content.final_cta.visible ? <FinalCta content={content.final_cta} /> : null}
     </>
   );
 }

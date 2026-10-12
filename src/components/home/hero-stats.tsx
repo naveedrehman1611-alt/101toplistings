@@ -1,7 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { Icon, type IconName } from '@/components/icon';
 import type { DirectoryStats, ReviewSummary } from '@/lib/queries';
+import type { SectionValues } from '@/lib/content/schema';
+import type { HOME_PAGE } from '@/lib/content/pages/home';
 import { CountUp } from './count-up';
+
+export type HeroStatsContent = SectionValues<(typeof HOME_PAGE)['sections']['stats']>;
 
 // Bobs up and down; each cell sets --float-delay so the icons move out of step.
 const FLOAT = 'inline-flex motion-safe:animate-float';
@@ -45,7 +49,7 @@ function StarRow({ className, width }: { className: string; width?: string }) {
 }
 
 /** Grey stars with gold ones clipped on top to the real average, so 4.3 fills 86%. */
-function Rating({ reviews }: { reviews: ReviewSummary }) {
+function Rating({ reviews, label }: { reviews: ReviewSummary; label: string }) {
   const average = Math.min(Math.max(reviews.average, 0), 5);
   const score = average.toFixed(1);
   const fill = `${(average / 5) * 100}%`;
@@ -65,7 +69,7 @@ function Rating({ reviews }: { reviews: ReviewSummary }) {
         /5
       </span>
       <span aria-hidden className="text-secondary text-sm sm:col-start-1">
-        User Reviews
+        {label}
       </span>
       <span className="sr-only">
         Average rating {score} out of 5 from {count} {reviews.count === 1 ? 'review' : 'reviews'}
@@ -95,9 +99,11 @@ const CELL =
  * 'pending' and only staff can approve one, so every public listing was reviewed.
  */
 export function HeroStats({
+  content: c,
   stats,
   reviews,
 }: {
+  content: HeroStatsContent;
   stats: DirectoryStats;
   reviews: ReviewSummary | null;
 }) {
@@ -112,7 +118,7 @@ export function HeroStats({
           icon="handshake"
           tone="text-brand-600"
           value={<CountUp to={listings} format="compact" />}
-          label="Active Businesses"
+          label={c.listings_label}
         />
       ),
     });
@@ -125,7 +131,7 @@ export function HeroStats({
           icon="location_city"
           tone="text-accent-500"
           value={<CountUp to={cities} format="compact" />}
-          label="Cities Covered"
+          label={c.cities_label}
         />
       ),
     });
@@ -138,13 +144,13 @@ export function HeroStats({
           icon="schedule"
           tone="text-brand-600"
           value={<CountUp to={100} format="percent" />}
-          label="Reviewed Listings"
+          label={c.reviewed_label}
         />
       ),
     });
   }
   if (reviews && reviews.count > 0) {
-    cells.push({ key: 'rating', content: <Rating reviews={reviews} /> });
+    cells.push({ key: 'rating', content: <Rating reviews={reviews} label={c.rating_label} /> });
   }
   if (cells.length === 0) return null;
 
