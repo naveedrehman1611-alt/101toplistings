@@ -12,6 +12,7 @@ import { Breadcrumbs } from '@/components/ui';
 import { Icon, type IconName } from '@/components/icon';
 import { CountUp } from '@/components/home/count-up';
 import { HubCtaBand } from '@/components/services-hub/hub-cta-band';
+import { TeamSection } from '@/components/about/team-section';
 import { seoMetadata } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -375,6 +376,9 @@ export default async function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* Founders, team and advisors (placeholder data in src/lib/team.ts). */}
+      <TeamSection brand={brand} />
 
       {/* Story with first-90-days timeline left, values list right. */}
       <section aria-labelledby="about-story" className="bg-white py-20 lg:py-[100px]">
