@@ -8,7 +8,7 @@ import { writeAudit } from './audit';
 import { FormError, errorMessage } from './form-data';
 import { checkLink } from './link-rules';
 import { tableTag } from './supabase';
-import { isIconName } from '@/components/icons';
+import { isIconName } from '@/components/icon';
 import { sectionFor } from './content/registry';
 import {
   TEXTAREA_MAX,
