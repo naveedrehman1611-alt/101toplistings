@@ -142,6 +142,13 @@ const PATHS = {
 
 export type IconName = keyof typeof PATHS;
 
+/** Every name, sorted: the choices an editable icon field offers (src/lib/content). */
+export const ICON_NAMES = (Object.keys(PATHS) as IconName[]).sort();
+
+export function isIconName(value: unknown): value is IconName {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(PATHS, value);
+}
+
 /**
  * Decorative by default (aria-hidden). `size` is the pixel size, the same number
  * as the design's `text-[Npx]` on its icon spans; colour is `currentColor`.
