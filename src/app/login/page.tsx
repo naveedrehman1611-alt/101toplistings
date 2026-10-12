@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase-server';
 import { getCurrentUser, roleAtLeast } from '@/lib/auth';
 import { Breadcrumbs } from '@/components/ui';
 import { GoogleSignIn } from '@/components/google-sign-in';
+import { getPageContent } from '@/lib/content/get';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,12 +41,19 @@ async function signIn(formData: FormData) {
   redirect(user && roleAtLeast(user.role, 'moderator') ? '/admin' : '/dashboard');
 }
 
+/** Carries ?next= over to the sign-up page, so the visitor still lands where they were going. */
+function withNext(href: string, next: string | undefined): string {
+  if (!next) return href;
+  return `${href}${href.includes('?') ? '&' : '?'}next=${encodeURIComponent(next)}`;
+}
+
 export default async function LoginPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string; error?: string; reset?: string }>;
 }) {
-  const sp = await searchParams;
+  const [sp, content] = await Promise.all([searchParams, getPageContent('auth')]);
+  const c = content.login;
 
   // Already signed in — no reason to show the form again.
   const user = await getCurrentUser();
@@ -56,17 +64,17 @@ export default async function LoginPage({
 
   return (
     <div className="container-page py-12">
-      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: 'Sign in' }]} />
+      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: c.breadcrumb }]} />
       <div className="mx-auto max-w-sm">
-        <h1 className="font-headline-lg text-headline-lg">Sign in</h1>
-        <p className="mt-3 text-[var(--text-muted)]">Manage listings, content and settings.</p>
+        <h1 className="font-headline-lg text-headline-lg">{c.heading}</h1>
+        {c.intro ? <p className="mt-3 text-[var(--text-muted)]">{c.intro}</p> : null}
 
         {sp.reset ? (
           <p
             role="status"
             className="border-brand-500/40 bg-brand-50 text-brand-800 mt-6 rounded-lg border px-4 py-3 text-sm"
           >
-            Your password has been changed. Sign in with your new password.
+            {c.reset_notice}
           </p>
         ) : null}
         {sp.error ? (
@@ -78,13 +86,13 @@ export default async function LoginPage({
           </p>
         ) : null}
 
-        <GoogleSignIn next={sp.next} from="login" />
+        <GoogleSignIn next={sp.next} from="login" content={content.google} />
 
         <form action={signIn} className="mt-6 space-y-4">
           <input type="hidden" name="next" value={sp.next ?? ''} />
           <div>
             <label htmlFor="email" className="block text-sm font-medium">
-              Email
+              {c.email_label}
             </label>
             <input
               id="email"
@@ -97,7 +105,7 @@ export default async function LoginPage({
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium">
-              Password
+              {c.password_label}
             </label>
             <input
               id="password"
@@ -112,23 +120,23 @@ export default async function LoginPage({
             type="submit"
             className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 w-full rounded-lg shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
           >
-            Sign in
+            {c.button}
           </button>
         </form>
         <p className="mt-4 text-sm">
-          <Link href="/forgot-password" className="text-brand-700 hover:underline">
-            Forgot your password?
+          <Link href={c.forgot.href} className="text-brand-700 hover:underline">
+            {c.forgot.label}
           </Link>
         </p>
         <p className="mt-6 text-sm text-[var(--text-muted)]">
-          New here?{' '}
+          {c.register_before}{' '}
           <Link
-            href={sp.next ? `/register?next=${encodeURIComponent(sp.next)}` : '/register'}
+            href={withNext(c.register_link.href, sp.next)}
             className="text-brand-700 hover:underline"
           >
-            Create an account
+            {c.register_link.label}
           </Link>{' '}
-          to add your business or write a review.
+          {c.register_after}
         </p>
       </div>
     </div>

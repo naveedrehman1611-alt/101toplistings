@@ -5,15 +5,21 @@ import { usePathname } from 'next/navigation';
 import { Icon } from '@/components/icon';
 import { MegaMenu, MegaMenuFooter, focusRing } from '@/components/mega-menu';
 import type { ServiceCategoryId, ServiceNavItem } from '@/lib/service-pages';
+import type { SiteContent } from '@/lib/content/pages/global';
 
 /** The services hub. Kept here, not imported, so the page copy stays out of the client bundle. */
 export const SERVICES_BASE = '/seo-services';
 
-/** Menu columns, in order. Labels live here so the page copy stays out of the client bundle. */
-export const SERVICE_CATEGORIES: { id: ServiceCategoryId; label: string }[] = [
-  { id: 'seo', label: 'SEO' },
-  { id: 'links', label: 'Links & Authority' },
-  { id: 'marketing', label: 'Content & Marketing' },
+export type ServicesMenuContent = SiteContent['services_menu'];
+
+/** Menu columns, in order; their headings are edited in Admin → Content. */
+const SERVICE_CATEGORIES: {
+  id: ServiceCategoryId;
+  heading: 'seo_heading' | 'links_heading' | 'marketing_heading';
+}[] = [
+  { id: 'seo', heading: 'seo_heading' },
+  { id: 'links', heading: 'links_heading' },
+  { id: 'marketing', heading: 'marketing_heading' },
 ];
 
 /** The page is the services hub or one of the service pages. */
@@ -28,9 +34,11 @@ export function isServicePath(pathname: string, services: ServiceNavItem[]): boo
 /** Desktop "SEO Services" trigger and its panel: icon rows in columns, as in the tools menu. */
 export function ServicesMegaMenu({
   services,
+  content,
   label,
 }: {
   services: ServiceNavItem[];
+  content: ServicesMenuContent;
   /** The admin's label when the menu replaces their link to the hub. */
   label?: string;
 }) {
@@ -38,8 +46,8 @@ export function ServicesMegaMenu({
 
   return (
     <MegaMenu
-      label={label ?? 'SEO Services'}
-      shortLabel={label ?? 'Services'}
+      label={label ?? content.label}
+      shortLabel={label ?? content.short_label}
       active={isServicePath(pathname, services)}
       width="max-w-3xl"
     >
@@ -47,7 +55,7 @@ export function ServicesMegaMenu({
         {SERVICE_CATEGORIES.map((category) => (
           <div key={category.id}>
             <p className="font-label-sm text-label-sm text-secondary mb-2 px-2 tracking-wider uppercase">
-              {category.label}
+              {content[category.heading]}
             </p>
             <ul className="flex flex-col gap-0.5">
               {services
@@ -72,19 +80,19 @@ export function ServicesMegaMenu({
       </div>
       <MegaMenuFooter>
         <p className="font-body-sm text-body-sm text-on-surface-variant">
-          Not sure where to start?{' '}
+          {content.note}{' '}
           <Link
-            href="/seo-audit"
+            href={content.note_link.href}
             className={`text-primary-container hover:text-primary rounded-sm font-semibold transition-colors ${focusRing}`}
           >
-            Get an SEO audit
+            {content.note_link.label}
           </Link>
         </p>
         <Link
-          href={SERVICES_BASE}
+          href={content.view_all.href}
           className={`font-label-md text-label-md text-primary-container hover:text-primary inline-flex items-center gap-1 rounded-sm font-semibold transition-colors ${focusRing}`}
         >
-          View all SEO services
+          {content.view_all.label}
           <Icon name="north_east" size={16} />
         </Link>
       </MegaMenuFooter>
