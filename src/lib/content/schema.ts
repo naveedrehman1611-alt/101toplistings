@@ -11,7 +11,7 @@
  * Safe to import from client and server code: no data access here.
  */
 
-import { isIconName } from '@/components/icons';
+import { isIconName, type IconName } from '@/components/icon';
 
 type Base = { label: string; hint?: string };
 
@@ -21,7 +21,8 @@ export type TextareaField = Base & { kind: 'textarea'; default: string; max?: nu
 export type LinkField = Base & { kind: 'link'; default: LinkValue };
 /** `default.src` is a path under /public, used until an image is chosen from Media. */
 export type ImageField = Base & { kind: 'image'; default: { src: string; alt: string } };
-export type IconField = Base & { kind: 'icon'; default: string };
+/** A Material Symbols name from src/components/icon.tsx, the set the public pages draw. */
+export type IconField = Base & { kind: 'icon'; default: IconName };
 export type BooleanField = Base & { kind: 'boolean'; default: boolean };
 
 export type ScalarField =
@@ -68,15 +69,17 @@ export type ImageValue = { src: string; alt: string; width: number | null; heigh
 /** An image as stored: a media row, or null for the code default, plus alt text. */
 export type StoredImage = { media_id: string | null; alt: string };
 
-type ScalarValue<F> = F extends TextField | TextareaField | IconField
-  ? string
-  : F extends BooleanField
-    ? boolean
-    : F extends LinkField
-      ? LinkValue
-      : F extends ImageField
-        ? ImageValue
-        : never;
+type ScalarValue<F> = F extends IconField
+  ? IconName
+  : F extends TextField | TextareaField
+    ? string
+    : F extends BooleanField
+      ? boolean
+      : F extends LinkField
+        ? LinkValue
+        : F extends ImageField
+          ? ImageValue
+          : never;
 
 type ItemDefault<I> = { [K in keyof I]: I[K] extends ImageField ? StoredImage : ScalarValue<I[K]> };
 
@@ -108,7 +111,7 @@ export const link = (label: string, def: LinkValue, hint?: string) =>
   ({ kind: 'link', label, default: def, hint }) as const satisfies LinkField;
 export const image = (label: string, def: { src: string; alt: string }, hint?: string) =>
   ({ kind: 'image', label, default: def, hint }) as const satisfies ImageField;
-export const icon = (label: string, def: string, hint?: string) =>
+export const icon = (label: string, def: IconName, hint?: string) =>
   ({ kind: 'icon', label, default: def, hint }) as const satisfies IconField;
 export const toggle = (label: string, def: boolean, hint?: string) =>
   ({ kind: 'boolean', label, default: def, hint }) as const satisfies BooleanField;

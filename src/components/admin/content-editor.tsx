@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { ICON_NAMES, Icon, isIconName } from '@/components/icons';
+import { ICON_NAMES, Icon, isIconName } from '@/components/icon';
 import type { Field, Fields, ListField, ScalarField, StoredImage } from '@/lib/content/schema';
 import type { MediaOption } from './media-select';
 
