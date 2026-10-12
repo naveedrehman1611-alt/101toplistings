@@ -182,7 +182,6 @@ export function Footer({
   trustLine,
   copyright,
   email,
-  address,
   social,
 }: {
   brand: string;
@@ -191,7 +190,6 @@ export function Footer({
   trustLine: string;
   copyright: string;
   email: string;
-  address: string;
   social: FooterSocial[];
 }) {
   return (
@@ -219,15 +217,6 @@ export function Footer({
               {email ? (
                 <ContactRow icon="mail" href={`mailto:${email}`}>
                   {email}
-                </ContactRow>
-              ) : null}
-              {address ? (
-                <ContactRow
-                  icon="location_on"
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-                  external
-                >
-                  {address}
                 </ContactRow>
               ) : null}
               <ContactRow icon="chat" href={WHATSAPP_LINK.href} external>
