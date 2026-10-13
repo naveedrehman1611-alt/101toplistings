@@ -107,11 +107,17 @@ export function Hero({
           className="absolute top-0 right-[calc(100%-60px)] hidden h-full w-[440px] lg:block"
           style={{ backgroundImage: SKYLINE_FADE }}
         />
+        {/* The largest element in the first viewport, so the likely LCP element,
+            on phones as well as desktop: fetched eagerly at high priority. React
+            hoists a matching fetchpriority="high" preload into <head> for an eager
+            <img>, which is why the Next 16 docs prefer this pair to `preload`,
+            whose <link> carries no fetchpriority and starts at low image priority. */}
         <Image
           src={c.photo.src}
           alt={c.photo.alt}
           fill
-          preload
+          loading="eager"
+          fetchPriority="high"
           sizes="(min-width: 1024px) 563px, 100vw"
           className="object-cover object-right-top lg:[mask-image:linear-gradient(to_right,transparent,black_60px)]"
         />
