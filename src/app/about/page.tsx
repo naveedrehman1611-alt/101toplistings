@@ -104,8 +104,9 @@ export default async function AboutPage() {
     getPageSections('about'),
     getDirectoryStats(),
   ]);
-  // A heading or intro saved under Admin -> Pages still wins, as it did before.
-  const header = findSection(sections, 'header');
+  // A header kept in Admin → Pages (the older page sections) is shown until the hero
+  // is saved in Admin → Content; from then on the Content copy wins.
+  const header = content.hero.edited ? undefined : findSection(sections, 'header');
 
   return (
     <>

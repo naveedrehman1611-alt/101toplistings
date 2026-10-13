@@ -51,7 +51,7 @@ export const ABOUT_PAGE = definePage({
     hero: defineSection({
       label: 'Top of the page',
       description:
-        'Eyebrow, headline, intro, checklist, buttons and the four cards on the right. A heading or intro saved under Admin → Pages (About, "header") still takes precedence.',
+        'Eyebrow, headline, intro, checklist, buttons and the four cards on the right. Until you save this section, a heading saved for this page in Admin → Pages & sections is shown instead; after that, this one wins.',
       hideable: false,
       fields: {
         eyebrow: text('Eyebrow', 'SEO for the UK, USA & Europe', { max: 80 }),
@@ -388,7 +388,7 @@ export const CONTACT_PAGE = definePage({
     hero: defineSection({
       label: 'Top of the page',
       description:
-        'The navy banner. A heading or intro saved under Admin → Pages (Contact, "header") still takes precedence for the breadcrumb and intro.',
+        'The navy banner. Until you save this section, a heading saved for this page in Admin → Pages & sections is shown instead; after that, this one wins.',
       hideable: false,
       fields: {
         breadcrumb: text('Breadcrumb label', 'Contact us', { max: 40 }),

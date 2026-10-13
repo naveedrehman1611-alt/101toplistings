@@ -28,8 +28,9 @@ export default async function CategoriesPage() {
     getCategories(),
     getPageContent('business_categories'),
   ]);
-  // A header kept in Admin → Pages still wins, as it did before the copy was editable here.
-  const header = findSection(sections, 'header');
+  // A header kept in Admin → Pages (the older page sections) is shown until the hero
+  // is saved in Admin → Content; from then on the Content copy wins.
+  const header = hero.edited ? undefined : findSection(sections, 'header');
 
   // Top-level categories as cards, each listing its subcategories, so a tree of
   // 18 parents and ~150 children reads as 18 groups rather than one long grid.

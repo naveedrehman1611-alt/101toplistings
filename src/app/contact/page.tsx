@@ -151,7 +151,9 @@ export default async function ContactPage({
   const subjects = form.subjects.map((s) => s.subject).filter(Boolean);
   const subject = presetSubject(sp.subject, subjects);
   const message = presetMessage(sp.service);
-  const header = findSection(sections, 'header');
+  // A header kept in Admin → Pages (the older page sections) is shown until the hero
+  // is saved in Admin → Content; from then on the Content copy wins.
+  const header = hero.edited ? undefined : findSection(sections, 'header');
   const email = settingText(settings, 'contact.email');
   const label = header?.heading ?? hero.breadcrumb;
   const aside = info.visible || help.visible;

@@ -86,7 +86,9 @@ export default async function ListingsPage({
   const params: ListingsParams = { q, category: cat?.slug, city: city?.slug, sort };
   const pages = Math.min(MAX_PAGE, Math.max(1, Math.ceil(total / BROWSE_PER_PAGE)));
   const offset = (page - 1) * BROWSE_PER_PAGE;
-  const header = findSection(sections, 'header');
+  // A header kept in Admin → Pages (the older page sections) is shown until the hero
+  // is saved in Admin → Content; from then on the Content copy wins.
+  const header = hero.edited ? undefined : findSection(sections, 'header');
   // A header kept in Admin → Pages still wins, as it did before the copy was editable here.
   const heading = header?.heading ?? hero.heading;
 

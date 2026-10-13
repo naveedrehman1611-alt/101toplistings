@@ -35,9 +35,9 @@ export default async function ServicesPage() {
     getPageContent('service'),
   ]);
   const { hero, groups: g, industries: ind, cta } = content;
-  // A heading set in Admin → Pages (the older page sections) still wins, as plain
-  // text; otherwise the Content heading, with its green words.
-  const header = findSection(sections, 'header');
+  // A header kept in Admin → Pages (the older page sections) is shown until the hero
+  // is saved in Admin → Content; from then on the Content copy wins.
+  const header = hero.edited ? undefined : findSection(sections, 'header');
   const heading = header?.heading ?? (
     <>
       {hero.heading_start ? `${hero.heading_start} ` : null}

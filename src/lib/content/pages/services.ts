@@ -49,7 +49,7 @@ const SEO_SERVICES_PAGE = definePage({
         eyebrow: text('Small label above the headline', 'Complete SEO Services', { max: 60 }),
         heading_start: text('Headline, start', 'Every', {
           max: 120,
-          hint: 'The page H1 is: start, the green words, then the end. Any part may be blank. A headline set for this page in Admin → Pages still takes priority.',
+          hint: 'The page H1 is: start, the green words, then the end. Any part may be blank. Until you save this section, a heading saved for this page in Admin → Pages & sections is shown instead; after that, this one wins.',
         }),
         heading_highlight: text('Headline, green words', 'Professional SEO Service', { max: 120 }),
         heading_end: text('Headline, end', 'Your Business Needs to Rank, Grow, and Get Found.', {
@@ -60,7 +60,7 @@ const SEO_SERVICES_PAGE = definePage({
           '{brand} is an SEO agency and SEO company offering professional, affordable SEO services for small business and growing brands worldwide. We help you rank higher, earn more organic traffic and turn visits into leads.',
           {
             max: 600,
-            hint: '{brand} becomes the brand name. An intro set for this page in Admin → Pages still takes priority.',
+            hint: '{brand} becomes the brand name. Until you save this section, a heading saved for this page in Admin → Pages & sections is shown instead; after that, this one wins.',
           },
         ),
         stat_services: text('Figure 1 label (number of services)', 'SEO Services', {

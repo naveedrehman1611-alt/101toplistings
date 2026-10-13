@@ -18,7 +18,7 @@ import {
  */
 
 const PAGES_HEADER_HINT =
-  'If Admin → Pages has a header for this page, its heading and subheading are shown instead.';
+  'Until you save this section, a heading saved for this page in Admin → Pages & sections is shown instead; after that, this one wins.';
 
 // ---------------------------------------------------------------------------
 // Shared by every directory page: the filter bar, result counts and cards

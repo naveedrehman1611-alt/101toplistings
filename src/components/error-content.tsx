@@ -15,6 +15,7 @@ const ErrorContext = createContext<ErrorPageContent | null>(null);
 /** Only for a render outside the root layout, which should not happen: the shipped copy. */
 const FALLBACK: ErrorPageContent = {
   visible: true,
+  edited: false,
   icon: 'error',
   eyebrow: 'Error',
   heading: "This page didn't load",

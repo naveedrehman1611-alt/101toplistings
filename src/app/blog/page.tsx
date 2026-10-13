@@ -30,8 +30,9 @@ export default async function BlogIndex() {
     getPageContent('blog'),
     getPageContent('blog_clusters'),
   ]);
-  // A header kept in Admin → Pages still wins, as it did before the copy was editable here.
-  const header = findSection(sections, 'header');
+  // A header kept in Admin → Pages (the older page sections) is shown until the hero
+  // is saved in Admin → Content; from then on the Content copy wins.
+  const header = hero.edited ? undefined : findSection(sections, 'header');
   const heading = header?.heading ?? hero.heading;
   return (
     <>

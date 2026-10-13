@@ -86,9 +86,12 @@ type ItemDefault<I> = { [K in keyof I]: I[K] extends ImageField ? StoredImage : 
 type FieldValue<F> =
   F extends ListField<infer I> ? { [K in keyof I]: ScalarValue<I[K]> }[] : ScalarValue<F>;
 
-/** What a component receives for a section: every field, resolved, plus `visible`. */
+/**
+ * What a component receives for a section: every field, resolved, plus
+ * `visible` and `edited` (true once the section has been saved in Admin → Content).
+ */
 export type SectionValues<S> = S extends { fields: infer F }
-  ? { [K in keyof F]: FieldValue<F[K]> } & { visible: boolean }
+  ? { [K in keyof F]: FieldValue<F[K]> } & { visible: boolean; edited: boolean }
   : never;
 
 /** Identity helpers: they only pin the generic so values and components stay typed. */

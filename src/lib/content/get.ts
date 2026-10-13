@@ -108,6 +108,7 @@ export const getPageContent = cache(async function getPageContent<P extends Page
       section,
       values: readStoredSection(section, row?.data),
       visible: section.hideable === false ? true : (row?.is_enabled ?? true),
+      edited: Boolean(row),
     };
   });
 
@@ -120,8 +121,8 @@ export const getPageContent = cache(async function getPageContent<P extends Page
   );
 
   const out: Record<string, Record<string, unknown>> = {};
-  for (const { name, section, values, visible } of stored) {
-    const resolved: Record<string, unknown> = { visible };
+  for (const { name, section, values, visible, edited } of stored) {
+    const resolved: Record<string, unknown> = { visible, edited };
     for (const [k, field] of Object.entries(section.fields)) {
       resolved[k] = resolveField(field, values[k], media, brand);
     }
