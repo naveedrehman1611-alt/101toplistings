@@ -14,10 +14,13 @@ export function ServiceCard({
   service,
   tag,
   featured = false,
+  learnMore = 'Learn more',
 }: {
   service: Pick<ServicePage, 'name' | 'description' | 'path' | 'icon'>;
   tag?: string;
   featured?: boolean;
+  /** The link text; screen readers also hear " about <service name>". */
+  learnMore?: string;
 }) {
   return (
     <article
@@ -65,7 +68,8 @@ export function ServiceCard({
           featured ? 'text-hero-green-light' : 'text-primary-container'
         }`}
       >
-        Learn more<span className="sr-only"> about {service.name}</span>
+        {learnMore}
+        <span className="sr-only"> about {service.name}</span>
         <Icon name="arrow_forward" size={16} />
       </Link>
     </article>
