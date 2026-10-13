@@ -185,12 +185,56 @@ export function toolsByCategory(): { id: ToolCategoryId; label: string; tools: F
   }));
 }
 
-/** Up to `limit` other live tools, same category first. */
-export function relatedTools(slug: string, limit = 4): FreeTool[] {
+/**
+ * Up to `limit` other live tools, same category first. Pass `tools` (from
+ * withCardCopy) to use the edited card copy and leave hidden cards out.
+ */
+export function relatedTools(
+  slug: string,
+  limit = 4,
+  tools: (FreeTool & { visible?: boolean })[] = FREE_TOOLS,
+): FreeTool[] {
   const tool = getTool(slug);
-  const others = LIVE_TOOLS.filter((t) => t.slug !== slug);
+  const others = tools.filter((t) => t.status === 'live' && t.visible !== false && t.slug !== slug);
   return [
     ...others.filter((t) => t.category === tool.category),
     ...others.filter((t) => t.category !== tool.category),
   ].slice(0, limit);
+}
+
+// ---------------------------------------------------------------------------
+// Editable card copy
+// ---------------------------------------------------------------------------
+
+/**
+ * The name, summary, icon and "New" badge of every tool card are editable in
+ * Admin → Content (the free_tools page, one "card-<slug>" section per tool);
+ * the entries above are their defaults. Slugs, categories and status are not.
+ */
+export type ToolCardCopy = {
+  name: string;
+  summary: string;
+  icon: IconName;
+  is_new: boolean;
+  visible: boolean;
+};
+
+export type ShownTool = FreeTool & { visible: boolean };
+
+/** The content section holding a tool's card copy. */
+export function cardKey(slug: string): `card-${string}` {
+  return `card-${slug}`;
+}
+
+/** A tool with its edited card copy over the defaults above. */
+export function withCardCopy(tool: FreeTool, copy: ToolCardCopy | undefined): ShownTool {
+  if (!copy) return { ...tool, visible: true };
+  return {
+    ...tool,
+    name: copy.name,
+    summary: copy.summary,
+    icon: copy.icon,
+    isNew: copy.is_new,
+    visible: copy.visible,
+  };
 }
