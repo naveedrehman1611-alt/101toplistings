@@ -2,6 +2,8 @@
 
 import { useActionState } from 'react';
 import { sendListingMessage, type ListingMessageState } from '@/lib/listing-message-actions';
+import { fill } from '@/components/browse/fill';
+import type { ListingContent } from '@/lib/content/pages/directory';
 
 const initialState: ListingMessageState = { status: 'idle', message: '' };
 
@@ -20,10 +22,12 @@ export function ContactAuthorForm({
   listingId,
   slug,
   name,
+  labels: t,
 }: {
   listingId: string;
   slug: string;
   name: string;
+  labels: ListingContent['contact'];
 }) {
   const [state, formAction, pending] = useActionState(sendListingMessage, initialState);
   const sent = state.status === 'ok';
@@ -31,8 +35,10 @@ export function ContactAuthorForm({
 
   return (
     <section id="contact-author" className="surface-card scroll-mt-24 p-5">
-      <h2 className="font-title-md text-title-md text-on-surface">Contact Author</h2>
-      <h3 className="font-label-md text-label-md text-secondary mt-1">Send message to “{name}”</h3>
+      <h2 className="font-title-md text-title-md text-on-surface">{t.heading}</h2>
+      <h3 className="font-label-md text-label-md text-secondary mt-1">
+        {fill(t.subheading, { name })}
+      </h3>
 
       {/* Always mounted so screen readers announce the confirmation when it appears. */}
       <div role="status">
@@ -59,7 +65,7 @@ export function ContactAuthorForm({
           <input type="hidden" name="listing_name" value={name} />
 
           <label className="block">
-            <span className="font-label-md text-label-md">Name</span>
+            <span className="font-label-md text-label-md">{t.name}</span>
             <input
               name="name"
               required
@@ -70,7 +76,7 @@ export function ContactAuthorForm({
             />
           </label>
           <label className="block">
-            <span className="font-label-md text-label-md">Email</span>
+            <span className="font-label-md text-label-md">{t.email}</span>
             <input
               name="email"
               type="email"
@@ -82,7 +88,7 @@ export function ContactAuthorForm({
             />
           </label>
           <label className="block">
-            <span className="font-label-md text-label-md">Phone (optional)</span>
+            <span className="font-label-md text-label-md">{t.phone}</span>
             <input
               name="phone"
               type="tel"
@@ -93,7 +99,7 @@ export function ContactAuthorForm({
             />
           </label>
           <label className="block">
-            <span className="font-label-md text-label-md">Message</span>
+            <span className="font-label-md text-label-md">{t.message}</span>
             <textarea
               name="message"
               required
@@ -112,7 +118,7 @@ export function ContactAuthorForm({
               defaultChecked={f.terms === 'on'}
               className="accent-primary-container mt-1 size-4 shrink-0"
             />
-            <span>I agree to share these details with {name} so they can reply.</span>
+            <span>{fill(t.consent, { name })}</span>
           </label>
 
           {/* Honeypot: hidden from people, filled in by bots. */}
@@ -130,7 +136,7 @@ export function ContactAuthorForm({
             disabled={pending}
             className="bg-primary-container text-on-primary hover:bg-primary font-label-md text-label-md focus-visible:ring-primary-container inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg px-5 shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:opacity-60"
           >
-            {pending ? 'Sending…' : 'Send Private Message'}
+            {pending ? t.sending : t.submit}
           </button>
         </form>
       )}

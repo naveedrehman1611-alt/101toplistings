@@ -3,6 +3,26 @@ import Link from 'next/link';
 import { SITE_TIME_ZONE, type BrowseRow, type OpenState } from '@/lib/browse';
 import { Icon } from '@/components/icon';
 import { Stars } from '@/components/ui';
+import { fill } from './fill';
+
+/** The row's own words; Admin → Content → Directory: filters, results and cards. */
+export type ListingRowLabels = {
+  featured: string;
+  open_now: string;
+  closed: string;
+  published: string;
+  view_details: string;
+  contact: string;
+};
+
+const LABELS: ListingRowLabels = {
+  featured: 'Featured',
+  open_now: 'Open now',
+  closed: 'Closed',
+  published: 'Published {date}',
+  view_details: 'View details',
+  contact: 'Contact',
+};
 
 // Only the numbers come from Intl. Month names do not: en-GB prints "Sep" or
 // "Sept" depending on the runtime's ICU data, and the page must read the same
@@ -31,7 +51,15 @@ function initial(name: string): string {
   return (name.match(/[\p{L}\p{N}]/u)?.[0] ?? '').toUpperCase();
 }
 
-export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
+export function ListingRow({
+  row,
+  rank,
+  labels: t = LABELS,
+}: {
+  row: BrowseRow;
+  rank: number;
+  labels?: ListingRowLabels;
+}) {
   const headingId = `listing-${row.id}`;
   const href = `/listing/${row.slug}`;
   const date = row.publishedAt ? new Date(row.publishedAt) : null;
@@ -75,10 +103,10 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
               // The listing card's gold badge; its dark text keeps AA contrast.
               <span className={`${PILL} bg-badge-gold text-on-secondary-fixed`}>
                 <Icon name="star" size={14} />
-                Featured
+                {t.featured}
               </span>
             ) : null}
-            <OpenBadge state={row.open} />
+            <OpenBadge state={row.open} labels={t} />
           </div>
         </div>
 
@@ -119,7 +147,7 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
           ) : null}
           {published ? (
             <time dateTime={published.toISOString()} className="text-[var(--text-muted)]">
-              Published {formatDate(published)}
+              {fill(t.published, { date: formatDate(published) })}
             </time>
           ) : null}
           <Stars value={row.rating} count={row.reviewCount} />
@@ -132,31 +160,31 @@ export function ListingRow({ row, rank }: { row: BrowseRow; rank: number }) {
       <div className="flex w-full gap-2 sm:w-auto sm:shrink-0 sm:flex-col">
         <Link
           href={href}
-          aria-label={`View details for ${row.name}`}
+          aria-label={`${t.view_details} for ${row.name}`}
           className={`${ACTION} bg-primary-container text-on-primary hover:bg-primary`}
         >
-          View details
+          {t.view_details}
           <Icon name="arrow_forward" size={16} />
         </Link>
         <Link
           href={`${href}#contact-author`}
-          aria-label={`Contact ${row.name}`}
+          aria-label={`${t.contact} ${row.name}`}
           className={`${ACTION} border border-[var(--border)] hover:bg-[var(--surface-2)]`}
         >
           <Icon name="mail" size={16} />
-          Contact
+          {t.contact}
         </Link>
       </div>
     </article>
   );
 }
 
-function OpenBadge({ state }: { state: OpenState }) {
+function OpenBadge({ state, labels }: { state: OpenState; labels: ListingRowLabels }) {
   if (state === 'open') {
-    return <span className={`${PILL} bg-brand-50 text-brand-800`}>Open now</span>;
+    return <span className={`${PILL} bg-brand-50 text-brand-800`}>{labels.open_now}</span>;
   }
   if (state === 'closed') {
-    return <span className={`${PILL} bg-red-50 text-red-700`}>Closed</span>;
+    return <span className={`${PILL} bg-red-50 text-red-700`}>{labels.closed}</span>;
   }
   return null;
 }

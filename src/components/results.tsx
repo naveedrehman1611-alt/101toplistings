@@ -1,16 +1,13 @@
 import Link from 'next/link';
 import type { ListingCard as Card } from '@/lib/queries';
+import type { CardsContent, ResultsContent } from '@/lib/content/pages/directory';
 import { ListingCard } from './listing-card';
 import { EmptyState } from './ui';
+import { fill } from './browse/fill';
 
 export type SortKey = 'newest' | 'oldest' | 'rating' | 'alphabetical' | 'nearest';
 
-const SORTS: { key: SortKey; label: string }[] = [
-  { key: 'newest', label: 'Newest' },
-  { key: 'oldest', label: 'Oldest' },
-  { key: 'rating', label: 'Highest rated' },
-  { key: 'alphabetical', label: 'A–Z' },
-];
+const SORTS = ['newest', 'oldest', 'rating', 'alphabetical'] as const satisfies SortKey[];
 
 function buildHref(base: string, params: Record<string, string | number | undefined>) {
   const q = new URLSearchParams();
@@ -33,6 +30,8 @@ export function Results({
   cityNames,
   emptyTitle,
   emptyBody,
+  labels: t,
+  cardLabels,
 }: {
   listings: Card[];
   basePath: string;
@@ -47,7 +46,17 @@ export function Results({
   cityNames: Map<string, string>;
   emptyTitle: string;
   emptyBody: string;
+  /** Editable copy: Admin → Content → Directory: filters, results and cards. */
+  labels: ResultsContent;
+  cardLabels: CardsContent;
 }) {
+  const sortLabels: Record<SortKey, string> = {
+    nearest: t.sort_nearest,
+    newest: t.sort_newest,
+    oldest: t.sort_oldest,
+    rating: t.sort_rating,
+    alphabetical: t.sort_alphabetical,
+  };
   const total = listings[0]?.total_count ?? 0;
   const pages = Math.min(MAX_PAGE, Math.max(1, Math.ceil(Number(total) / perPage)));
   // A link per page is fine at 3 pages and is kilobytes of markup on every
@@ -67,24 +76,22 @@ export function Results({
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         {/* An h2, so the cards' h3 titles follow the page h1 without skipping a level. */}
         <h2 className="font-sans text-sm font-normal tracking-normal text-[var(--text-muted)]">
-          {total} {Number(total) === 1 ? 'business' : 'businesses'}
+          {fill(Number(total) === 1 ? t.count_one : t.count_many, { count: total })}
         </h2>
         <div className="flex flex-wrap gap-2">
-          {(nearest ? [{ key: 'nearest' as const, label: 'Nearest' }, ...SORTS] : SORTS).map(
-            (s) => (
-              <Link
-                key={s.key}
-                href={buildHref(basePath, { ...params, q: query, sort: s.key })}
-                className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
-                  sort === s.key
-                    ? 'border-brand-500 bg-brand-50 text-brand-800'
-                    : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-                }`}
-              >
-                {s.label}
-              </Link>
-            ),
-          )}
+          {(nearest ? (['nearest', ...SORTS] as SortKey[]) : SORTS).map((key) => (
+            <Link
+              key={key}
+              href={buildHref(basePath, { ...params, q: query, sort: key })}
+              className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                sort === key
+                  ? 'border-brand-500 bg-brand-50 text-brand-800'
+                  : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
+              }`}
+            >
+              {sortLabels[key]}
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -93,7 +100,12 @@ export function Results({
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {listings.map((l) => (
-            <ListingCard key={l.id} listing={l} cityName={cityNames.get(l.city_id ?? '')} />
+            <ListingCard
+              key={l.id}
+              listing={l}
+              cityName={cityNames.get(l.city_id ?? '')}
+              labels={cardLabels}
+            />
           ))}
         </div>
       )}

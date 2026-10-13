@@ -7,6 +7,8 @@ import { Button, EmptyState } from '@/components/ui';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { MIN_CITY_LISTINGS_TO_INDEX, seoMetadata } from '@/lib/seo';
+import { getPageContent } from '@/lib/content/get';
+import { fill } from '@/components/browse/fill';
 
 export const revalidate = 600;
 
@@ -24,10 +26,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LocationsPage() {
-  const groups = await getCitiesByCountry();
+  const [groups, { hero, countries, empty }] = await Promise.all([
+    getCitiesByCountry(),
+    getPageContent('locations'),
+  ]);
   const counts = await getCityListingCounts(groups.flatMap((g) => g.cities.map((c) => c.id)));
 
-  const trail = [{ label: 'Home', href: '/' }, { label: 'Locations' }];
+  const trail = [{ label: 'Home', href: '/' }, { label: hero.crumb }];
 
   const cityCount = groups.reduce((n, g) => n + g.cities.length, 0);
 
@@ -36,36 +41,56 @@ export default async function LocationsPage() {
       <JsonLd data={breadcrumbSchema(trail, '/locations')} />
       <PageHero
         trail={trail}
-        eyebrow="Browse by location"
+        eyebrow={hero.eyebrow}
         heading={
           <>
-            Business directory by <span className="text-hero-green-light">location</span>
+            {hero.heading}
+            {hero.highlight ? (
+              <>
+                {' '}
+                <span className="text-hero-green-light">{hero.highlight}</span>
+              </>
+            ) : null}
           </>
         }
-        subheading="Use this business directory by country and city to find companies near you or in the market you are researching. Choose a city to see the businesses listed there."
+        subheading={hero.intro || undefined}
         stats={
           groups.length
             ? [
-                { value: groups.length, label: groups.length === 1 ? 'Country' : 'Countries' },
-                { value: cityCount, label: cityCount === 1 ? 'City' : 'Cities' },
+                {
+                  value: groups.length,
+                  label: groups.length === 1 ? hero.stat_country : hero.stat_countries,
+                },
+                { value: cityCount, label: cityCount === 1 ? hero.stat_city : hero.stat_cities },
               ]
             : undefined
         }
       >
-        <div className="flex flex-wrap gap-3">
-          <Button href="/add-business">List your business</Button>
-          <Button href="/business-directory" variant="ghost">
-            Browse all businesses
-          </Button>
-        </div>
+        {(hero.primary.label && hero.primary.href) ||
+        (hero.secondary.label && hero.secondary.href) ? (
+          <div className="flex flex-wrap gap-3">
+            {hero.primary.label && hero.primary.href ? (
+              <Button href={hero.primary.href}>{hero.primary.label}</Button>
+            ) : null}
+            {hero.secondary.label && hero.secondary.href ? (
+              <Button href={hero.secondary.href} variant="ghost">
+                {hero.secondary.label}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </PageHero>
       <div className="container-page pb-10 md:pb-12">
         {groups.length === 0 ? (
           <div className="mt-12">
             <EmptyState
-              title="No locations yet"
-              body="Cities will appear here once they are added to the directory."
-              action={<Button href="/business-directory">Browse businesses</Button>}
+              title={empty.title}
+              body={empty.body}
+              action={
+                empty.button.label && empty.button.href ? (
+                  <Button href={empty.button.href}>{empty.button.label}</Button>
+                ) : undefined
+              }
             />
           </div>
         ) : (
@@ -75,7 +100,7 @@ export default async function LocationsPage() {
                 id={`country-${g.country.slug}`}
                 className="font-headline-md text-headline-md mt-12"
               >
-                Business directory in {g.country.name}
+                {fill(countries.heading, { country: g.country.name })}
               </h2>
               <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {g.cities.map((c) => {
@@ -94,7 +119,9 @@ export default async function LocationsPage() {
                         <span>{c.name}</span>
                         {n !== undefined ? (
                           <span className="text-sm font-normal text-[var(--text-muted)]">
-                            {n} {n === 1 ? 'listing' : 'listings'}
+                            {fill(n === 1 ? countries.listing_one : countries.listing_many, {
+                              count: n,
+                            })}
                           </span>
                         ) : null}
                       </Link>

@@ -11,6 +11,7 @@ import { ListingRow } from '@/components/browse/listing-row';
 import { Pager } from '@/components/browse/pager';
 import { ResultsToolbar } from '@/components/browse/results-toolbar';
 import { seoMetadata } from '@/lib/seo';
+import { getPageContent } from '@/lib/content/get';
 
 export const revalidate = 300;
 
@@ -54,11 +55,14 @@ export default async function ListingsPage({
   const sort = parseBrowseSort(sp.sort);
   const q = sp.q?.trim().slice(0, 100) || undefined;
 
-  const [sections, categories, cities] = await Promise.all([
+  const [sections, categories, cities, content, shared] = await Promise.all([
     getPageSections('listings'),
     getCategories(),
     getCities(),
+    getPageContent('business_directory'),
+    getPageContent('directory_shared'),
   ]);
+  const { hero, summary, empty } = content;
   // Filters travel as slugs so the URL stays readable; unknown slugs are ignored.
   const cat = categories.find((c) => c.slug === sp.category);
   const city = cities.find((c) => c.slug === sp.city);
@@ -83,22 +87,23 @@ export default async function ListingsPage({
   const pages = Math.min(MAX_PAGE, Math.max(1, Math.ceil(total / BROWSE_PER_PAGE)));
   const offset = (page - 1) * BROWSE_PER_PAGE;
   const header = findSection(sections, 'header');
-  const heading = header?.heading ?? 'All listings';
+  // A header kept in Admin → Pages still wins, as it did before the copy was editable here.
+  const heading = header?.heading ?? hero.heading;
 
   return (
     <>
       <PageHero
         trail={[{ label: 'Home', href: '/' }, { label: heading }]}
-        eyebrow="Business directory"
+        eyebrow={hero.eyebrow}
         heading={heading}
-        subheading={header?.subheading}
+        subheading={header?.subheading ?? (hero.intro || undefined)}
         stats={
           filtered
             ? undefined
             : [
-                { value: total, label: 'Listings' },
-                { value: categories.length, label: 'Categories' },
-                { value: cities.length, label: 'Cities' },
+                { value: total, label: hero.stat_listings },
+                { value: categories.length, label: hero.stat_categories },
+                { value: cities.length, label: hero.stat_cities },
               ]
         }
       />
@@ -114,12 +119,13 @@ export default async function ListingsPage({
             categories={categories}
             cities={cities}
             nearMe
+            labels={shared.filters}
           />
         </div>
 
-        {facets ? (
+        {facets && summary.visible ? (
           <div className="mt-10">
-            <DirectorySummary facets={facets} params={params} />
+            <DirectorySummary facets={facets} params={params} content={summary} />
           </div>
         ) : null}
 
@@ -135,39 +141,38 @@ export default async function ListingsPage({
                 perPage={BROWSE_PER_PAGE}
                 sort={sort}
                 params={params}
+                labels={shared.results}
               />
               <ol start={offset + 1} className="mt-6 space-y-4">
                 {rows.map((row, i) => (
                   <li key={row.id}>
-                    <ListingRow row={row} rank={offset + i + 1} />
+                    <ListingRow row={row} rank={offset + i + 1} labels={shared.cards} />
                   </li>
                 ))}
               </ol>
               <div className="mt-10">
-                <Pager page={page} pages={pages} params={params} />
+                <Pager page={page} pages={pages} params={params} labels={shared.results} />
               </div>
             </>
           ) : page > 1 ? (
             // A page number past the end of the list, usually from an old link.
             <EmptyState
-              title="Nothing on this page"
-              body="The list is shorter than this page number. Start again from the first page."
+              title={empty.past_end_title}
+              body={empty.past_end_body}
               action={
-                <Button href={listingsHref({ ...params, page: undefined })}>Go to page 1</Button>
+                <Button href={listingsHref({ ...params, page: undefined })}>
+                  {empty.past_end_button}
+                </Button>
               }
             />
           ) : (
             <EmptyState
-              title={filtered ? 'No matches' : 'No listings yet'}
-              body={
-                filtered
-                  ? 'Nothing matches these filters. Try another city or category, or clear the filters.'
-                  : 'Nothing has been approved for this view.'
-              }
+              title={filtered ? empty.filtered_title : empty.empty_title}
+              body={filtered ? empty.filtered_body : empty.empty_body}
               action={
                 filtered ? (
                   <Button href="/business-directory" variant="ghost">
-                    Clear filters
+                    {empty.clear_button}
                   </Button>
                 ) : undefined
               }

@@ -12,17 +12,34 @@ import { useRouter } from 'next/navigation';
  * Inside a filter form it carries that form's keyword and category along, so
  * "plumbers near me" works in one step.
  */
+export type NearMeMessages = {
+  busy: string;
+  unsupported: string;
+  blocked: string;
+  failed: string;
+};
+
+const NEAR_ME_MESSAGES: NearMeMessages = {
+  busy: 'Finding you…',
+  unsupported: 'Your browser cannot share its location. Pick a city instead.',
+  blocked: 'Location is blocked for this site. Allow it in your browser settings, or pick a city.',
+  failed: 'We could not find your location. Try again, or pick a city.',
+};
+
 export function NearMeButton({
   radius = 10,
   className,
   label = 'Near me',
   messageClassName = 'mt-1 max-w-xs text-xs text-on-error-container',
+  messages = NEAR_ME_MESSAGES,
 }: {
   radius?: number;
   className?: string;
   label?: string;
   /** Classes for the error line under the button, e.g. a light colour on a dark background. */
   messageClassName?: string;
+  /** The busy label and error lines; defaults to the original wording. */
+  messages?: NearMeMessages;
 }) {
   const router = useRouter();
   const [state, setState] = useState<'idle' | 'locating' | 'error'>('idle');
@@ -31,7 +48,7 @@ export function NearMeButton({
   function locate(e: React.MouseEvent<HTMLButtonElement>) {
     if (!('geolocation' in navigator)) {
       setState('error');
-      setMessage('Your browser cannot share its location. Pick a city instead.');
+      setMessage(messages.unsupported);
       return;
     }
     const form = e.currentTarget.closest('form');
@@ -54,11 +71,7 @@ export function NearMeButton({
       },
       (err) => {
         setState('error');
-        setMessage(
-          err.code === err.PERMISSION_DENIED
-            ? 'Location is blocked for this site. Allow it in your browser settings, or pick a city.'
-            : 'We could not find your location. Try again, or pick a city.',
-        );
+        setMessage(err.code === err.PERMISSION_DENIED ? messages.blocked : messages.failed);
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
     );
@@ -82,7 +95,7 @@ export function NearMeButton({
             clipRule="evenodd"
           />
         </svg>
-        {state === 'locating' ? 'Finding you…' : label}
+        {state === 'locating' ? messages.busy : label}
       </button>
       {message ? (
         <span role="alert" className={messageClassName}>

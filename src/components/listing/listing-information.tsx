@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Icon } from '@/components/icon';
 import type { ListingDetail } from '@/lib/queries';
+import type { ListingContent } from '@/lib/content/pages/directory';
 
 const pinIcon = <Icon name="location_on" size={18} />;
 const phoneIcon = <Icon name="call" size={18} />;
@@ -57,9 +58,11 @@ const linkClass = 'text-primary-container hover:underline';
 export function ListingInformation({
   listing,
   cityName,
+  labels,
 }: {
   listing: ListingDetail;
   cityName: string | null;
+  labels: ListingContent['information'];
 }) {
   const coords = coordinates(listing.latitude, listing.longitude);
   const address = fullAddress(listing.address, cityName);
@@ -108,14 +111,14 @@ export function ListingInformation({
       className="text-primary-container inline-flex items-center gap-1 font-medium hover:underline"
     >
       {directionIcon}
-      Get Direction
+      {labels.directions}
       {newTab}
     </a>
   ) : null;
 
   return (
     <section className="surface-card p-5">
-      <h2 className="font-title-md text-title-md text-on-surface">Information</h2>
+      <h2 className="font-title-md text-title-md text-on-surface">{labels.heading}</h2>
 
       {coords ? (
         <>
@@ -133,7 +136,7 @@ export function ListingInformation({
               rel="noopener noreferrer"
               className={linkClass}
             >
-              View larger map
+              {labels.larger_map}
               {newTab}
             </a>
             {/* Without an address row, directions sit with the map instead. */}

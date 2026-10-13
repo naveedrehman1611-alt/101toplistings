@@ -15,6 +15,8 @@ import { MIN_CATEGORY_LISTINGS_TO_INDEX, SHARE_IMAGE } from '@/lib/seo';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { redirectOrNotFound } from '@/lib/redirects';
+import { getPageContent } from '@/lib/content/get';
+import { fill } from '@/components/browse/fill';
 
 export const revalidate = 600;
 const PER_PAGE = 12;
@@ -69,7 +71,12 @@ export default async function CategoryPage({
   const page = parsePage(sp.page);
   const sort = parseSort(sp.sort);
   const q = sp.q?.trim().slice(0, 100) || undefined;
-  const [cities, categories] = await Promise.all([getCities(), getCategories()]);
+  const [cities, categories, { hero, empty }, shared] = await Promise.all([
+    getCities(),
+    getCategories(),
+    getPageContent('category_page'),
+    getPageContent('directory_shared'),
+  ]);
   const city = cities.find((c) => c.slug === sp.city);
   // A parent's results already include its children (search_listings, 0021);
   // the links below let visitors narrow to one of them.
@@ -86,7 +93,7 @@ export default async function CategoryPage({
   const filtered = Boolean(q || city);
   const trail = [
     { label: 'Home', href: '/' },
-    { label: 'Categories', href: '/business-categories' },
+    { label: hero.crumb, href: '/business-categories' },
     ...(parent ? [{ label: parent.name, href: `/category/${parent.slug}` }] : []),
     { label: cat.name },
   ];
@@ -95,8 +102,8 @@ export default async function CategoryPage({
   // Shown only for the unfiltered category, so the figure is the category's own total.
   const total = filtered ? 0 : Number(listings[0]?.total_count ?? 0);
   const stats = [
-    ...(total > 0 ? [{ value: total, label: 'Listings' }] : []),
-    ...(children.length ? [{ value: children.length, label: 'Subcategories' }] : []),
+    ...(total > 0 ? [{ value: total, label: hero.stat_listings }] : []),
+    ...(children.length ? [{ value: children.length, label: hero.stat_subcategories }] : []),
   ];
 
   return (
@@ -107,7 +114,7 @@ export default async function CategoryPage({
       ) : null}
       <PageHero
         trail={trail}
-        eyebrow="Business category"
+        eyebrow={hero.eyebrow}
         heading={cat.name}
         subheading={cat.description}
         stats={stats}
@@ -137,6 +144,7 @@ export default async function CategoryPage({
             city={city?.slug}
             sort={sort}
             cities={cities}
+            labels={shared.filters}
           />
         </div>
         <div className="mt-8">
@@ -149,18 +157,18 @@ export default async function CategoryPage({
             query={q}
             params={{ city: city?.slug }}
             cityNames={new Map(cities.map((c) => [c.id, c.name]))}
-            emptyTitle={
-              filtered
-                ? `No ${cat.name.toLowerCase()} match`
-                : `No ${cat.name.toLowerCase()} listed yet`
-            }
+            emptyTitle={fill(filtered ? empty.filtered_title : empty.empty_title, {
+              category: cat.name.toLowerCase(),
+            })}
             emptyBody={
               filtered
                 ? city
-                  ? `Nothing in ${city.name} yet. Try another city or clear the filters.`
-                  : 'Nothing matches that search. Try a shorter keyword.'
-                : 'Nothing has been approved in this category so far.'
+                  ? fill(empty.city_body, { city: city.name })
+                  : empty.search_body
+                : empty.empty_body
             }
+            labels={shared.results}
+            cardLabels={shared.cards}
           />
         </div>
       </div>

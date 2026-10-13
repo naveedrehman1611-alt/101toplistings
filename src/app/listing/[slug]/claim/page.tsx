@@ -6,6 +6,8 @@ import { getCurrentUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase-server';
 import { submitClaim } from '@/lib/public-actions';
 import { Breadcrumbs } from '@/components/ui';
+import { getPageContent } from '@/lib/content/get';
+import { fill, fillNodes } from '@/components/browse/fill';
 
 // Depends on who is signed in, so it is rendered per request like the review page.
 export const dynamic = 'force-dynamic';
@@ -28,7 +30,10 @@ export default async function ClaimPage({
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const listing = await getListing(slug);
   if (!listing) notFound();
-  const user = await getCurrentUser();
+  const [user, { claim: t }] = await Promise.all([
+    getCurrentUser(),
+    getPageContent('listing_page'),
+  ]);
   const here = `/listing/${listing.slug}/claim`;
 
   // RLS lets a user read a listing row only if they own it (or are staff), and
@@ -61,57 +66,57 @@ export default async function ClaimPage({
         trail={[
           { label: 'Home', href: '/' },
           { label: listing.name, href: `/listing/${listing.slug}` },
-          { label: 'Claim this business' },
+          { label: t.crumb },
         ]}
       />
       <div className="max-w-xl">
-        <h1 className="font-headline-lg text-headline-lg">Claim {listing.name}</h1>
-        <p className="mt-3 text-[var(--text-muted)]">
-          Own or manage this business? Claim it to update its details, photos and opening hours and
-          reply to reviews. It&apos;s free. We check every claim before handing over control.
-        </p>
+        <h1 className="font-headline-lg text-headline-lg">
+          {fill(t.heading, { name: listing.name })}
+        </h1>
+        {t.intro ? <p className="mt-3 text-[var(--text-muted)]">{t.intro}</p> : null}
 
         {sp.sent ? (
           <Box>
-            <p role="status">
-              Thanks — your claim was received. We&apos;ll contact you to verify it, usually within
-              a couple of days.
-            </p>
-            <BackLink slug={listing.slug} name={listing.name} />
+            <p role="status">{t.sent}</p>
+            <BackLink slug={listing.slug} label={fill(t.back, { name: listing.name })} />
           </Box>
         ) : owns ? (
           <Box>
-            <p>You already manage this business.</p>
-            <Link href="/dashboard" className="mt-2 inline-block font-medium hover:underline">
-              Go to your dashboard →
-            </Link>
+            <p>{t.owns}</p>
+            {t.dashboard.label && t.dashboard.href ? (
+              <Link
+                href={t.dashboard.href}
+                className="mt-2 inline-block font-medium hover:underline"
+              >
+                {t.dashboard.label}
+              </Link>
+            ) : null}
           </Box>
         ) : existing ? (
           <Box>
-            <p>
-              {existing.status === 'resolved'
-                ? 'We have reviewed your claim for this business. If you think we got it wrong, please contact us.'
-                : 'You have already claimed this business. We will be in touch once we have checked it.'}
-            </p>
-            <BackLink slug={listing.slug} name={listing.name} />
+            <p>{existing.status === 'resolved' ? t.resolved : t.pending}</p>
+            <BackLink slug={listing.slug} label={fill(t.back, { name: listing.name })} />
           </Box>
         ) : !user ? (
           <p className="mt-6 text-[var(--text-muted)]">
-            Please{' '}
-            <Link
-              href={`/login?next=${encodeURIComponent(here)}`}
-              className="text-brand-700 hover:underline"
-            >
-              sign in
-            </Link>{' '}
-            or{' '}
-            <Link
-              href={`/register?next=${encodeURIComponent(here)}`}
-              className="text-brand-700 hover:underline"
-            >
-              create an account
-            </Link>{' '}
-            to claim this business. The account becomes the one that manages the listing.
+            {fillNodes(t.signin, {
+              signin: (
+                <Link
+                  href={`/login?next=${encodeURIComponent(here)}`}
+                  className="text-brand-700 hover:underline"
+                >
+                  {t.signin_link}
+                </Link>
+              ),
+              register: (
+                <Link
+                  href={`/register?next=${encodeURIComponent(here)}`}
+                  className="text-brand-700 hover:underline"
+                >
+                  {t.register_link}
+                </Link>
+              ),
+            })}
           </p>
         ) : (
           <form action={submitClaim} className="mt-6 space-y-5">
@@ -126,19 +131,20 @@ export default async function ClaimPage({
             <input type="hidden" name="listing_id" value={listing.id} />
             <input type="hidden" name="slug" value={listing.slug} />
             <label className="block text-sm">
-              <span className="font-medium">Your role at the business</span>
+              <span className="font-medium">{t.role}</span>
               <select name="role" required defaultValue="" className={inputCls}>
                 <option value="" disabled>
-                  Choose one
+                  {t.role_placeholder}
                 </option>
-                <option>Owner</option>
-                <option>Manager</option>
-                <option>Employee</option>
-                <option>Marketing agency</option>
+                {t.roles
+                  .filter((r) => r.label)
+                  .map((r, i) => (
+                    <option key={i}>{r.label}</option>
+                  ))}
               </select>
             </label>
             <label className="block text-sm">
-              <span className="font-medium">Phone number</span>
+              <span className="font-medium">{t.phone}</span>
               <input
                 name="phone"
                 type="tel"
@@ -147,12 +153,10 @@ export default async function ClaimPage({
                 autoComplete="tel"
                 className={inputCls}
               />
-              <span className="mt-1 block text-xs text-[var(--text-muted)]">
-                Ideally the business number shown on the listing, so we can confirm quickly.
-              </span>
+              <span className="mt-1 block text-xs text-[var(--text-muted)]">{t.phone_hint}</span>
             </label>
             <label className="block text-sm">
-              <span className="font-medium">Link to proof (optional)</span>
+              <span className="font-medium">{t.proof}</span>
               <input
                 name="evidence_url"
                 type="url"
@@ -160,12 +164,10 @@ export default async function ClaimPage({
                 placeholder="https://"
                 className={inputCls}
               />
-              <span className="mt-1 block text-xs text-[var(--text-muted)]">
-                Your business website, Facebook page or Google profile that names you.
-              </span>
+              <span className="mt-1 block text-xs text-[var(--text-muted)]">{t.proof_hint}</span>
             </label>
             <label className="block text-sm">
-              <span className="font-medium">Anything else? (optional)</span>
+              <span className="font-medium">{t.message}</span>
               <textarea
                 name="message"
                 maxLength={2000}
@@ -177,7 +179,7 @@ export default async function ClaimPage({
               type="submit"
               className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 rounded-lg px-6 shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
             >
-              Submit claim
+              {t.submit}
             </button>
           </form>
         )}
@@ -194,10 +196,10 @@ function Box({ children }: { children: React.ReactNode }) {
   );
 }
 
-function BackLink({ slug, name }: { slug: string; name: string }) {
+function BackLink({ slug, label }: { slug: string; label: string }) {
   return (
     <Link href={`/listing/${slug}`} className="mt-2 inline-block font-medium hover:underline">
-      ← Back to {name}
+      {label}
     </Link>
   );
 }

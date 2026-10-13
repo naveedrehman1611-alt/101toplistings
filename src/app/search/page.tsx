@@ -5,6 +5,8 @@ import { ListingFilters } from '@/components/listing-filters';
 import { Results, parsePage, parseSort } from '@/components/results';
 import { PageHero } from '@/components/page-hero';
 import { seoMetadata } from '@/lib/seo';
+import { getPageContent } from '@/lib/content/get';
+import { fill } from '@/components/browse/fill';
 
 // SSR — query-dependent, never cached (§1.5 rendering table).
 export const dynamic = 'force-dynamic';
@@ -42,7 +44,12 @@ export default async function SearchPage({
   const sort = parseSort(sp.sort ?? (near ? 'nearest' : undefined));
   const effectiveSort = !near && sort === 'nearest' ? 'newest' : sort;
 
-  const [categories, cities] = await Promise.all([getCategories(), getCities()]);
+  const [categories, cities, { hero, distance, empty }, shared] = await Promise.all([
+    getCategories(),
+    getCities(),
+    getPageContent('search'),
+    getPageContent('directory_shared'),
+  ]);
   const cat = categories.find((c) => c.slug === sp.category);
   const city = cities.find((c) => c.slug === sp.city);
   // Any one of keyword, category, city or a location is enough to run a search.
@@ -60,13 +67,15 @@ export default async function SearchPage({
         offset: (page - 1) * PER_PAGE,
       })
     : [];
-  const scope = [cat?.name, city ? `in ${city.name}` : null].filter(Boolean).join(' ');
-  const where = near ? `within ${near.radius} km of you` : null;
+  const scope = [cat?.name, city ? fill(hero.in_city, { city: city.name }) : null]
+    .filter(Boolean)
+    .join(' ');
+  const where = near ? fill(hero.within, { km: near.radius }) : null;
   const heading = q
-    ? `Results for “${q}”${scope ? ` · ${scope}` : ''}${where ? ` · ${where}` : ''}`
+    ? `${fill(hero.results_heading, { query: q })}${scope ? ` · ${scope}` : ''}${where ? ` · ${where}` : ''}`
     : near
-      ? `${cat?.name ?? 'Businesses'} near you`
-      : scope || 'Search';
+      ? fill(hero.near_heading, { category: cat?.name ?? hero.near_any })
+      : scope || hero.heading;
   const nearParams: Record<string, string> = near
     ? { lat: String(near.lat), lng: String(near.lng), radius: String(near.radius) }
     : {};
@@ -74,8 +83,8 @@ export default async function SearchPage({
   return (
     <>
       <PageHero
-        trail={[{ label: 'Home', href: '/' }, { label: 'Search' }]}
-        eyebrow="Search the directory"
+        trail={[{ label: 'Home', href: '/' }, { label: hero.crumb }]}
+        eyebrow={hero.eyebrow}
         heading={heading}
       />
       <div className="container-page py-10 md:py-12">
@@ -90,12 +99,13 @@ export default async function SearchPage({
             cities={cities}
             nearMe
             near={near ?? undefined}
+            labels={shared.filters}
           />
         </div>
 
         {near ? (
           <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-[var(--text-muted)]">Distance:</span>
+            <span className="text-[var(--text-muted)]">{distance.label}</span>
             {RADII.map((r) => (
               <Link
                 key={r}
@@ -113,7 +123,7 @@ export default async function SearchPage({
                     : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
                 }`}
               >
-                {r} km
+                {fill(distance.option, { km: r })}
               </Link>
             ))}
           </div>
@@ -131,17 +141,13 @@ export default async function SearchPage({
               params={{ category: cat?.slug, city: city?.slug, ...nearParams }}
               nearest={Boolean(near)}
               cityNames={new Map(cities.map((c) => [c.id, c.name]))}
-              emptyTitle={near ? 'Nothing nearby yet' : 'No matches'}
-              emptyBody={
-                near
-                  ? `Nothing within ${near.radius} km of you matches. Try a wider distance, or browse by city.`
-                  : 'Nothing matched. Try a shorter keyword, another city, or clear a filter.'
-              }
+              emptyTitle={near ? empty.nearby_title : empty.title}
+              emptyBody={near ? fill(empty.nearby_body, { km: near.radius }) : empty.body}
+              labels={shared.results}
+              cardLabels={shared.cards}
             />
           ) : (
-            <p className="text-[var(--text-muted)]">
-              Type a keyword, pick a category or city, or press Near me to see what&apos;s close by.
-            </p>
+            <p className="text-[var(--text-muted)]">{empty.prompt}</p>
           )}
         </div>
       </div>

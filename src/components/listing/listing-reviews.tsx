@@ -2,6 +2,8 @@ import { Stars } from '@/components/ui';
 import type { ListingDetail, PublicReview } from '@/lib/queries';
 import { REVIEW_CRITERIA, type ReviewCriterionKey } from '@/lib/review-criteria';
 import { ReviewForm } from './review-form';
+import { fill } from '@/components/browse/fill';
+import type { ListingContent } from '@/lib/content/pages/directory';
 
 type ReviewedListing = Pick<
   ListingDetail,
@@ -22,13 +24,17 @@ function aspectValue(review: PublicReview, key: ReviewCriterionKey) {
 export function ListingReviews({
   listing,
   reviews,
+  labels: t,
+  formLabels,
 }: {
   listing: ReviewedListing;
   reviews: PublicReview[];
+  labels: ListingContent['reviews'];
+  formLabels: ListingContent['review_form'];
 }) {
   const form = (
     <div className="surface-card mt-4 p-5">
-      <ReviewForm listingId={listing.id} slug={listing.slug} />
+      <ReviewForm listingId={listing.id} slug={listing.slug} labels={formLabels} />
     </div>
   );
 
@@ -36,7 +42,7 @@ export function ListingReviews({
     return (
       <section id="reviews" className="mt-10 scroll-mt-24">
         <h2 className="font-headline-sm text-headline-sm text-on-surface">
-          Be the first to review “{listing.name}”
+          {fill(t.first_heading, { name: listing.name })}
         </h2>
         {form}
       </section>
@@ -56,14 +62,14 @@ export function ListingReviews({
   return (
     <section id="reviews" className="mt-10 scroll-mt-24">
       <h2 className="font-headline-sm text-headline-sm text-on-surface">
-        {total} review{total === 1 ? '' : 's'} for “{listing.name}”
+        {fill(total === 1 ? t.heading_one : t.heading_many, { count: total, name: listing.name })}
       </h2>
 
       {hasOverall || aspects.length > 0 ? (
         <div className="surface-card mt-4 flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:gap-10">
           {hasOverall ? (
             <div className="shrink-0">
-              <p className="font-body-sm text-body-sm text-secondary">Overall rating</p>
+              <p className="font-body-sm text-body-sm text-secondary">{t.overall}</p>
               <div className="mt-1">
                 <Stars value={listing.rating_average} count={listing.review_count} />
               </div>
@@ -99,7 +105,7 @@ export function ListingReviews({
 
       {total > reviews.length ? (
         <p className="font-body-sm text-body-sm text-secondary mt-4">
-          Showing the {reviews.length} most recent.
+          {fill(t.showing_recent, { count: reviews.length })}
         </p>
       ) : null}
 
@@ -134,7 +140,7 @@ export function ListingReviews({
                 <p className="font-body-md text-body-md mt-2 whitespace-pre-line">{r.body}</p>
               ) : null}
               <p className="font-body-sm text-body-sm text-secondary mt-2">
-                {r.author_name ?? 'Visitor'} ·{' '}
+                {r.author_name ?? t.anonymous} ·{' '}
                 <time dateTime={r.created_at}>
                   {new Date(r.created_at).toLocaleDateString('en-GB', {
                     day: 'numeric',
@@ -145,9 +151,7 @@ export function ListingReviews({
               </p>
               {r.reply_body ? (
                 <div className="border-primary-container mt-3 border-l-2 pl-3">
-                  <p className="font-label-md text-label-md text-on-surface">
-                    Reply from the business
-                  </p>
+                  <p className="font-label-md text-label-md text-on-surface">{t.reply_heading}</p>
                   <p className="font-body-md text-body-md text-on-surface-variant mt-1 whitespace-pre-line">
                     {r.reply_body}
                   </p>
@@ -158,7 +162,7 @@ export function ListingReviews({
         })}
       </ul>
 
-      <h3 className="font-title-md text-title-md text-on-surface mt-10">Add a review</h3>
+      <h3 className="font-title-md text-title-md text-on-surface mt-10">{t.add_heading}</h3>
       {form}
     </section>
   );
