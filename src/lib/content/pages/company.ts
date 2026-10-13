@@ -349,10 +349,29 @@ export const ABOUT_PAGE = definePage({
     }),
     cta: defineSection({
       label: 'Green call-to-action band',
-      description:
-        'The band above the footer. It is shared with the SEO services pages, so only its heading is set here.',
+      description: 'The green band above the footer: heading, a short line and two buttons.',
       fields: {
         heading: text('Heading', 'Ready to rank your business higher?', { max: 120 }),
+        body: text(
+          'Text under the heading',
+          'Get a free SEO audit and a plan you can actually read.',
+          {
+            max: 200,
+            hint: 'Leave blank for none.',
+          },
+        ),
+        primary: link(
+          'Dark button',
+          { label: 'Get Free SEO Audit', href: '/seo-audit' },
+          'Leave the text blank to hide the button.',
+        ),
+        primary_icon: icon('Dark button icon', 'fact_check'),
+        quote: link(
+          'White button',
+          { label: 'Request a Quote', href: '/contact?subject=SEO%20services' },
+          'Leave the text blank to hide the button.',
+        ),
+        quote_icon: icon('White button icon', 'mail'),
       },
     }),
   },

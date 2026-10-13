@@ -117,7 +117,15 @@ export default async function AboutPage() {
       {content.why.visible ? <Why c={content.why} /> : null}
       {content.approach.visible ? <Approach c={content.approach} /> : null}
       {content.cta.visible ? (
-        <HubCtaBand quoteHref={QUOTE_HREF} heading={content.cta.heading} />
+        <HubCtaBand
+          heading={content.cta.heading}
+          body={content.cta.body}
+          primary={content.cta.primary}
+          primaryIcon={content.cta.primary_icon}
+          quoteHref={content.cta.quote.href || QUOTE_HREF}
+          quoteLabel={content.cta.quote.label}
+          quoteIcon={content.cta.quote_icon}
+        />
       ) : null}
     </>
   );
