@@ -2,7 +2,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Icon, type IconName } from '@/components/icon';
 import type { City } from '@/lib/queries';
+import type { SectionValues } from '@/lib/content/schema';
+import type { HOME_PAGE } from '@/lib/content/pages/home';
 import { CityTabs } from './city-tabs';
+
+export type CitiesContent = SectionValues<(typeof HOME_PAGE)['sections']['cities']>;
 
 /**
  * The markets the section has a tab for, in tab order, each with its top cities
@@ -107,19 +111,19 @@ export function pickHomeCities<T extends Pick<City, 'slug'>>(cities: T[]): CityM
   });
 }
 
-function countLabel(n: number | undefined): string {
-  if (!n) return 'Explore businesses';
-  return `${n.toLocaleString('en-US')} ${n === 1 ? 'Listing' : 'Listings'}`;
+function countLabel(n: number | undefined, c: CitiesContent): string {
+  if (!n) return c.no_count;
+  return `${n.toLocaleString('en-US')} ${n === 1 ? c.listing_one : c.listing_many}`;
 }
 
 function CityTile({
   city,
   index,
-  count,
+  countText,
 }: {
   city: Pick<City, 'id' | 'slug' | 'name'>;
   index: number;
-  count: number | undefined;
+  countText: string;
 }) {
   const image = IMAGES[city.slug];
   return (
@@ -156,16 +160,18 @@ function CityTile({
         <h3 className="font-headline-sm text-headline-sm group-hover:text-primary-fixed text-white transition-colors">
           {city.name}
         </h3>
-        <span className="font-label-sm text-label-sm mt-1 text-white/85">{countLabel(count)}</span>
+        <span className="font-label-sm text-label-sm mt-1 text-white/85">{countText}</span>
       </div>
     </Link>
   );
 }
 
 export function Cities({
+  content: c,
   markets,
   counts,
 }: {
+  content: CitiesContent;
   markets: CityMarket<Pick<City, 'id' | 'slug' | 'name'>>[];
   counts: Map<string, number>;
 }) {
@@ -177,15 +183,13 @@ export function Cities({
         <div className="mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
             <span className="font-label-sm text-label-sm text-primary-container font-semibold uppercase">
-              Metro Hubs
+              {c.eyebrow}
             </span>
             <h2 className="font-headline-lg text-headline-lg-mobile text-on-surface md:text-headline-lg mt-1">
-              Browse Businesses by City
+              {c.heading}
             </h2>
             <p className="font-body-md text-body-md text-on-surface-variant mt-2 max-w-2xl">
-              Find local businesses and service providers in top cities across Pakistan, the UK, the
-              USA, the UAE and Europe. Select a city to explore available categories and business
-              listings.
+              {c.intro}
             </p>
           </div>
         </div>
@@ -198,14 +202,19 @@ export function Cities({
               ? [
                   {
                     key: 'all',
-                    label: 'All',
+                    label: c.all_tab,
                     panel: (
                       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
                         {markets.flatMap((m) =>
                           m.cities
                             .slice(0, ALL_TILES_PER_MARKET)
-                            .map((c, i) => (
-                              <CityTile key={c.id} city={c} index={i} count={counts.get(c.id)} />
+                            .map((city, i) => (
+                              <CityTile
+                                key={city.id}
+                                city={city}
+                                index={i}
+                                countText={countLabel(counts.get(city.id), c)}
+                              />
                             )),
                         )}
                       </div>
@@ -218,25 +227,32 @@ export function Cities({
               label: m.label,
               panel: (
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                  {m.cities.map((c, i) => (
-                    <CityTile key={c.id} city={c} index={i} count={counts.get(c.id)} />
+                  {m.cities.map((city, i) => (
+                    <CityTile
+                      key={city.id}
+                      city={city}
+                      index={i}
+                      countText={countLabel(counts.get(city.id), c)}
+                    />
                   ))}
                 </div>
               ),
             })),
           ]}
         />
-        <p className="font-label-sm text-label-sm text-on-surface-variant mt-6">
-          City photos:{' '}
-          <a
-            href="https://commons.wikimedia.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-primary-container underline"
-          >
-            Wikimedia Commons
-          </a>
-        </p>
+        {c.credit_link.label && c.credit_link.href ? (
+          <p className="font-label-sm text-label-sm text-on-surface-variant mt-6">
+            {c.credit_text ? <>{c.credit_text} </> : null}
+            <a
+              href={c.credit_link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary-container underline"
+            >
+              {c.credit_link.label}
+            </a>
+          </p>
+        ) : null}
       </div>
     </section>
   );
