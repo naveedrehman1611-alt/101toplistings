@@ -73,7 +73,7 @@ export function TopRated({
                 href={c.empty_button.href}
                 className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex items-center gap-2 rounded-lg px-5 py-2.5 shadow-xs transition-all hover:shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
               >
-                <Icon name="add_business" size={18} />
+                <Icon name={c.empty_button_icon} size={18} />
                 <span>{c.empty_button.label}</span>
               </Link>
             ) : undefined

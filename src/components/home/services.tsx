@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Icon, type IconName } from '@/components/icon';
+import { Icon } from '@/components/icon';
 import type { SectionValues } from '@/lib/content/schema';
 import { isSafeHref } from '@/lib/content/schema';
 import type { HOME_PAGE } from '@/lib/content/pages/home';
@@ -7,16 +7,6 @@ import { categoryHref } from './hero';
 
 export type ServicesContent = SectionValues<(typeof HOME_PAGE)['sections']['services']>;
 type ServiceCard = ServicesContent['cards'][number];
-
-/** Card icons by position, cycled when the admin adds more cards. */
-const ICONS: IconName[] = [
-  'restaurant',
-  'medical_services',
-  'home_repair_service',
-  'school',
-  'flight_takeoff',
-  'business_center',
-];
 
 /**
  * A card's category page, or a keyword search when the directory lacks that
@@ -55,7 +45,7 @@ export function Services({
             className="group bg-surface-card focus-visible:ring-primary-container flex flex-col rounded-2xl p-7 shadow-xs transition-all duration-300 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
           >
             <div className="bg-surface-container-low text-primary-container group-hover:bg-primary group-hover:text-on-primary mb-5 flex h-14 w-14 items-center justify-center rounded-xl transition-colors">
-              <Icon name={ICONS[i % ICONS.length]} size={28} />
+              <Icon name={s.icon} size={28} />
             </div>
             <h3 className="font-title-md text-title-md text-on-surface group-hover:text-primary-container transition-colors">
               {s.title}

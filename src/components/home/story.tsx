@@ -1,12 +1,9 @@
-import { Icon, type IconName } from '@/components/icon';
+import { Icon } from '@/components/icon';
 import type { DirectoryStats } from '@/lib/queries';
 import type { SectionValues } from '@/lib/content/schema';
 import type { HOME_PAGE } from '@/lib/content/pages/home';
 
 export type StoryContent = SectionValues<(typeof HOME_PAGE)['sections']['story']>;
-
-/** Highlight icons by position, cycled when the admin adds more cards. */
-const HIGHLIGHT_ICONS: IconName[] = ['travel_explore', 'verified', 'storefront'];
 
 export function Story({ content: c, stats }: { content: StoryContent; stats: DirectoryStats }) {
   // Live counts only; a figure that failed to load, or is zero, is left out.
@@ -26,7 +23,7 @@ export function Story({ content: c, stats }: { content: StoryContent; stats: Dir
           <div>
             {c.badge ? (
               <div className="bg-secondary-container font-label-sm text-label-sm text-on-secondary-fixed mb-3 inline-flex items-center gap-2 rounded-md px-3 py-1">
-                <Icon name="hub" size={16} className="text-primary" />
+                <Icon name={c.badge_icon} size={16} className="text-primary" />
                 <span>{c.badge}</span>
               </div>
             ) : null}
@@ -48,7 +45,7 @@ export function Story({ content: c, stats }: { content: StoryContent; stats: Dir
                 className="border-border-subtle bg-surface-bg flex items-start gap-3.5 rounded-xl border p-4"
               >
                 <div className="bg-surface-container text-primary-container flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
-                  <Icon name={HIGHLIGHT_ICONS[i % HIGHLIGHT_ICONS.length]} size={20} />
+                  <Icon name={h.icon} size={20} />
                 </div>
                 <div>
                   <h3 className="font-title-md text-title-md text-on-surface">{h.title}</h3>

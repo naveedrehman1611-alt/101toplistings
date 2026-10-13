@@ -23,7 +23,7 @@ export function CtaBanner({ content: c }: { content: CtaBannerContent }) {
               href={c.button.href}
               className="bg-surface-card font-title-md text-title-md text-on-background hover:bg-surface-bright inline-flex items-center gap-2 rounded-xl px-8 py-4 shadow-lg transition-all hover:shadow-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
             >
-              <Icon name="rocket_launch" size={22} className="text-primary-container" />
+              <Icon name={c.button_icon} size={22} className="text-primary-container" />
               <span>{c.button.label}</span>
             </Link>
           </div>

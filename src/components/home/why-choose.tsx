@@ -1,11 +1,8 @@
-import { Icon, type IconName } from '@/components/icon';
+import { Icon } from '@/components/icon';
 import type { SectionValues } from '@/lib/content/schema';
 import type { HOME_PAGE } from '@/lib/content/pages/home';
 
 export type WhyChooseContent = SectionValues<(typeof HOME_PAGE)['sections']['why_choose']>;
-
-/** Card icons by position, cycled when the admin adds more cards. */
-const ICONS: IconName[] = ['manage_search', 'fact_check', 'contact_phone'];
 
 /** "Why choose" section of the home page (Stitch design). */
 export function WhyChoose({ content: c }: { content: WhyChooseContent }) {
@@ -27,7 +24,7 @@ export function WhyChoose({ content: c }: { content: WhyChooseContent }) {
             className="bg-surface-card flex flex-col items-center rounded-2xl p-8 text-center shadow-xs transition-shadow duration-300 hover:shadow-md"
           >
             <div className="bg-surface-container text-primary-container mb-6 flex h-16 w-16 items-center justify-center rounded-2xl">
-              <Icon name={ICONS[i % ICONS.length]} size={32} />
+              <Icon name={feature.icon} size={32} />
             </div>
             <h3 className="font-headline-sm text-headline-sm text-on-surface">{feature.title}</h3>
             <p className="font-body-md text-body-md text-on-surface-variant mt-3">{feature.body}</p>

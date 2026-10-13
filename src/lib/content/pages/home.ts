@@ -1,4 +1,4 @@
-import { definePage, defineSection, image, link, list, text, textarea } from '../schema';
+import { definePage, defineSection, icon, image, link, list, text, textarea } from '../schema';
 
 const hero = defineSection({
   label: 'Hero',
@@ -55,8 +55,11 @@ const stats = defineSection({
   description:
     'The light band under the hero. The numbers are live from the directory; only their labels are edited here.',
   fields: {
+    listings_icon: icon('Icon beside the number of businesses', 'handshake'),
     listings_label: text('Label under the number of businesses', 'Active Businesses', { max: 40 }),
+    cities_icon: icon('Icon beside the number of cities', 'location_city'),
     cities_label: text('Label under the number of cities', 'Cities Covered', { max: 40 }),
+    reviewed_icon: icon('Icon beside "100%"', 'schedule'),
     reviewed_label: text('Label under "100%"', 'Reviewed Listings', {
       max: 40,
       hint: 'Every public listing is approved by staff first, so this figure is always 100%.',
@@ -92,6 +95,7 @@ const top_rated = defineSection({
       { label: 'Add your business', href: '/dashboard/listings/new' },
       'Leave the text blank to hide the button.',
     ),
+    empty_button_icon: icon('No businesses yet: button icon', 'add_business'),
   },
 });
 
@@ -100,6 +104,7 @@ const story = defineSection({
   description:
     'The white card with "Find Trusted Local Businesses Worldwide", three highlights and live directory counts.',
   fields: {
+    badge_icon: icon('Badge icon', 'hub'),
     badge: text('Badge', 'Global Directory Network', { max: 60 }),
     heading: text('Heading', 'Find Trusted Local Businesses Worldwide', { max: 120 }),
     intro: textarea(
@@ -110,21 +115,25 @@ const story = defineSection({
     highlights: list('Highlights', {
       noun: 'highlight',
       max: 6,
-      hint: 'Shown three to a row. Icons follow the position: explore, verified, storefront, then repeat.',
+      hint: 'Shown three to a row.',
       item: {
+        icon: icon('Icon', 'travel_explore'),
         title: text('Title', '', { max: 80 }),
         body: textarea('Text', '', { max: 300 }),
       },
       default: [
         {
+          icon: 'travel_explore',
           title: 'Discover & Compare',
           body: 'Quickly narrow searches by city, category, or service type to find matching providers.',
         },
         {
+          icon: 'verified',
           title: 'Verified Profiles',
           body: 'Inspect authentic contact info, locations, working hours, and genuine customer feedback.',
         },
         {
+          icon: 'storefront',
           title: 'Free Growth for Owners',
           body: 'Free business listings give local entrepreneurs nationwide online reach without middleman fees.',
         },
@@ -161,21 +170,25 @@ const why_choose = defineSection({
     cards: list('Why choose us cards', {
       noun: 'card',
       max: 9,
-      hint: 'Shown three to a row. Icons follow the position: search, checklist, contact, then repeat.',
+      hint: 'Shown three to a row.',
       item: {
+        icon: icon('Icon', 'manage_search'),
         title: text('Title', '', { max: 80 }),
         body: textarea('Text', '', { max: 400 }),
       },
       default: [
         {
+          icon: 'manage_search',
           title: 'Filter by Location and Service',
           body: "Select the exact service you're looking for along with your city or nearby area. This helps you skip unrelated listings and reach businesses that actually match your needs.",
         },
         {
+          icon: 'fact_check',
           title: 'Check Complete Business Info',
           body: 'View contact numbers, categories, addresses, current opening status, photos, and other profile details — all before you decide to reach out.',
         },
         {
+          icon: 'contact_phone',
           title: 'Reach Out Directly',
           body: 'Contact the business by phone, visit their website, or check their exact location on the map. No third-party booking or unnecessary steps involved in the process.',
         },
@@ -230,8 +243,9 @@ const services = defineSection({
     cards: list('Service cards', {
       noun: 'card',
       max: 12,
-      hint: 'Shown three to a row. Icons follow the position: food, medical, repair, education, travel, business, then repeat.',
+      hint: 'Shown three to a row.',
       item: {
+        icon: icon('Icon', 'business_center'),
         title: text('Title', '', { max: 80 }),
         body: textarea('Text', '', { max: 300 }),
         category: text('Category slug', '', {
@@ -249,6 +263,7 @@ const services = defineSection({
       },
       default: [
         {
+          icon: 'restaurant',
           title: 'Restaurants and Food Services',
           body: 'Find restaurants, cafés, bakeries, fast-food outlets, caterers, home chefs, and other food businesses in your city.',
           category: 'restaurants',
@@ -256,6 +271,7 @@ const services = defineSection({
           href: '',
         },
         {
+          icon: 'medical_services',
           title: 'Health and Medical Services',
           body: 'Explore doctors, clinics, dental practices, laboratories, pharmacies, physiotherapists, and other healthcare-related listings.',
           category: 'doctors',
@@ -263,6 +279,7 @@ const services = defineSection({
           href: '',
         },
         {
+          icon: 'home_repair_service',
           title: 'Home Repair and Maintenance',
           body: 'Find plumbers, electricians, AC technicians, carpenters, painters, and other home service providers near you.',
           category: 'home-services',
@@ -270,6 +287,7 @@ const services = defineSection({
           href: '',
         },
         {
+          icon: 'school',
           title: 'Education and Training',
           body: 'Discover schools, colleges, tuition centers, language institutes, and training academies for every stage of learning.',
           category: 'schools',
@@ -277,6 +295,7 @@ const services = defineSection({
           href: '',
         },
         {
+          icon: 'flight_takeoff',
           title: 'Travel and Accommodation',
           body: 'Compare hotels, guest houses, travel agencies, tour operators, and Umrah and Hajj services for your next trip.',
           category: 'travel-agents',
@@ -285,6 +304,7 @@ const services = defineSection({
         },
         {
           // A mix of several categories, so it opens the full category index.
+          icon: 'business_center',
           title: 'Professional and Business Services',
           body: 'Connect with consultants, designers, recruitment agencies, translators, and other professionals who help businesses grow.',
           category: '',
@@ -310,21 +330,25 @@ const how_it_works = defineSection({
     steps: list('Steps', {
       noun: 'step',
       max: 6,
-      hint: 'Numbered in this order. Icons follow the position: search, reviews, directions, then repeat.',
+      hint: 'Numbered in this order.',
       item: {
+        icon: icon('Icon', 'search'),
         title: text('Title', '', { max: 80 }),
         body: textarea('Text', '', { max: 400 }),
       },
       default: [
         {
+          icon: 'search',
           title: 'Search & Discover',
           body: "Type in what you're looking for — a restaurant, doctor, lawyer, or any local service. Filter by city, category, or rating to find exactly what you need.",
         },
         {
+          icon: 'reviews',
           title: 'Read Reviews & Compare',
           body: 'Browse detailed business profiles with real customer reviews, contact info, and location maps — all in one place. Fast, free, and built for businesses worldwide.',
         },
         {
+          icon: 'near_me',
           title: 'Connect & Visit',
           body: 'Call, message, or get directions to the business directly from the listing. No middleman, no hassle — just direct connection.',
         },
@@ -345,6 +369,7 @@ const grow_visibility = defineSection({
       'Customers search online before choosing a local service provider. A complete profile helps them find you first.',
       { max: 500 },
     ),
+    why_icon: icon('Left panel heading icon', 'visibility'),
     why_heading: text('Left panel heading', 'Why a Complete Profile Matters', { max: 100 }),
     why_body: textarea(
       'Left panel text',
@@ -359,6 +384,8 @@ const grow_visibility = defineSection({
         hint: 'The line with the tick at the bottom of the left panel. Leave blank to hide it.',
       },
     ),
+    why_note_icon: icon('Left panel footnote icon', 'verified'),
+    checklist_icon: icon('Right panel heading icon', 'checklist'),
     checklist_heading: text(
       'Right panel heading',
       'What Should a Complete Business Profile Include?',
@@ -380,11 +407,13 @@ const grow_visibility = defineSection({
         { text: 'Service areas and available facilities' },
       ],
     }),
+    checklist_bullet: icon('Checklist bullet icon', 'check_circle'),
     button: link(
       'Button',
       { label: "Add Your Business — It's Free", href: '/dashboard/listings/new' },
       'Leave the text blank to hide the button.',
     ),
+    button_icon: icon('Button icon', 'add_business'),
   },
 });
 
@@ -392,6 +421,7 @@ const helping_customers = defineSection({
   label: 'Helping customers',
   description: 'Advice for customers using listings, and a link to report wrong details.',
   fields: {
+    badge_icon: icon('Badge icon', 'verified'),
     badge: text('Badge', 'Consumer Protection & Accuracy', { max: 60 }),
     heading: text('Heading', 'Helping Customers Make Better Local Choices', { max: 120 }),
     subheading: textarea(
@@ -404,6 +434,7 @@ const helping_customers = defineSection({
       'Every profile on {brand} brings together the details people usually look for across several websites: what a business does, where it is, when it is open and how to reach it. Business owners provide and update this information, so it is always worth checking that it is current.\n\nFor medical, financial, legal and other important services, confirm opening hours, prices, qualifications or licences, availability and service terms with the business directly before you visit, book or pay.\n\nIf you notice a phone number, address, opening time or any other detail that is wrong or out of date, let us know through our contact page so we can review and correct the listing.',
       { max: 3000, hint: 'Leave a blank line between paragraphs.' },
     ),
+    report_icon: icon('Report bar icon', 'report'),
     report_text: text('Report bar text', 'Spotted an out-of-date number or address?', {
       max: 120,
     }),
@@ -430,6 +461,7 @@ const cta_banner = defineSection({
       { label: "Add Your Business — It's Free", href: '/add-business' },
       'Leave the text blank to hide the button.',
     ),
+    button_icon: icon('Button icon', 'rocket_launch'),
   },
 });
 
@@ -518,6 +550,7 @@ const final_cta = defineSection({
   label: 'Closing call to action',
   description: 'The navy band with a flag icon just above the footer.',
   fields: {
+    icon: icon('Icon above the heading', 'flag'),
     heading: text('Heading', 'Submit Your Listing Today!', { max: 120 }),
     body: textarea(
       'Text',
@@ -529,6 +562,7 @@ const final_cta = defineSection({
       { label: "Add Your Business — It's Free", href: '/dashboard/listings/new' },
       'Leave the text blank to hide the button.',
     ),
+    button_icon: icon('Button icon', 'add_circle'),
   },
 });
 

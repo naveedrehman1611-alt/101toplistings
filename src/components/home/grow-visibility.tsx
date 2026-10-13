@@ -26,7 +26,7 @@ export function GrowVisibility({ content: c }: { content: GrowVisibilityContent 
           <div className="bg-surface-bg flex flex-col justify-between rounded-2xl p-5 sm:p-8">
             <div>
               <div className="text-primary-container mb-4 flex items-center gap-2">
-                <Icon name="visibility" size={24} />
+                <Icon name={c.why_icon} size={24} />
                 <h3 className="font-headline-sm text-headline-sm text-on-surface">
                   {c.why_heading}
                 </h3>
@@ -41,7 +41,7 @@ export function GrowVisibility({ content: c }: { content: GrowVisibilityContent 
                 states the benefit without a statistic. */}
             {c.why_note ? (
               <div className="bg-surface-card mt-8 flex items-center gap-3 rounded-xl p-4 pt-6">
-                <Icon name="verified" size={24} className="text-verified-teal" />
+                <Icon name={c.why_note_icon} size={24} className="text-verified-teal" />
                 <span className="font-body-sm text-body-sm text-on-surface">{c.why_note}</span>
               </div>
             ) : null}
@@ -49,7 +49,7 @@ export function GrowVisibility({ content: c }: { content: GrowVisibilityContent 
           <div className="bg-surface-container flex flex-col justify-between rounded-2xl p-5 sm:p-8">
             <div>
               <div className="text-primary-container mb-4 flex items-center gap-2">
-                <Icon name="checklist" size={24} />
+                <Icon name={c.checklist_icon} size={24} />
                 <h3 className="font-headline-sm text-headline-sm text-on-surface">
                   {c.checklist_heading}
                 </h3>
@@ -57,7 +57,11 @@ export function GrowVisibility({ content: c }: { content: GrowVisibilityContent 
               <ul className="font-body-md text-body-md text-on-surface space-y-3.5">
                 {c.checklist.map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <Icon name="check_circle" size={20} className="text-primary-container mt-0.5" />
+                    <Icon
+                      name={c.checklist_bullet}
+                      size={20}
+                      className="text-primary-container mt-0.5"
+                    />
                     <span>{item.text}</span>
                   </li>
                 ))}
@@ -69,7 +73,7 @@ export function GrowVisibility({ content: c }: { content: GrowVisibilityContent 
                   href={c.button.href}
                   className="bg-primary-container font-title-md text-title-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden sm:px-6"
                 >
-                  <Icon name="add_business" size={20} />
+                  <Icon name={c.button_icon} size={20} />
                   <span className="text-center text-balance">{c.button.label}</span>
                 </Link>
               </div>

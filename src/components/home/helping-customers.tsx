@@ -16,7 +16,7 @@ export function HelpingCustomers({ content: c }: { content: HelpingCustomersCont
       <div className="bg-surface-card mx-auto max-w-4xl rounded-3xl p-8 text-left shadow-xs sm:p-12">
         {c.badge ? (
           <div className="bg-tertiary-fixed font-label-sm text-label-sm text-on-tertiary-fixed mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1">
-            <Icon name="verified" size={16} />
+            <Icon name={c.badge_icon} size={16} />
             <span>{c.badge}</span>
           </div>
         ) : null}
@@ -34,7 +34,7 @@ export function HelpingCustomers({ content: c }: { content: HelpingCustomersCont
         {c.report_text || hasLink ? (
           <div className="bg-surface-bg mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl p-4 pt-6">
             <div className="font-body-sm text-body-sm text-on-surface flex items-center gap-2">
-              <Icon name="report" size={20} className="text-secondary" />
+              <Icon name={c.report_icon} size={20} className="text-secondary" />
               <span>{c.report_text}</span>
             </div>
             {hasLink ? (

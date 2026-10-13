@@ -1,11 +1,8 @@
-import { Icon, type IconName } from '@/components/icon';
+import { Icon } from '@/components/icon';
 import type { SectionValues } from '@/lib/content/schema';
 import type { HOME_PAGE } from '@/lib/content/pages/home';
 
 export type HowItWorksContent = SectionValues<(typeof HOME_PAGE)['sections']['how_it_works']>;
-
-/** Step icons by position, cycled when the admin adds more steps. */
-const ICONS: IconName[] = ['search', 'reviews', 'near_me'];
 
 /** "How does it work?" step section of the home page (Stitch design). */
 export function HowItWorks({ content: c }: { content: HowItWorksContent }) {
@@ -29,7 +26,7 @@ export function HowItWorks({ content: c }: { content: HowItWorksContent }) {
                 <span className="bg-primary-container font-headline-sm text-headline-sm text-on-primary flex h-12 w-12 items-center justify-center rounded-xl">
                   {i + 1}
                 </span>
-                <Icon name={ICONS[i % ICONS.length]} size={32} className="text-primary" />
+                <Icon name={step.icon} size={32} className="text-primary" />
               </div>
               <h3 className="font-headline-sm text-headline-sm text-on-surface">{step.title}</h3>
               <p className="font-body-md text-body-md text-on-surface-variant mt-3">{step.body}</p>
