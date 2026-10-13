@@ -42,45 +42,64 @@ export default async function AdminContent({
         }
       />
 
-      <div className="mt-6 space-y-6">
-        {pages.map(([pageId, page]) => (
-          <section key={pageId} className="surface-card p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-lg font-semibold">{page.label}</h2>
-              <Link href={page.path} className="text-brand-700 text-sm hover:underline">
-                View page
-              </Link>
-            </div>
-            <ul className="mt-3 divide-y divide-[var(--border)]">
-              {Object.entries(page.sections).map(([sectionId, section]) => {
-                const row = rows.get(`${pageId}.${sectionId}`);
-                return (
-                  <li
-                    key={sectionId}
-                    className="flex flex-wrap items-center justify-between gap-3 py-2.5"
+      <div className="mt-6 space-y-3">
+        {pages.map(([pageId, page]) => {
+          const sections = Object.entries(page.sections);
+          const edited = sections.filter(([id]) => rows.has(`${pageId}.${id}`)).length;
+          return (
+            // Folded by default: the service pages alone are over a hundred sections.
+            <details key={pageId} className="surface-card group p-5">
+              <summary className="flex cursor-pointer list-none flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-lg font-semibold">
+                  <span
+                    aria-hidden
+                    className="mr-2 inline-block transition-transform group-open:rotate-90"
                   >
-                    <div className="min-w-0">
-                      <Link
-                        href={`/admin/content/${pageId}/${sectionId}`}
-                        className="text-brand-700 font-medium hover:underline"
-                      >
-                        {section.label}
-                      </Link>
-                      {section.description ? (
-                        <p className="text-xs text-[var(--text-muted)]">{section.description}</p>
-                      ) : null}
-                    </div>
-                    <span className="text-xs text-[var(--text-muted)]">
-                      {!row
-                        ? 'Original'
-                        : `${row.is_enabled ? 'Edited' : 'Hidden'} · ${new Date(row.updated_at).toLocaleDateString('en-GB')}`}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        ))}
+                    ›
+                  </span>
+                  {page.label}
+                </h2>
+                <span className="text-xs text-[var(--text-muted)]">
+                  {sections.length} {sections.length === 1 ? 'section' : 'sections'}
+                  {edited ? ` · ${edited} edited` : ''}
+                </span>
+              </summary>
+              <p className="mt-2 text-sm">
+                <Link href={page.path} className="text-brand-700 hover:underline">
+                  View page
+                </Link>
+              </p>
+              <ul className="mt-3 divide-y divide-[var(--border)]">
+                {sections.map(([sectionId, section]) => {
+                  const row = rows.get(`${pageId}.${sectionId}`);
+                  return (
+                    <li
+                      key={sectionId}
+                      className="flex flex-wrap items-center justify-between gap-3 py-2.5"
+                    >
+                      <div className="min-w-0">
+                        <Link
+                          href={`/admin/content/${pageId}/${sectionId}`}
+                          className="text-brand-700 font-medium hover:underline"
+                        >
+                          {section.label}
+                        </Link>
+                        {section.description ? (
+                          <p className="text-xs text-[var(--text-muted)]">{section.description}</p>
+                        ) : null}
+                      </div>
+                      <span className="text-xs text-[var(--text-muted)]">
+                        {!row
+                          ? 'Original'
+                          : `${row.is_enabled ? 'Edited' : 'Hidden'} · ${new Date(row.updated_at).toLocaleDateString('en-GB')}`}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
+          );
+        })}
       </div>
     </div>
   );
