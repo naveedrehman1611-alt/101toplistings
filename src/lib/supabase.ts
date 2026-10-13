@@ -76,4 +76,16 @@ export const supabase = createClient(url, anonKey, {
   global: { fetch: cachedFetch },
 });
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+/**
+ * The canonical origin every absolute URL is built from (`${SITE_URL}/path`).
+ * Normalised so an env value with a trailing slash or without a scheme still
+ * gives the sitemap and canonicals the same URLs as metadataBase.
+ */
+export const SITE_URL = normaliseSiteUrl(
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+);
+
+function normaliseSiteUrl(value: string): string {
+  const trimmed = value.trim().replace(/\/+$/, '');
+  return /^https?:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`;
+}

@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
-import { findSection, getPageSections, getSettings, settingText } from '@/lib/queries';
+import { findSection, getPageSections } from '@/lib/queries';
+import { getPageContent } from '@/lib/content/get';
+import { serviceKey } from '@/lib/content/pages/services';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { DEFAULT_AREA_SERVED, SERVICE_PAGES } from '@/lib/service-pages';
 import { SITE_URL } from '@/lib/supabase';
 import { seoMetadata } from '@/lib/seo';
-import { HUB_CATEGORIES, UNFEATURED_HUBS } from '@/lib/services-hub';
+import { HUB_CATEGORIES, UNFEATURED_HUBS, hubIcon, hubTitle } from '@/lib/services-hub';
 import { PageHero } from '@/components/page-hero';
 import { HubSectionHeader } from '@/components/services-hub/hub-section-header';
 import { ServiceCard } from '@/components/services-hub/service-card';
@@ -12,8 +14,6 @@ import { IndustryTile } from '@/components/services-hub/industry-tile';
 import { HubCtaBand } from '@/components/services-hub/hub-cta-band';
 
 export const revalidate = 3600;
-
-const QUOTE_HREF = '/contact?subject=SEO%20services';
 
 const TITLE = 'SEO Services | Rank Higher & Grow Online';
 const DESCRIPTION =
@@ -29,19 +29,26 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ServicesPage() {
-  const [sections, settings] = await Promise.all([getPageSections('services'), getSettings()]);
-  const header = findSection(sections, 'header');
-  const brand = settingText(settings, 'brand.name', 'RankYouSite');
-  // An admin-set heading renders as plain text; the default carries a green accent.
+  const [sections, content, services] = await Promise.all([
+    getPageSections('services'),
+    getPageContent('seo_services'),
+    getPageContent('service'),
+  ]);
+  const { hero, groups: g, industries: ind, cta } = content;
+  // A header kept in Admin → Pages (the older page sections) is shown until the hero
+  // is saved in Admin → Content; from then on the Content copy wins.
+  const header = hero.edited ? undefined : findSection(sections, 'header');
   const heading = header?.heading ?? (
     <>
-      Every <span className="text-hero-green-light">Professional SEO Service</span> Your Business
-      Needs to Rank, Grow, and Get Found.
+      {hero.heading_start ? `${hero.heading_start} ` : null}
+      {hero.heading_highlight ? (
+        <span className="text-hero-green-light">{hero.heading_highlight}</span>
+      ) : null}
+      {hero.heading_end ? ` ${hero.heading_end}` : null}
     </>
   );
-  const subheading =
-    header?.subheading ??
-    `${brand} is an SEO agency and SEO company offering professional, affordable SEO services for small business and growing brands worldwide. We help you rank higher, earn more organic traffic and turn visits into leads.`;
+  const subheading = header?.subheading ?? hero.intro;
+  const tagOf = (slug: string, fallback: string) => services[serviceKey(slug)]?.tag ?? fallback;
 
   // Pages with no hub section (/website-development) are not SEO services, so
   // they stay out of the cards, the counts and the OfferCatalog below.
@@ -49,6 +56,8 @@ export default async function ServicesPage() {
   // Sections in HUB_CATEGORIES order; one with no services yet is skipped.
   const groups = HUB_CATEGORIES.map((c) => ({
     ...c,
+    title: hubTitle(content, c.id),
+    icon: hubIcon(content, c.id),
     services: hubPages.filter((s) => s.hub === c.id),
   })).filter((c) => c.services.length > 0);
   const categories = groups.filter((c) => c.id !== 'industry');
@@ -85,11 +94,11 @@ export default async function ServicesPage() {
       <JsonLd data={offerCatalog} />
       <PageHero
         trail={trail}
-        eyebrow="Complete SEO Services"
+        eyebrow={hero.eyebrow}
         heading={heading}
         subheading={subheading}
         stats={[
-          { value: serviceCount, label: 'SEO Services' },
+          { value: serviceCount, label: hero.stat_services },
           {
             value: (
               <>
@@ -97,56 +106,71 @@ export default async function ServicesPage() {
                 <sup className="text-base">+</sup>
               </>
             ),
-            label: 'Industries Served',
+            label: hero.stat_industries,
           },
-          { value: 'Free', label: 'SEO Audit' },
+          { value: hero.stat_audit_value, label: hero.stat_audit_label },
         ]}
       />
 
-      <div className="bg-white py-20 lg:py-[100px]">
-        <div className="container-page">
-          {categories.map(({ id, title, icon, services }) => (
-            <section key={id} aria-labelledby={`hub-${id}`} className="mb-16">
-              <HubSectionHeader
-                id={`hub-${id}`}
-                icon={icon}
-                title={title}
-                count={`${services.length} ${services.length === 1 ? 'Service' : 'Services'}`}
-              />
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {services.map((s, i) => (
-                  <ServiceCard
-                    key={s.slug}
-                    service={s}
-                    tag={s.tag}
-                    featured={i === 0 && !UNFEATURED_HUBS.includes(id)}
-                  />
-                ))}
-              </div>
-            </section>
-          ))}
+      {g.visible || (ind.visible && industries) ? (
+        <div className="bg-white py-20 lg:py-[100px]">
+          <div className="container-page">
+            {g.visible
+              ? categories.map(({ id, title, icon, services: list }) => (
+                  <section key={id} aria-labelledby={`hub-${id}`} className="mb-16">
+                    <HubSectionHeader
+                      id={`hub-${id}`}
+                      icon={icon}
+                      title={title}
+                      count={`${list.length} ${list.length === 1 ? g.count_one : g.count_many}`}
+                    />
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {list.map((s, i) => (
+                        <ServiceCard
+                          key={s.slug}
+                          service={s}
+                          tag={tagOf(s.slug, s.tag)}
+                          featured={i === 0 && !UNFEATURED_HUBS.includes(id)}
+                          learnMore={g.learn_more}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))
+              : null}
 
-          {industries ? (
-            <section aria-labelledby="hub-industry">
-              <HubSectionHeader
-                id="hub-industry"
-                icon={industries.icon}
-                title={industries.title}
-                count={`${industryCount} Industries`}
-              />
-              <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-                {industries.services.map((s) => (
-                  <li key={s.slug}>
-                    <IndustryTile name={s.name} icon={s.icon} href={s.path} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
+            {ind.visible && industries ? (
+              <section aria-labelledby="hub-industry">
+                <HubSectionHeader
+                  id="hub-industry"
+                  icon={industries.icon}
+                  title={industries.title}
+                  count={`${industryCount} ${ind.count}`}
+                />
+                <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+                  {industries.services.map((s) => (
+                    <li key={s.slug}>
+                      <IndustryTile name={s.name} icon={s.icon} href={s.path} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+          </div>
         </div>
-      </div>
+      ) : null}
 
-      <HubCtaBand quoteHref={QUOTE_HREF} />
+      {cta.visible ? (
+        <HubCtaBand
+          heading={cta.heading}
+          body={cta.body}
+          primary={cta.primary}
+          primaryIcon={cta.primary_icon}
+          quoteLabel={cta.secondary.label}
+          quoteIcon={cta.secondary_icon}
+          quoteHref={cta.secondary.href}
+        />
+      ) : null}
     </>
   );
 }

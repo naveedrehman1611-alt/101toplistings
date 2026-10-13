@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getSettings, settingText } from '@/lib/queries';
 import { ServicePageView } from '@/components/service-page';
 import { servicePage } from '@/lib/service-pages';
 import { seoMetadata } from '@/lib/seo';
@@ -19,8 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
+/** Copy is editable as this page's section under "Service pages" in Admin → Content. */
 export default async function WebsiteDevelopmentPage() {
   if (!PAGE) notFound();
-  const settings = await getSettings();
-  return <ServicePageView page={PAGE} brand={settingText(settings, 'brand.name', 'RankYouSite')} />;
+  return <ServicePageView page={PAGE} />;
 }

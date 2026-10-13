@@ -1,77 +1,47 @@
 import Link from 'next/link';
-import { Icon, type IconName } from '@/components/icon';
+import { Icon } from '@/components/icon';
+import type { SectionValues } from '@/lib/content/schema';
+import { isSafeHref } from '@/lib/content/schema';
+import type { HOME_PAGE } from '@/lib/content/pages/home';
 import { categoryHref } from './hero';
 
-/** `slug` is the category page, `keyword` the search used when it does not exist. */
-const SERVICES: {
-  href: { slug: string; keyword: string } | string;
-  icon: IconName;
-  title: string;
-  body: string;
-}[] = [
-  {
-    href: { slug: 'restaurants', keyword: 'restaurant' },
-    icon: 'restaurant',
-    title: 'Restaurants and Food Services',
-    body: 'Find restaurants, cafés, bakeries, fast-food outlets, caterers, home chefs, and other food businesses in your city.',
-  },
-  {
-    href: { slug: 'doctors', keyword: 'doctor' },
-    icon: 'medical_services',
-    title: 'Health and Medical Services',
-    body: 'Explore doctors, clinics, dental practices, laboratories, pharmacies, physiotherapists, and other healthcare-related listings.',
-  },
-  {
-    href: { slug: 'home-services', keyword: 'plumber' },
-    icon: 'home_repair_service',
-    title: 'Home Repair and Maintenance',
-    body: 'Find plumbers, electricians, AC technicians, carpenters, painters, and other home service providers near you.',
-  },
-  {
-    href: { slug: 'schools', keyword: 'school' },
-    icon: 'school',
-    title: 'Education and Training',
-    body: 'Discover schools, colleges, tuition centers, language institutes, and training academies for every stage of learning.',
-  },
-  {
-    href: { slug: 'travel-agents', keyword: 'travel' },
-    icon: 'flight_takeoff',
-    title: 'Travel and Accommodation',
-    body: 'Compare hotels, guest houses, travel agencies, tour operators, and Umrah and Hajj services for your next trip.',
-  },
-  {
-    // A mix of several categories, so it opens the full category index.
-    href: '/business-categories',
-    icon: 'business_center',
-    title: 'Professional and Business Services',
-    body: 'Connect with consultants, designers, recruitment agencies, translators, and other professionals who help businesses grow.',
-  },
-];
+export type ServicesContent = SectionValues<(typeof HOME_PAGE)['sections']['services']>;
+type ServiceCard = ServicesContent['cards'][number];
 
-export function Services({ categorySlugs }: { categorySlugs: ReadonlySet<string> }) {
+/**
+ * A card's category page, or a keyword search when the directory lacks that
+ * category; a card with no category uses its own link, else the category index.
+ */
+function cardHref(s: ServiceCard, categorySlugs: ReadonlySet<string>): string {
+  const slug = s.category.trim();
+  if (slug) return categoryHref(categorySlugs, slug, s.keyword.trim() || slug);
+  const href = s.href.trim();
+  return href && isSafeHref(href) ? href : '/business-categories';
+}
+
+export function Services({
+  content: c,
+  categorySlugs,
+}: {
+  content: ServicesContent;
+  categorySlugs: ReadonlySet<string>;
+}) {
   return (
     <section className="container-page py-20">
       <div className="mx-auto mb-16 max-w-3xl text-center">
         <span className="font-label-sm text-label-sm text-primary-container font-semibold uppercase">
-          High-Demand Sectors
+          {c.eyebrow}
         </span>
         <h2 className="font-headline-lg text-headline-lg-mobile text-on-surface md:text-headline-lg mt-2">
-          Popular Services People Search for Worldwide
+          {c.heading}
         </h2>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-3">
-          From daily essentials to specialized services, these are the categories people search for
-          most often in cities worldwide.
-        </p>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-3">{c.intro}</p>
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {SERVICES.map((s) => (
+        {c.cards.map((s, i) => (
           <Link
-            key={s.title}
-            href={
-              typeof s.href === 'string'
-                ? s.href
-                : categoryHref(categorySlugs, s.href.slug, s.href.keyword)
-            }
+            key={i}
+            href={cardHref(s, categorySlugs)}
             className="group bg-surface-card focus-visible:ring-primary-container flex flex-col rounded-2xl p-7 shadow-xs transition-all duration-300 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
           >
             <div className="bg-surface-container-low text-primary-container group-hover:bg-primary group-hover:text-on-primary mb-5 flex h-14 w-14 items-center justify-center rounded-xl transition-colors">
@@ -83,14 +53,16 @@ export function Services({ categorySlugs }: { categorySlugs: ReadonlySet<string>
             <p className="font-body-sm text-body-sm text-on-surface-variant mt-2 flex-1">
               {s.body}
             </p>
-            <span className="font-label-sm text-label-sm text-primary-container mt-4 inline-flex items-center gap-1 font-semibold">
-              <span>Explore directory</span>
-              <Icon
-                name="arrow_forward"
-                size={16}
-                className="transition-transform group-hover:translate-x-1"
-              />
-            </span>
+            {c.link_label ? (
+              <span className="font-label-sm text-label-sm text-primary-container mt-4 inline-flex items-center gap-1 font-semibold">
+                <span>{c.link_label}</span>
+                <Icon
+                  name="arrow_forward"
+                  size={16}
+                  className="transition-transform group-hover:translate-x-1"
+                />
+              </span>
+            ) : null}
           </Link>
         ))}
       </div>

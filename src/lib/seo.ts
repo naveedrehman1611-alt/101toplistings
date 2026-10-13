@@ -1,5 +1,5 @@
 import type { Metadata, ResolvingMetadata } from 'next';
-import { supabase } from './supabase';
+import { SITE_URL, supabase } from './supabase';
 
 /**
  * Per-route SEO overrides for the static public routes (§9.5.4), stored in
@@ -36,8 +36,9 @@ export const SEO_ROUTES = [
   { route: '/contact', label: 'Contact' },
   { route: '/privacy', label: 'Privacy policy' },
   { route: '/terms', label: 'Terms of use' },
-  // Always noindex and disallowed in robots.ts: result pages are thin and
-  // endless. Its title and description can still be changed.
+  // Always noindex: result pages are thin and endless. Not disallowed in
+  // robots.ts, so crawlers can read that noindex. Its title and description
+  // can still be changed.
   { route: '/search', label: 'Search' },
 ] as const;
 
@@ -60,14 +61,39 @@ export type SeoOverride = {
  * never submitted while it asks not to be indexed, and it joins the sitemap on
  * its own once enough listings are approved.
  */
-export const MIN_CITY_LISTINGS_TO_INDEX = 3;
+export const MIN_CITY_LISTINGS_TO_INDEX = 5;
 
 /**
- * The same rule for category pages: one with no approved listings renders
- * only an empty state, so it is noindex and out of the sitemap until a
- * listing is approved into it (or any of its subcategories).
+ * The same rule for category pages: one with only a handful of approved
+ * listings is a near-empty page repeated across the taxonomy, so it is noindex
+ * and out of the sitemap until enough listings are approved into it (or any of
+ * its subcategories).
  */
-export const MIN_CATEGORY_LISTINGS_TO_INDEX = 1;
+export const MIN_CATEGORY_LISTINGS_TO_INDEX = 5;
+
+/**
+ * Canonical and robots for a city or category results page.
+ *
+ * - Page 2+ is its own canonical: pointing it at page 1 tells Google the
+ *   listings further down are duplicates, so they are never discovered there.
+ * - A sorted or filtered copy (?sort=, ?q=, ?city=, ?category=) is the same
+ *   listings again: canonical to the plain page and noindex, so it drops out
+ *   of the "not indexed" reports instead of being crawled once per order.
+ * - `thin` is the listing threshold above.
+ */
+export function resultsPageSeo(
+  path: string,
+  page: number,
+  variant: boolean,
+  thin: boolean,
+): Pick<Metadata, 'alternates' | 'robots'> {
+  return {
+    alternates: {
+      canonical: `${SITE_URL}${path}${!variant && page > 1 ? `?page=${page}` : ''}`,
+    },
+    robots: variant || thin ? { index: false, follow: true } : undefined,
+  };
+}
 
 /**
  * The site-wide share image (src/app/opengraph-image.tsx). The root file only

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase-server';
 import { getCurrentUser } from '@/lib/auth';
 import { Breadcrumbs } from '@/components/ui';
+import { getPageContent } from '@/lib/content/get';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,30 +49,34 @@ export default async function ResetPasswordPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
-  const sp = await searchParams;
-  const user = await getCurrentUser();
+  const [sp, user, content] = await Promise.all([
+    searchParams,
+    getCurrentUser(),
+    getPageContent('auth'),
+  ]);
+  const c = content.reset_password;
 
   return (
     <div className="container-page py-12">
-      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: 'Choose a new password' }]} />
+      <Breadcrumbs trail={[{ label: 'Home', href: '/' }, { label: c.breadcrumb }]} />
       <div className="mx-auto max-w-sm">
-        <h1 className="font-headline-lg text-headline-lg">Choose a new password</h1>
+        <h1 className="font-headline-lg text-headline-lg">{c.heading}</h1>
 
         {!user ? (
           <p className="mt-6 text-[var(--text-muted)]">
-            This page only works from the link in a password reset email, and that link has expired
-            or was opened in a different browser.{' '}
-            <Link href="/forgot-password" className="text-brand-700 hover:underline">
-              Request a new reset link
+            {c.expired_text}{' '}
+            <Link href={c.expired_link.href} className="text-brand-700 hover:underline">
+              {c.expired_link.label}
             </Link>
             .
           </p>
         ) : (
           <>
-            <p className="mt-3 text-[var(--text-muted)]">
-              Setting a new password for {user.email ?? 'your account'}. You will be signed out
-              everywhere and asked to sign in again.
-            </p>
+            {c.intro ? (
+              <p className="mt-3 text-[var(--text-muted)]">
+                {c.intro.replaceAll('{email}', user.email ?? c.email_fallback)}
+              </p>
+            ) : null}
 
             {sp.error ? (
               <p
@@ -85,7 +90,7 @@ export default async function ResetPasswordPage({
             <form action={updatePassword} className="mt-6 space-y-4">
               <div>
                 <label htmlFor="password" className="block text-sm font-medium">
-                  New password
+                  {c.password_label}
                 </label>
                 <input
                   id="password"
@@ -96,11 +101,13 @@ export default async function ResetPasswordPage({
                   required
                   className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-hidden focus:ring-2"
                 />
-                <p className="mt-1 text-xs text-[var(--text-muted)]">At least 8 characters.</p>
+                {c.password_hint ? (
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">{c.password_hint}</p>
+                ) : null}
               </div>
               <div>
                 <label htmlFor="confirm" className="block text-sm font-medium">
-                  Confirm new password
+                  {c.confirm_label}
                 </label>
                 <input
                   id="confirm"
@@ -116,7 +123,7 @@ export default async function ResetPasswordPage({
                 type="submit"
                 className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 w-full rounded-lg shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
               >
-                Update password
+                {c.button}
               </button>
             </form>
           </>

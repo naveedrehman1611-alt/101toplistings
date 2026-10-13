@@ -5,11 +5,15 @@ import { Header } from '@/components/header';
 import { Footer, type FooterSocial } from '@/components/footer';
 import { BackToTop } from '@/components/back-to-top';
 import { WhatsAppButton } from '@/components/whatsapp-button';
+import { WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import { getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
 import { jsonLdHtml } from '@/lib/json-ld';
 import { serviceNavItems } from '@/lib/service-pages';
-import GoogleAnalytics from "./google-analytics";
+import { getPageContent } from '@/lib/content/get';
+import { ErrorContentProvider } from '@/components/error-content';
+import { toolsWithCopy } from '@/components/tools/tool-page';
+import GoogleAnalytics from './google-analytics';
 
 // Criterion 36: critical fonts preloaded.
 const inter = Inter({
@@ -49,10 +53,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [settings, nav, mobileNav] = await Promise.all([
+  // Content reads go through the cached anon client, like settings and menus,
+  // so every public route stays statically cacheable.
+  const [settings, nav, mobileNav, site, errors, toolsHub] = await Promise.all([
     getSettings(),
     getMenu('header', 'Primary'),
     getMenu('mobile', 'Mobile'),
+    getPageContent('site'),
+    getPageContent('errors'),
+    getPageContent('free_tools'),
   ]);
 
   const brand = settingText(settings, 'brand.name', 'RankYouSite');
@@ -62,9 +71,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     .map((network) => ({ network, href: settingText(settings, `social.${network}`).trim() }))
     .filter((s) => /^https?:\/\//.test(s.href));
   const sameAs = social.map((s) => s.href);
+  // The phone in Settings, else the WhatsApp number the site already shows.
+  const telephone = settingText(settings, 'contact.phone').trim() || `+${WHATSAPP_NUMBER}`;
 
-  // Site-wide Organization + WebSite schema; the SearchAction lets Google
-  // offer a sitelinks search box that lands on /search.
+  // Site-wide Organization + WebSite schema. The logo is a square PNG (Google
+  // wants at least 112px, in a raster format) so the brand can show in results;
+  // the SearchAction lets Google offer a search box that lands on /search.
   const siteJsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -73,7 +85,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         '@id': `${SITE_URL}/#organization`,
         name: brand,
         url: SITE_URL,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${SITE_URL}/logo-512.png`,
+          width: 512,
+          height: 512,
+        },
         ...(email ? { email } : {}),
+        telephone,
+        contactPoint: {
+          '@type': 'ContactPoint',
+          contactType: 'customer support',
+          telephone,
+          ...(email ? { email } : {}),
+        },
         ...(sameAs.length ? { sameAs } : {}),
       },
       {
@@ -105,10 +130,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Skip to content
         </a>
-        <Header brand={brand} nav={nav} mobileNav={mobileNav} services={serviceNavItems()} />
+        <Header
+          nav={nav}
+          mobileNav={mobileNav}
+          services={serviceNavItems()}
+          tools={toolsWithCopy(toolsHub).filter((t) => t.visible)}
+          content={{ header: site.header, services_menu: site.services_menu }}
+        />
         {/* tabIndex lets the skip link move keyboard focus here, not just scroll. */}
         <main id="main" tabIndex={-1} className="flex-1 outline-hidden">
-          {children}
+          {/* error.tsx is a client component, so its copy reaches it through context. */}
+          <ErrorContentProvider value={errors.error}>{children}</ErrorContentProvider>
         </main>
         <Footer
           brand={brand}
@@ -121,9 +153,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           copyright={settingText(settings, 'footer.copyright', brand)}
           email={email}
           social={social}
+          content={{
+            footer: site.footer,
+            footer_quick_links: site.footer_quick_links,
+            footer_core_services: site.footer_core_services,
+            footer_ai_services: site.footer_ai_services,
+          }}
         />
         <BackToTop />
-        <WhatsAppButton brand={brand} />
+        {site.whatsapp.visible ? <WhatsAppButton content={site.whatsapp} /> : null}
         <GoogleAnalytics />
       </body>
     </html>

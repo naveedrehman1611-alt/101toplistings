@@ -3,71 +3,40 @@ import type { ReactNode } from 'react';
 import { Icon, type IconName } from '@/components/icon';
 import { SiteLogo } from '@/components/site-logo';
 import { BackToTopLink } from '@/components/back-to-top';
-import { servicePage } from '@/lib/service-pages';
 import { whatsappHref } from '@/lib/whatsapp';
+import type { SiteContent } from '@/lib/content/pages/global';
+
+export type FooterContent = Pick<
+  SiteContent,
+  'footer' | 'footer_quick_links' | 'footer_core_services' | 'footer_ai_services'
+>;
 
 type FooterLink = { label: string; href: string; external?: boolean; highlight?: boolean };
 
-const WHATSAPP_LINK: FooterLink = {
-  label: 'WhatsApp Us',
-  href: whatsappHref(),
-  external: true,
-  highlight: true,
-};
+const WHATSAPP_HREF = whatsappHref();
 
-const QUICK_LINKS: FooterLink[] = [
-  { label: 'Home', href: '/' },
-  { label: 'All SEO Services', href: '/seo-services' },
-  { label: 'Website Development', href: '/website-development' },
-  { label: 'Business Directory', href: '/business-directory' },
-  { label: 'SEO Blog', href: '/blog' },
-  { label: 'About Us', href: '/about' },
-  { label: 'Contact Us', href: '/contact' },
-  { label: 'Free SEO Audit', href: '/seo-audit' },
-  { label: 'SEO Consulting', href: '/seo-services/seo-consulting' },
-  { label: 'Free SEO Tools', href: '/free-tools' },
-  WHATSAPP_LINK,
-];
-
-/** [service slug, footer label]: hrefs come from the service catalogue, so they never go stale. */
-const CORE_SERVICES: [string, string][] = [
-  ['local-seo', 'Local SEO Services'],
-  ['technical-seo', 'Technical SEO'],
-  ['ecommerce-seo', 'Ecommerce SEO'],
-  ['national-seo', 'National SEO'],
-  ['international-seo', 'International SEO'],
-  ['enterprise-seo', 'Enterprise SEO'],
-  ['on-page-seo', 'On-Page SEO'],
-  ['off-page-seo', 'Off-Page SEO'],
-  ['link-building', 'Link Building'],
-  ['lead-generation-seo', 'Lead Generation SEO'],
-];
-
-const AI_PLATFORM_SERVICES: [string, string][] = [
-  ['aeo-services', 'AEO Services'],
-  ['geo-services', 'GEO Services'],
-  ['ai-seo', 'AI SEO Services'],
-  ['wordpress-seo', 'WordPress SEO'],
-  ['shopify-seo', 'Shopify SEO'],
-  ['woocommerce-seo', 'WooCommerce SEO'],
-  ['white-label-seo', 'White Label SEO'],
-  ['google-business-profile', 'GBP / GMB Services'],
-  ['seo-migration', 'SEO Migration'],
-  ['seo-penalty-removal', 'Penalty Removal'],
-];
-
-function serviceLinks(entries: [string, string][]): FooterLink[] {
-  return entries.flatMap(([slug, label]) => {
-    const page = servicePage(slug);
-    return page ? [{ label, href: page.path }] : [];
-  });
+/** The link columns, in order; each is a section the admin can hide. */
+function columns(content: FooterContent): { title: string; links: FooterLink[] }[] {
+  const links = (items: { link: { label: string; href: string } }[]): FooterLink[] =>
+    items.filter((i) => i.link.label && i.link.href).map((i) => i.link);
+  const quick = content.footer_quick_links;
+  const core = content.footer_core_services;
+  const ai = content.footer_ai_services;
+  return [
+    {
+      visible: quick.visible,
+      title: quick.heading,
+      links: [
+        ...links(quick.links),
+        ...(quick.whatsapp_label
+          ? [{ label: quick.whatsapp_label, href: WHATSAPP_HREF, external: true, highlight: true }]
+          : []),
+      ],
+    },
+    { visible: core.visible, title: core.heading, links: links(core.links) },
+    { visible: ai.visible, title: ai.heading, links: links(ai.links) },
+  ].filter((column) => column.visible && column.links.length > 0);
 }
-
-const COLUMNS: { title: string; links: FooterLink[] }[] = [
-  { title: 'Quick Links', links: QUICK_LINKS },
-  { title: 'Core SEO Services', links: serviceLinks(CORE_SERVICES) },
-  { title: 'AI & Platform SEO', links: serviceLinks(AI_PLATFORM_SERVICES) },
-];
 
 export type FooterSocial = {
   network: 'facebook' | 'instagram' | 'linkedin' | 'x' | 'youtube';
@@ -184,6 +153,7 @@ export function Footer({
   copyright,
   email,
   social,
+  content,
 }: {
   brand: string;
   about: string;
@@ -192,14 +162,16 @@ export function Footer({
   copyright: string;
   email: string;
   social: FooterSocial[];
+  content: FooterContent;
 }) {
+  const c = content.footer;
   return (
     <footer className="bg-navy-950 w-full text-slate-300">
       <div className="mx-auto max-w-7xl px-6 pt-16 pb-10 lg:px-12 lg:pt-20">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] lg:gap-10">
           <div className="sm:col-span-2 lg:col-span-1 lg:pr-6">
             <Link href="/" aria-label={`${brand} home`} className={`inline-block ${textLink}`}>
-              <SiteLogo alt={brand} variant="dark" className="h-auto w-full max-w-64" />
+              <SiteLogo image={c.logo} variant="dark" className="h-auto w-full max-w-64" />
             </Link>
             {about ? (
               <p className="mt-6 max-w-md text-[16px] leading-[1.85] text-slate-300">{about}</p>
@@ -220,9 +192,11 @@ export function Footer({
                   {email}
                 </ContactRow>
               ) : null}
-              <ContactRow icon="chat" href={WHATSAPP_LINK.href} external>
-                WhatsApp Us
-              </ContactRow>
+              {c.whatsapp_label ? (
+                <ContactRow icon="chat" href={WHATSAPP_HREF} external>
+                  {c.whatsapp_label}
+                </ContactRow>
+              ) : null}
             </ul>
 
             {social.length > 0 ? (
@@ -244,8 +218,8 @@ export function Footer({
             ) : null}
           </div>
 
-          {COLUMNS.map((column) => (
-            <nav key={column.title} aria-label={column.title}>
+          {columns(content).map((column, i) => (
+            <nav key={i} aria-label={column.title || undefined}>
               <h2 className="font-display relative border-b border-white/10 pb-4 text-[15px] font-bold tracking-[0.08em] text-white uppercase">
                 {column.title}
                 <span
@@ -254,8 +228,8 @@ export function Footer({
                 />
               </h2>
               <ul className="mt-6 space-y-3">
-                {column.links.map((link) => (
-                  <li key={link.href} className="flex items-baseline gap-2.5">
+                {column.links.map((link, i) => (
+                  <li key={`${link.href}|${i}`} className="flex items-baseline gap-2.5">
                     <span
                       aria-hidden
                       className={`size-1.5 shrink-0 -translate-y-0.5 rounded-full ${
@@ -285,16 +259,17 @@ export function Footer({
             <Link href="/" className={`font-semibold text-slate-200 hover:text-white ${textLink}`}>
               {copyright.replace(/\.+$/, '')}
             </Link>
-            . All rights reserved.{' '}
-            <Link href="/privacy" className={`hover:text-white ${textLink}`}>
-              Privacy Policy
+            . {c.rights}{' '}
+            <Link href={c.privacy.href} className={`hover:text-white ${textLink}`}>
+              {c.privacy.label}
             </Link>{' '}
             ·{' '}
-            <Link href="/terms" className={`hover:text-white ${textLink}`}>
-              Terms of Service
+            <Link href={c.terms.href} className={`hover:text-white ${textLink}`}>
+              {c.terms.label}
             </Link>
           </p>
           <BackToTopLink
+            label={c.back_to_top}
             className={`shrink-0 rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-[14px] font-semibold text-slate-300 transition-colors hover:border-white/30 hover:text-white ${focusRing}`}
           />
         </div>

@@ -5,6 +5,8 @@ import { getListing } from '@/lib/queries';
 import { getCurrentUser } from '@/lib/auth';
 import { Breadcrumbs } from '@/components/ui';
 import { ReviewForm } from '@/components/listing/review-form';
+import { getPageContent } from '@/lib/content/get';
+import { fill, fillNodes } from '@/components/browse/fill';
 
 // Separate from the listing page so that page can stay statically cached; this
 // one depends on who is signed in.
@@ -19,7 +21,10 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const listing = await getListing(slug);
   if (!listing) notFound();
-  const user = await getCurrentUser();
+  const [user, { review_page: t, review_form }] = await Promise.all([
+    getCurrentUser(),
+    getPageContent('listing_page'),
+  ]);
   const here = `/listing/${listing.slug}/review`;
 
   return (
@@ -28,33 +33,38 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
         trail={[
           { label: 'Home', href: '/' },
           { label: listing.name, href: `/listing/${listing.slug}` },
-          { label: 'Write a review' },
+          { label: t.crumb },
         ]}
       />
       <div className="max-w-xl">
-        <h1 className="font-headline-lg text-headline-lg">Review {listing.name}</h1>
+        <h1 className="font-headline-lg text-headline-lg">
+          {fill(t.heading, { name: listing.name })}
+        </h1>
 
         {!user ? (
           <p className="mt-6 text-[var(--text-muted)]">
-            Please{' '}
-            <Link
-              href={`/login?next=${encodeURIComponent(here)}`}
-              className="text-brand-700 hover:underline"
-            >
-              sign in
-            </Link>{' '}
-            or{' '}
-            <Link
-              href={`/register?next=${encodeURIComponent(here)}`}
-              className="text-brand-700 hover:underline"
-            >
-              create an account
-            </Link>{' '}
-            to write a review. One review per person, per business.
+            {fillNodes(t.signin, {
+              signin: (
+                <Link
+                  href={`/login?next=${encodeURIComponent(here)}`}
+                  className="text-brand-700 hover:underline"
+                >
+                  {t.signin_link}
+                </Link>
+              ),
+              register: (
+                <Link
+                  href={`/register?next=${encodeURIComponent(here)}`}
+                  className="text-brand-700 hover:underline"
+                >
+                  {t.register_link}
+                </Link>
+              ),
+            })}
           </p>
         ) : (
           <div className="mt-6">
-            <ReviewForm listingId={listing.id} slug={listing.slug} />
+            <ReviewForm listingId={listing.id} slug={listing.slug} labels={review_form} />
           </div>
         )}
       </div>

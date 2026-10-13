@@ -2,7 +2,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Icon, type IconName } from '@/components/icon';
 import type { Category, City } from '@/lib/queries';
-import heroCity from '../../../public/images/hero-city.webp';
+import type { SectionValues } from '@/lib/content/schema';
+import type { HOME_PAGE } from '@/lib/content/pages/home';
+import { lines } from '@/lib/content/schema';
+
+export type HeroContent = SectionValues<(typeof HOME_PAGE)['sections']['hero']>;
 
 /**
  * A category page when the directory has that category, otherwise a keyword
@@ -79,12 +83,16 @@ function FilterSelect({
 }
 
 export function Hero({
+  content: c,
   categories,
   cities,
 }: {
+  content: HeroContent;
   categories: Pick<Category, 'slug' | 'name'>[];
   cities: Pick<City, 'slug' | 'name'>[];
 }) {
+  // The badge wraps at " + " on narrow phones, as the original markup did.
+  const [badgeHead, ...badgeTail] = c.badge.split(' + ');
   return (
     <section className="bg-hero-navy relative overflow-hidden text-white">
       {/* Decorative photo. The asset is the mockup's top-right corner, so from lg it
@@ -92,7 +100,7 @@ export function Hero({
           Nudged up 1% to hide a light line along its top edge. Below lg it lies full
           width behind the text at 35%. */}
       <div
-        aria-hidden
+        aria-hidden={c.photo.alt ? undefined : true}
         className="pointer-events-none absolute inset-x-0 top-0 aspect-[910/756] -translate-y-[1%] opacity-35 lg:left-auto lg:w-[563px] lg:opacity-100"
       >
         <div
@@ -100,8 +108,8 @@ export function Hero({
           style={{ backgroundImage: SKYLINE_FADE }}
         />
         <Image
-          src={heroCity}
-          alt=""
+          src={c.photo.src}
+          alt={c.photo.alt}
           fill
           preload
           sizes="(min-width: 1024px) 563px, 100vw"
@@ -116,37 +124,46 @@ export function Hero({
       <div className="container-page relative pt-10 pb-14 lg:pt-[73px]">
         <p className="border-hero-green-light/40 bg-hero-green-light/5 text-hero-green-light inline-block max-w-full rounded-2xl border px-[18px] py-[7px] text-[13px] font-semibold sm:rounded-full sm:text-[15px]">
           {/* Wraps before the "+" on narrow phones; the margins widen the gaps around it. */}
-          <span className="me-1 whitespace-nowrap">Business Directory</span>{' '}
-          <span className="whitespace-nowrap">
-            <span className="me-1">+</span> SEO & Digital Marketing
-          </span>
+          <span className="me-1 whitespace-nowrap">{badgeHead}</span>
+          {badgeTail.length ? (
+            <>
+              {' '}
+              <span className="whitespace-nowrap">
+                <span className="me-1">+</span> {badgeTail.join(' + ')}
+              </span>
+            </>
+          ) : null}
         </p>
 
         <h1 className="font-display mt-6 text-[40px] leading-[1.03] font-extrabold tracking-tight sm:text-5xl lg:mt-[18px] lg:text-[64px]">
-          <span className="block">List Your Business.</span>
-          <span className="block">Get Found Online.</span>
-          <span className="text-hero-green-light block">Grow With SEO.</span>
+          {lines(c.heading).map((line, i) => (
+            <span key={i} className="block">
+              {line}
+            </span>
+          ))}
+          {c.highlight ? <span className="text-hero-green-light block">{c.highlight}</span> : null}
         </h1>
 
         {/* From lg the lines break where the mockup's do: no max-width gives both breaks. */}
-        <p className="mt-4 max-w-[36rem] text-lg leading-[1.55] text-white/85">
-          Discover businesses worldwide, create a powerful business listing, and get SEO &amp;
-          digital marketing services to grow your visibility, traffic, and leads.
-        </p>
+        <p className="mt-4 max-w-[36rem] text-lg leading-[1.55] text-white/85">{c.intro}</p>
 
         <div className="mt-7 flex flex-wrap gap-3">
-          <Link
-            href="/add-business"
-            className="bg-hero-green hover:bg-hero-green-hover focus-visible:ring-hero-green inline-flex h-12 items-center justify-center rounded-lg px-6 text-base font-semibold text-white transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
-          >
-            Add Your Business
-          </Link>
-          <Link
-            href="/seo-audit"
-            className="focus-visible:ring-hero-green-light inline-flex h-12 items-center justify-center rounded-lg border border-white/40 px-6 text-base font-semibold text-white transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:outline-hidden"
-          >
-            Get an SEO Audit
-          </Link>
+          {c.primary.label && c.primary.href ? (
+            <Link
+              href={c.primary.href}
+              className="bg-hero-green hover:bg-hero-green-hover focus-visible:ring-hero-green inline-flex h-12 items-center justify-center rounded-lg px-6 text-base font-semibold text-white transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
+            >
+              {c.primary.label}
+            </Link>
+          ) : null}
+          {c.secondary.label && c.secondary.href ? (
+            <Link
+              href={c.secondary.href}
+              className="focus-visible:ring-hero-green-light inline-flex h-12 items-center justify-center rounded-lg border border-white/40 px-6 text-base font-semibold text-white transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:outline-hidden"
+            >
+              {c.secondary.label}
+            </Link>
+          ) : null}
         </div>
 
         <form
@@ -164,7 +181,7 @@ export function Hero({
               id="hero-q"
               name="q"
               type="search"
-              placeholder="Business name, category or keyword"
+              placeholder={c.search_placeholder}
               className={`${CONTROL} appearance-none truncate placeholder:text-[#6b7280]`}
             />
           </div>
@@ -173,7 +190,7 @@ export function Hero({
             name="category"
             label="Category"
             icon="grid_view"
-            allLabel="All Categories"
+            allLabel={c.category_all}
             options={categories}
             className="lg:flex-1"
           />
@@ -182,7 +199,7 @@ export function Hero({
             name="city"
             label="City"
             icon="location_on"
-            allLabel="All Cities"
+            allLabel={c.city_all}
             options={cities}
             className="lg:flex-[1.2]"
           />
@@ -190,27 +207,31 @@ export function Hero({
             type="submit"
             className="bg-hero-green hover:bg-hero-green-hover focus-visible:ring-hero-green h-12 w-full shrink-0 rounded-lg text-base font-semibold text-white transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden lg:w-[188px]"
           >
-            Search
+            {c.search_button}
           </button>
         </form>
 
-        <p className="mt-4 text-sm text-white/75">
-          <Link
-            href="/business-directory"
-            className="underline-offset-4 hover:text-white hover:underline"
-          >
-            Browse Businesses
-          </Link>
-          <span aria-hidden className="mx-2">
-            ·
-          </span>
-          <Link
-            href="/seo-services"
-            className="underline-offset-4 hover:text-white hover:underline"
-          >
-            Explore SEO Services
-          </Link>
-        </p>
+        {c.links.length ? (
+          <p className="mt-4 text-sm text-white/75">
+            {c.links
+              .filter((l) => l.link.label && l.link.href)
+              .map((l, i) => (
+                <span key={i}>
+                  {i > 0 ? (
+                    <span aria-hidden className="mx-2">
+                      ·
+                    </span>
+                  ) : null}
+                  <Link
+                    href={l.link.href}
+                    className="underline-offset-4 hover:text-white hover:underline"
+                  >
+                    {l.link.label}
+                  </Link>
+                </span>
+              ))}
+          </p>
+        ) : null}
       </div>
     </section>
   );

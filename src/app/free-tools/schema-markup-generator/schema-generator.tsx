@@ -22,6 +22,10 @@ import {
 import type { Draft, FieldDef, Level, RepeatDef, Row, SchemaTypeId } from './schema-types';
 import { validateSchema } from './validate';
 import type { Issue } from './validate';
+import type { ToolLabels } from '@/components/tools/tool-page';
+import { fill } from '@/components/tools/rich-text';
+
+type Labels = ToolLabels<'tool_schema_markup'>;
 
 const STORAGE_PREFIX = 'rys:schema-generator:v1:';
 const TYPE_KEY = `${STORAGE_PREFIX}type`;
@@ -60,7 +64,7 @@ function writeStorage(key: string, value: string | null) {
   }
 }
 
-export function SchemaGenerator() {
+export function SchemaGenerator({ labels: l }: { labels: Labels }) {
   const [type, setType] = useState<SchemaTypeId>('LocalBusiness');
   const [drafts, setDrafts] = useState<Partial<Record<SchemaTypeId, Draft>>>({});
   const [restored, setRestored] = useState(false);
@@ -117,7 +121,7 @@ export function SchemaGenerator() {
     <div className="flex flex-col gap-6">
       <ToolCard>
         <fieldset>
-          <legend className={labelClass}>Schema type</legend>
+          <legend className={labelClass}>{l.type_legend}</legend>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             {SCHEMA_TYPES.map((t) => {
               const active = t.id === type;
@@ -149,24 +153,26 @@ export function SchemaGenerator() {
             onClick={() => setDrafts((prev) => ({ ...prev, [type]: exampleDraft(type) }))}
           >
             <Icon name="storefront" size={18} />
-            Load example
+            {l.load_example}
           </button>
           <button type="button" className={secondaryButtonClass} onClick={reset}>
             <Icon name="close" size={18} />
-            Reset
+            {l.reset}
           </button>
           <p className="font-body-sm text-body-sm text-on-surface-variant self-center">
-            Drafts autosave in this browser.
+            {l.autosave_note}
           </p>
         </div>
       </ToolCard>
 
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <ToolCard className="min-w-0">
-          <h2 className="font-title-md text-title-md text-on-surface">{def.label} details</h2>
+          <h2 className="font-title-md text-title-md text-on-surface">
+            {fill(l.details_heading, { type: def.label })}
+          </h2>
           <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-            <span className="text-error">*</span> required ·{' '}
-            <span className="text-rating-star">◆</span> recommended by Google
+            <span className="text-error">*</span> {l.required_key} ·{' '}
+            <span className="text-rating-star">◆</span> {l.recommended_key}
           </p>
           {def.sections.map((section) => (
             <fieldset key={section.title} className="border-border-subtle mt-6 border-t pt-5">
@@ -183,6 +189,7 @@ export function SchemaGenerator() {
                           def={f}
                           rows={draft.lists[f.key] ?? []}
                           onChange={(rows) => setRows(f.key, rows)}
+                          labels={l}
                         />
                       </div>
                     );
@@ -195,6 +202,7 @@ export function SchemaGenerator() {
                         def={f}
                         value={draft.values[f.key] ?? ''}
                         onChange={(value) => setValue(f.key, value)}
+                        labels={l}
                       />
                     </div>
                   );
@@ -207,9 +215,9 @@ export function SchemaGenerator() {
         <div className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-24">
           <ToolCard className="min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-title-md text-title-md text-on-surface">JSON-LD output</h2>
+              <h2 className="font-title-md text-title-md text-on-surface">{l.output_heading}</h2>
               <span className="font-label-sm text-label-sm text-on-surface-variant">
-                {json.length.toLocaleString()} characters
+                {fill(l.output_size, { count: json.length.toLocaleString() })}
               </span>
             </div>
             <pre
@@ -220,40 +228,36 @@ export function SchemaGenerator() {
               <code>{json}</code>
             </pre>
             <div className="mt-4 flex flex-wrap gap-2">
-              <CopyButton text={json} label="Copy JSON" />
-              <CopyButton text={scriptTag} label="Copy <script> tag" />
+              <CopyButton text={json} label={l.copy_json} copiedLabel={l.copied} />
+              <CopyButton text={scriptTag} label={l.copy_script} copiedLabel={l.copied} />
               <DownloadButton
                 text={json}
                 filename={`${type.toLowerCase()}-schema.json`}
                 mime="application/ld+json"
-                label="Download .json"
+                label={l.download_json}
               />
             </div>
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-              <a
-                href="https://search.google.com/test/rich-results"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-label-md text-label-md text-primary-container hover:text-primary inline-flex items-center gap-1"
-              >
-                Test in Google Rich Results Test <Icon name="north_east" size={16} />
-              </a>
-              <a
-                href="https://validator.schema.org/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-label-md text-label-md text-primary-container hover:text-primary inline-flex items-center gap-1"
-              >
-                Schema.org validator <Icon name="north_east" size={16} />
-              </a>
+              {[l.rich_results, l.validator]
+                .filter((x) => x.label && x.href)
+                .map((x) => (
+                  <a
+                    key={x.href}
+                    href={x.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-label-md text-label-md text-primary-container hover:text-primary inline-flex items-center gap-1"
+                  >
+                    {x.label} <Icon name="north_east" size={16} />
+                  </a>
+                ))}
             </div>
             <p className="font-body-sm text-body-sm text-on-surface-variant mt-3">
-              Paste the script tag into the page&apos;s HTML (in the head or body), then run the
-              test on the live URL or with the code snippet option.
+              {l.output_note}
             </p>
           </ToolCard>
 
-          <ValidationPanel issues={issues} />
+          <ValidationPanel issues={issues} labels={l} />
         </div>
       </div>
     </div>
@@ -294,11 +298,13 @@ function Field({
   def,
   value,
   onChange,
+  labels: l,
 }: {
   id: string;
   def: FieldDef;
   value: string;
   onChange: (value: string) => void;
+  labels: Labels;
 }) {
   const helpId = def.help ? `${id}-help` : undefined;
 
@@ -355,17 +361,17 @@ function Field({
             className={smallButtonClass}
             onClick={() => setDays(DAYS.slice(0, 5))}
           >
-            Mon–Fri
+            {l.weekdays}
           </button>
           <button
             type="button"
             className={smallButtonClass}
             onClick={() => setDays(DAYS.slice(0, 6))}
           >
-            Mon–Sat
+            {l.weekdays_sat}
           </button>
           <button type="button" className={smallButtonClass} onClick={() => setDays(DAYS)}>
-            Every day
+            {l.every_day}
           </button>
         </div>
       </fieldset>
@@ -447,11 +453,13 @@ function RepeatField({
   def,
   rows,
   onChange,
+  labels,
 }: {
   idBase: string;
   def: RepeatDef;
   rows: Row[];
   onChange: (rows: Row[]) => void;
+  labels: Labels;
 }) {
   const setCell = (i: number, key: string, value: string) =>
     onChange(rows.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
@@ -526,6 +534,7 @@ function RepeatField({
                     def={f}
                     value={row[f.key] ?? ''}
                     onChange={(value) => setCell(i, f.key, value)}
+                    labels={labels}
                   />
                 </div>
               ))}
@@ -552,12 +561,12 @@ const ISSUE_STYLE: Record<Issue['level'], { icon: 'error' | 'report' | 'verified
     info: { icon: 'verified', cls: 'text-tertiary' },
   };
 
-function ValidationPanel({ issues }: { issues: Issue[] }) {
+function ValidationPanel({ issues, labels: l }: { issues: Issue[]; labels: Labels }) {
   const errors = issues.filter((i) => i.level === 'error').length;
   const warnings = issues.filter((i) => i.level === 'warning').length;
   return (
     <ToolCard className="min-w-0">
-      <h2 className="font-title-md text-title-md text-on-surface">Validation</h2>
+      <h2 className="font-title-md text-title-md text-on-surface">{l.validation_heading}</h2>
       <div aria-live="polite">
         <p
           className={`font-label-md text-label-md mt-2 inline-flex items-center gap-1.5 ${
@@ -569,7 +578,7 @@ function ValidationPanel({ issues }: { issues: Issue[] }) {
             ? `${errors} error${errors === 1 ? '' : 's'}, ${warnings} warning${warnings === 1 ? '' : 's'}`
             : warnings
               ? `No errors · ${warnings} recommended field${warnings === 1 ? '' : 's'} missing`
-              : 'No errors or warnings'}
+              : l.validation_ok}
         </p>
         {issues.length ? (
           <ul className="mt-3 flex flex-col gap-2">

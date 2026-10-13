@@ -7,6 +7,8 @@ import { Button, EmptyState } from '@/components/ui';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { seoMetadata } from '@/lib/seo';
+import { getPageContent } from '@/lib/content/get';
+import { HighlightedHeading } from '@/components/company/highlighted';
 
 export const revalidate = 600;
 
@@ -43,7 +45,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FeaturedBusinessesPage() {
-  const rows = await getFeatured();
+  const [rows, content] = await Promise.all([getFeatured(), getPageContent('featured_businesses')]);
+  const { hero, listings } = content;
   const trail = [{ label: 'Home', href: '/' }, { label: 'Featured businesses' }];
 
   return (
@@ -54,26 +57,28 @@ export default async function FeaturedBusinessesPage() {
       ) : null}
       <PageHero
         trail={trail}
-        eyebrow="Promoted listings"
-        heading={
-          <>
-            <span className="text-hero-green-light">Featured</span> businesses
-          </>
-        }
-        subheading="A featured business listing is a directory listing that has been given extra visibility. Featured businesses are shown first in the business directory, ahead of other listings, so customers see them before they scroll. Featuring changes where a listing appears, not how it is reviewed: every listing is checked before it goes live."
-        stats={rows.length > 0 ? [{ value: rows.length, label: 'Featured listings' }] : undefined}
+        eyebrow={hero.eyebrow}
+        heading={<HighlightedHeading c={hero} className="text-hero-green-light" />}
+        subheading={hero.intro}
+        stats={rows.length > 0 ? [{ value: rows.length, label: hero.stat_label }] : undefined}
       >
-        <div className="flex flex-wrap gap-3">
-          <Button href="/pricing">Get featured</Button>
-          <Button href="/business-directory" variant="ghost">
-            Browse businesses
-          </Button>
-        </div>
+        {hero.primary.label || (hero.secondary.label && hero.secondary.href) ? (
+          <div className="flex flex-wrap gap-3">
+            {hero.primary.label && hero.primary.href ? (
+              <Button href={hero.primary.href}>{hero.primary.label}</Button>
+            ) : null}
+            {hero.secondary.label && hero.secondary.href ? (
+              <Button href={hero.secondary.href} variant="ghost">
+                {hero.secondary.label}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </PageHero>
       <div className="container-page py-10 md:py-12">
         <section aria-labelledby="featured-heading">
           <h2 id="featured-heading" className="font-headline-md text-headline-md">
-            Featured business listings
+            {listings.heading}
           </h2>
           {rows.length > 0 ? (
             <ol className="mt-6 space-y-4">
@@ -86,9 +91,13 @@ export default async function FeaturedBusinessesPage() {
           ) : (
             <div className="mt-6">
               <EmptyState
-                title="No featured businesses yet"
-                body="No listing is featured at the moment. Browse the full directory, or find out how to get your business featured."
-                action={<Button href="/business-directory">Browse businesses</Button>}
+                title={listings.empty_title}
+                body={listings.empty_body}
+                action={
+                  listings.empty_button.label && listings.empty_button.href ? (
+                    <Button href={listings.empty_button.href}>{listings.empty_button.label}</Button>
+                  ) : undefined
+                }
               />
             </div>
           )}

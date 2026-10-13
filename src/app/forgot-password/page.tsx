@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase-server';
 import { SITE_URL } from '@/lib/supabase';
 import { Breadcrumbs } from '@/components/ui';
+import { getPageContent } from '@/lib/content/get';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,30 +47,28 @@ export default async function ForgotPasswordPage({
 }: {
   searchParams: Promise<{ error?: string; sent?: string }>;
 }) {
-  const sp = await searchParams;
+  const [sp, content] = await Promise.all([searchParams, getPageContent('auth')]);
+  const c = content.forgot_password;
 
   return (
     <div className="container-page py-12">
       <Breadcrumbs
         trail={[
           { label: 'Home', href: '/' },
-          { label: 'Sign in', href: '/login' },
-          { label: 'Reset your password' },
+          { label: c.breadcrumb_parent.label, href: c.breadcrumb_parent.href },
+          { label: c.breadcrumb },
         ]}
       />
       <div className="mx-auto max-w-sm">
-        <h1 className="font-headline-lg text-headline-lg">Reset your password</h1>
-        <p className="mt-3 text-[var(--text-muted)]">
-          Enter the email you signed up with and we will send you a link to choose a new password.
-        </p>
+        <h1 className="font-headline-lg text-headline-lg">{c.heading}</h1>
+        {c.intro ? <p className="mt-3 text-[var(--text-muted)]">{c.intro}</p> : null}
 
         {sp.sent ? (
           <p
             role="status"
             className="border-brand-500/40 bg-brand-50 text-brand-800 mt-6 rounded-lg border px-4 py-3 text-sm"
           >
-            If an account exists for that email, we have sent a link to reset its password. Open it
-            in this browser — it expires after a short while.
+            {c.sent_notice}
           </p>
         ) : null}
         {sp.error ? (
@@ -84,7 +83,7 @@ export default async function ForgotPasswordPage({
         <form action={requestReset} className="mt-6 space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium">
-              Email
+              {c.email_label}
             </label>
             <input
               id="email"
@@ -99,13 +98,13 @@ export default async function ForgotPasswordPage({
             type="submit"
             className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 w-full rounded-lg shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
           >
-            Send reset link
+            {c.button}
           </button>
         </form>
         <p className="mt-6 text-sm text-[var(--text-muted)]">
-          Remembered it?{' '}
-          <Link href="/login" className="text-brand-700 hover:underline">
-            Sign in
+          {c.login_before}{' '}
+          <Link href={c.login_link.href} className="text-brand-700 hover:underline">
+            {c.login_link.label}
           </Link>
         </p>
       </div>

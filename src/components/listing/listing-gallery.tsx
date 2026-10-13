@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { useRef, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import type { ListingImage } from '@/lib/queries';
 import { Icon } from '@/components/icon';
+import { fill } from '@/components/browse/fill';
+import type { ListingContent } from '@/lib/content/pages/directory';
 
 /** Viewport height left for the lightbox photo once the close bar and caption are placed. */
 const PHOTO_MAX_HEIGHT = '100dvh - 10rem';
@@ -57,7 +59,15 @@ function LightboxPhoto({ img, alt }: { img: ListingImage; alt: string }) {
  * Thumbnail grid plus a lightbox on the native <dialog>: showModal() gives the
  * focus trap, inert page, Escape to close and focus return for free.
  */
-export function ListingGallery({ images, name }: { images: ListingImage[]; name: string }) {
+export function ListingGallery({
+  images,
+  name,
+  labels,
+}: {
+  images: ListingImage[];
+  name: string;
+  labels: ListingContent['gallery'];
+}) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState<number | null>(null);
   const n = images.length;
@@ -88,9 +98,9 @@ export function ListingGallery({ images, name }: { images: ListingImage[]; name:
   return (
     <section className="mt-10">
       <h2 className="font-headline-sm text-headline-sm text-on-surface">
-        Gallery{' '}
+        {labels.heading}{' '}
         <span className="font-body-md text-body-md text-secondary">
-          ({n} {n === 1 ? 'photo' : 'photos'})
+          {fill(n === 1 ? labels.count_one : labels.count_many, { count: n })}
         </span>
       </h2>
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">

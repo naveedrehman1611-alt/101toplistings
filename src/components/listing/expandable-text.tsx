@@ -10,7 +10,17 @@ const BASE = 'font-body-md text-body-md whitespace-pre-line text-on-surface-vari
  * Whether it is collapsible is decided by the caller from the text itself,
  * never by measuring, so server and client render identical markup.
  */
-export function ExpandableText({ text, collapsible }: { text: string; collapsible: boolean }) {
+export function ExpandableText({
+  text,
+  collapsible,
+  showMore = 'Show more',
+  showLess = 'Show less',
+}: {
+  text: string;
+  collapsible: boolean;
+  showMore?: string;
+  showLess?: string;
+}) {
   const id = useId();
   const [expanded, setExpanded] = useState(false);
   const clamped = collapsible && !expanded;
@@ -28,7 +38,7 @@ export function ExpandableText({ text, collapsible }: { text: string; collapsibl
           onClick={() => setExpanded((v) => !v)}
           className="font-label-md text-label-md text-primary-container mt-2 hover:underline"
         >
-          {expanded ? 'Show less' : 'Show more'}
+          {expanded ? showLess : showMore}
         </button>
       ) : null}
     </>

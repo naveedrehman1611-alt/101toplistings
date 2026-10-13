@@ -8,27 +8,24 @@ import { Icon } from '@/components/icon';
 import { SiteLogo } from '@/components/site-logo';
 import { drawer } from '@/lib/motion';
 import { useSignedIn } from '@/lib/use-signed-in';
-import { TOOLS_BASE, toolHref, toolsByCategory } from '@/lib/free-tools';
+import { TOOLS_BASE, toolHref, toolsByCategory, type FreeTool } from '@/lib/free-tools';
 import { NewPill, SoonPill, ToolsMegaMenu } from '@/components/tools/tools-mega-menu';
 import { SERVICES_BASE, ServicesMegaMenu, isServicePath } from '@/components/services-mega-menu';
 import type { MenuItem } from '@/lib/queries';
 import type { ServiceNavItem } from '@/lib/service-pages';
-
-const ADD_LISTING = '/dashboard/listings/new';
+import type { SiteContent } from '@/lib/content/pages/global';
 
 /** The website development page (src/lib/services/website-development.ts), linked after the Services menu. */
 const WEB_DEV_PATH = '/website-development';
-
-const TOOL_CATEGORIES = toolsByCategory();
 
 const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
 
 /** "Home" leads the menu unless the admin has already added a link to "/". */
-function withHome(items: MenuItem[]): MenuItem[] {
+function withHome(items: MenuItem[], label: string): MenuItem[] {
   return items.some((item) => item.url === '/')
     ? items
-    : [{ label: 'Home', url: '/', sort_order: 0 }, ...items];
+    : [{ label, url: '/', sort_order: 0 }, ...items];
 }
 
 /** "/" matches only the home page; any other path also covers the pages below it. */
@@ -55,16 +52,22 @@ function isWebDevLink(item: MenuItem): boolean {
 }
 
 export function Header({
-  brand,
   nav,
   mobileNav,
   services,
+  tools,
+  content,
 }: {
-  brand: string;
   nav: MenuItem[];
   mobileNav: MenuItem[];
   services: ServiceNavItem[];
+  /** The free tools with their edited card copy (Admin → Content), hidden cards left out. */
+  tools: FreeTool[];
+  content: Pick<SiteContent, 'header' | 'services_menu'>;
 }) {
+  const c = content.header;
+  const toolCategories = toolsByCategory(tools);
+  const servicesMenu = content.services_menu;
   const pathname = usePathname();
   // null while unknown: neither the login link nor the account icon shows yet.
   const signedIn = useSignedIn();
@@ -91,7 +94,7 @@ export function Header({
   }, [open]);
 
   const close = () => setOpen(false);
-  const primary = withHome(nav);
+  const primary = withHome(nav, c.home_label);
   // Without an admin link to its hub, the Services menu sits just before the
   // tools, and the tools menu goes last.
   const servicesLink = primary.find(isServicesLink);
@@ -99,8 +102,8 @@ export function Header({
   // Login (or the account link) and Add Listing have their own buttons at the
   // foot of the drawer. The services and tools sections take the place of the
   // first link to their hub, or follow the links when there is none.
-  const drawerItems = withHome(mobileNav).filter(
-    (item) => item.url !== '/login' && item.url !== ADD_LISTING,
+  const drawerItems = withHome(mobileNav, c.home_label).filter(
+    (item) => item.url !== c.login.href && item.url !== c.add_listing.href,
   );
   const drawerServicesLink = drawerItems.find(isServicesLink);
   const drawerToolsLink = drawerItems.find(isToolsLink);
@@ -144,7 +147,7 @@ export function Header({
 
   // Drawer sections for the services and tools hubs, under the admin's label
   // when they replace a menu link.
-  const servicesSection = (label = 'SEO Services') => (
+  const servicesSection = (label = servicesMenu.label) => (
     <li key="mobile-services">
       <button
         type="button"
@@ -181,18 +184,18 @@ export function Header({
           ))}
         </ul>
         <Link
-          href={SERVICES_BASE}
+          href={servicesMenu.view_all.href}
           onClick={close}
           className={`font-label-md text-label-md text-primary-container mt-1 inline-flex items-center gap-1 rounded-sm px-2 py-2 font-semibold ${focusRing}`}
         >
-          View all SEO services
+          {servicesMenu.view_all.label}
           <Icon name="north_east" size={16} />
         </Link>
       </div>
     </li>
   );
 
-  const toolsSection = (label = 'Free SEO Tools') => (
+  const toolsSection = (label = c.mobile_tools_label) => (
     <li key="mobile-free-tools">
       <button
         type="button"
@@ -213,7 +216,7 @@ export function Header({
         />
       </button>
       <div id="mobile-free-tools" hidden={!toolsOpen} className="px-3 pb-2">
-        {TOOL_CATEGORIES.map((category) => (
+        {toolCategories.map((category) => (
           <div key={category.id} className="mt-3">
             <p className="font-label-sm text-label-sm text-secondary mb-1 tracking-wider uppercase">
               {category.label}
@@ -252,11 +255,11 @@ export function Header({
           </div>
         ))}
         <Link
-          href={TOOLS_BASE}
+          href={c.mobile_tools_all.href}
           onClick={close}
           className={`font-label-md text-label-md text-primary-container mt-3 inline-flex items-center gap-1 rounded-sm px-2 py-2 font-semibold ${focusRing}`}
         >
-          View all free tools
+          {c.mobile_tools_all.label}
           <Icon name="north_east" size={16} />
         </Link>
       </div>
@@ -269,7 +272,7 @@ export function Header({
         <div className="mx-auto max-w-7xl px-6 lg:px-12">
           <div className="flex h-20 items-center justify-between gap-3 sm:gap-6">
             <Link href="/" className={`flex min-w-0 shrink items-center rounded-xl ${focusRing}`}>
-              <SiteLogo alt={brand} eager className="h-9 w-auto sm:h-11 lg:h-10 xl:h-11" />
+              <SiteLogo image={c.logo} eager className="h-9 w-auto sm:h-11 lg:h-10 xl:h-11" />
             </Link>
 
             {/* gap-3 until xl and gap-5 from xl: with the services and tools triggers and the
@@ -280,13 +283,23 @@ export function Header({
                 if (item === servicesLink) {
                   return (
                     <Fragment key={`${item.url}|${item.label}`}>
-                      <ServicesMegaMenu services={services} label={item.label} />
+                      <ServicesMegaMenu
+                        services={services}
+                        content={servicesMenu}
+                        label={item.label}
+                      />
                       {webDevLink}
                     </Fragment>
                   );
                 }
                 if (item === toolsLink) {
-                  return <ToolsMegaMenu key={`${item.url}|${item.label}`} label={item.label} />;
+                  return (
+                    <ToolsMegaMenu
+                      key={`${item.url}|${item.label}`}
+                      label={item.label}
+                      tools={tools}
+                    />
+                  );
                 }
                 const active = isActive(pathname, item.url);
                 return (
@@ -306,11 +319,11 @@ export function Header({
               })}
               {servicesLink ? null : (
                 <>
-                  <ServicesMegaMenu services={services} />
+                  <ServicesMegaMenu services={services} content={servicesMenu} />
                   {webDevLink}
                 </>
               )}
-              {toolsLink ? null : <ToolsMegaMenu />}
+              {toolsLink ? null : <ToolsMegaMenu tools={tools} />}
             </nav>
 
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">
@@ -318,19 +331,22 @@ export function Header({
                   tools menu need the room. */}
               {signedIn === false ? (
                 <Link
-                  href="/login"
+                  href={c.login.href}
                   className={`font-label-md text-label-md text-on-surface-variant hover:text-on-surface hidden rounded-sm whitespace-nowrap transition-colors sm:inline-flex ${focusRing}`}
                 >
-                  Login<span className="lg:hidden xl:inline">&nbsp;/ Sign Up</span>
+                  {c.login.label}
+                  {c.login_suffix ? (
+                    <span className="lg:hidden xl:inline">&nbsp;{c.login_suffix}</span>
+                  ) : null}
                 </Link>
               ) : null}
               {/* Icon only below sm, so the bar fits a 360px screen. */}
               <Link
-                href={ADD_LISTING}
+                href={c.add_listing.href}
                 className={`bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary inline-flex size-10 items-center justify-center gap-2 rounded-lg shadow-xs transition-all hover:shadow-sm sm:size-auto sm:px-5 sm:py-2.5 ${focusRing}`}
               >
                 <Icon name="add_circle" size={18} />
-                <span className="sr-only sm:not-sr-only">Add Listing</span>
+                <span className="sr-only sm:not-sr-only">{c.add_listing.label}</span>
               </Link>
               {/* Signed in only. */}
               {signedIn ? (
@@ -383,7 +399,7 @@ export function Header({
               className="bg-surface-card absolute top-0 right-0 flex h-full w-80 max-w-[85vw] flex-col overflow-y-auto p-6 shadow-2xl"
             >
               <div className="mb-6 flex items-center justify-between gap-4">
-                <SiteLogo alt={brand} className="h-9 w-auto min-w-0" />
+                <SiteLogo image={c.logo} className="h-9 w-auto min-w-0" />
                 <button
                   ref={closeButton}
                   type="button"
@@ -436,27 +452,27 @@ export function Header({
               <div className="border-border-subtle mt-6 flex flex-col gap-3 border-t pt-6">
                 {signedIn === null ? null : (
                   <Link
-                    href={signedIn ? '/dashboard' : '/login'}
+                    href={signedIn ? '/dashboard' : c.login.href}
                     onClick={close}
                     className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low inline-flex h-11 items-center justify-center gap-2 rounded-lg border transition-colors ${focusRing}`}
                   >
                     {signedIn ? (
                       <>
                         <Icon name="person" size={18} />
-                        Your Account
+                        {c.account_label}
                       </>
                     ) : (
-                      'Login / Sign Up'
+                      c.mobile_login
                     )}
                   </Link>
                 )}
                 <Link
-                  href={ADD_LISTING}
+                  href={c.add_listing.href}
                   onClick={close}
                   className={`bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary inline-flex h-11 items-center justify-center gap-2 rounded-lg shadow-xs transition-all hover:shadow-sm ${focusRing}`}
                 >
                   <Icon name="add_circle" size={18} />
-                  Add Listing
+                  {c.add_listing.label}
                 </Link>
               </div>
             </motion.nav>

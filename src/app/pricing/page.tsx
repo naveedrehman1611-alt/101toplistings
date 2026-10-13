@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { Button } from '@/components/ui';
-import { Icon, type IconName } from '@/components/icon';
+import { Icon } from '@/components/icon';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { seoMetadata } from '@/lib/seo';
+import { getPageContent } from '@/lib/content/get';
+import { lines, type SectionValues } from '@/lib/content/schema';
+import type { PRICING_PAGE } from '@/lib/content/pages/company';
+import { InlineMarkdown } from '@/components/markdown';
+import { HighlightedHeading } from '@/components/company/highlighted';
 
 export const revalidate = 3600;
 
@@ -21,67 +25,11 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-type Plan = {
-  icon: IconName;
-  name: string;
-  price: string;
-  body: string;
-  points: string[];
-  actions: { label: string; href: string; ghost?: boolean }[];
-};
+type Sections = (typeof PRICING_PAGE)['sections'];
+type Content = { [K in keyof Sections]: SectionValues<Sections[K]> };
 
-const PLANS: Plan[] = [
-  {
-    icon: 'add_business',
-    name: 'Free listing',
-    price: 'Free',
-    body: 'A standard business listing in the directory, reviewed before it goes live.',
-    points: ['Your own listing page', 'Category and city placement', 'Edit your details any time'],
-    actions: [{ label: 'Create listing', href: '/dashboard/listings/new' }],
-  },
-  {
-    icon: 'star',
-    name: 'Featured listing',
-    price: 'Quote on request',
-    body: 'Extra visibility: featured listings are shown first in the business directory.',
-    points: ['Shown ahead of standard listings', 'Listed on the featured businesses page'],
-    actions: [
-      { label: 'Request a quote', href: '/contact?subject=Partnership%20or%20advertising' },
-    ],
-  },
-  {
-    icon: 'monitoring',
-    name: 'SEO & marketing services',
-    price: 'Custom quote',
-    body: 'Hands-on work on your own website: audits, technical and on-page SEO, content and link building.',
-    points: ['Start with an SEO audit', 'A plan scoped to your site and goals'],
-    actions: [
-      { label: 'Get SEO audit', href: '/seo-audit' },
-      { label: 'View SEO services', href: '/seo-services', ghost: true },
-    ],
-  },
-];
-
-const FACTORS: { title: string; body: string }[] = [
-  {
-    title: 'Size and condition of the site',
-    body: 'A five-page local business site and a large online store need very different amounts of work.',
-  },
-  {
-    title: 'Competition and goals',
-    body: 'Ranking in a crowded market or across several cities takes more effort than a single niche.',
-  },
-  {
-    title: 'Scope of work',
-    body: 'Technical fixes, content, local SEO and link building are separate workstreams; you pay for the ones you need.',
-  },
-  {
-    title: 'Starting point',
-    body: 'An audit shows what is already working and what is holding the site back, which sets the scope.',
-  },
-];
-
-export default function PricingPage() {
+export default async function PricingPage() {
+  const { hero, plans, factors } = await getPageContent('pricing');
   const trail = [{ label: 'Home', href: '/' }, { label: 'Pricing' }];
 
   return (
@@ -89,24 +37,35 @@ export default function PricingPage() {
       <JsonLd data={breadcrumbSchema(trail, '/pricing')} />
       <PageHero
         trail={trail}
-        eyebrow="Plans & Pricing"
-        heading={
-          <>
-            Business listing and <span className="text-hero-green-light">SEO pricing</span>
-          </>
-        }
-        subheading="Listing your business in the directory is free. Featured placement and SEO services are priced by quote, because the right scope depends on your business and website. There are no fixed prices published here."
+        eyebrow={hero.eyebrow}
+        heading={<HighlightedHeading c={hero} className="text-hero-green-light" />}
+        subheading={hero.intro}
         stats={[
-          { value: PLANS.length, label: 'Plans' },
-          { value: 'Free', label: 'Business Listing' },
-        ]}
+          { value: plans.plans.length, label: hero.stat_plans },
+          { value: hero.stat_value, label: hero.stat_label },
+        ].filter((s) => s.label)}
       />
 
       <div className="container-page py-12">
-        <h2 className="font-headline-md text-headline-md">Choose a plan</h2>
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {PLANS.map((p) => (
-            <div key={p.name} className="surface-card flex flex-col p-6">
+        {plans.visible ? <PlansSection c={plans} /> : null}
+        {factors.visible ? <FactorsSection c={factors} first={!plans.visible} /> : null}
+      </div>
+    </>
+  );
+}
+
+function PlansSection({ c }: { c: Content['plans'] }) {
+  return (
+    <>
+      <h2 className="font-headline-md text-headline-md">{c.heading}</h2>
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {c.plans.map((p, i) => {
+          const actions = [
+            { ...p.primary, ghost: false },
+            { ...p.secondary, ghost: true },
+          ].filter((a) => a.label && a.href);
+          return (
+            <div key={i} className="surface-card flex flex-col p-6">
               <div className="bg-surface-container-low text-primary-container mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
                 <Icon name={p.icon} size={26} />
               </div>
@@ -114,8 +73,8 @@ export default function PricingPage() {
               <p className="font-headline-sm text-headline-sm mt-1">{p.price}</p>
               <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">{p.body}</p>
               <ul className="mt-4 space-y-2 text-sm">
-                {p.points.map((pt) => (
-                  <li key={pt} className="flex items-start gap-2">
+                {lines(p.points).map((pt, j) => (
+                  <li key={j} className="flex items-start gap-2">
                     <Icon
                       name="check_circle"
                       size={18}
@@ -126,37 +85,43 @@ export default function PricingPage() {
                 ))}
               </ul>
               <div className="mt-6 flex flex-wrap gap-3 pt-2 lg:mt-auto">
-                {p.actions.map((a) => (
-                  <Button key={a.href} href={a.href} variant={a.ghost ? 'ghost' : 'primary'}>
+                {actions.map((a, j) => (
+                  <Button key={j} href={a.href} variant={a.ghost ? 'ghost' : 'primary'}>
                     {a.label}
                   </Button>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
-
-        <h2 className="font-headline-md text-headline-md mt-16">What affects SEO pricing</h2>
-        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-          {FACTORS.map((f) => (
-            <div key={f.title} className="surface-card p-6">
-              <h3 className="font-title-md text-title-md">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{f.body}</p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-6 text-sm text-[var(--text-muted)]">
-          Not sure where to start? See{' '}
-          <Link href="/featured-businesses" className="text-brand-700 hover:underline">
-            featured businesses
-          </Link>{' '}
-          or{' '}
-          <Link href="/contact" className="text-brand-700 hover:underline">
-            contact us
-          </Link>
-          .
-        </p>
+          );
+        })}
       </div>
+    </>
+  );
+}
+
+function FactorsSection({ c, first }: { c: Content['factors']; first: boolean }) {
+  return (
+    <>
+      <h2
+        className={
+          first ? 'font-headline-md text-headline-md' : 'font-headline-md text-headline-md mt-16'
+        }
+      >
+        {c.heading}
+      </h2>
+      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        {c.items.map((f, i) => (
+          <div key={i} className="surface-card p-6">
+            <h3 className="font-title-md text-title-md">{f.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{f.body}</p>
+          </div>
+        ))}
+      </div>
+      {c.note ? (
+        <p className="mt-6 text-sm text-[var(--text-muted)]">
+          <InlineMarkdown text={c.note} linkClassName="text-brand-700 hover:underline" />
+        </p>
+      ) : null}
     </>
   );
 }
