@@ -39,7 +39,7 @@ export const WEBSITE_DEVELOPMENT_PAGE: ServicePage = {
     },
     {
       title: 'SEO-ready, fast builds',
-      body: 'Clean URLs, logical headings, editable titles and meta descriptions, an XML sitemap, schema markup and redirects from old pages are in place before launch. We test speed and Core Web Vitals on real templates and fix heavy images, scripts and fonts before the site goes live.',
+      body: 'Clean URLs, logical headings, editable titles and meta descriptions, an XML sitemap and schema markup are in place before launch. We test speed and Core Web Vitals on real templates and fix heavy images, scripts and fonts before the site goes live.',
     },
     {
       title: 'Maintenance and support',
@@ -61,7 +61,7 @@ export const WEBSITE_DEVELOPMENT_PAGE: ServicePage = {
     },
     {
       title: 'Launch and support',
-      body: 'We launch, apply redirects, submit the sitemap in Search Console and watch for errors in the first weeks. Maintenance and improvements then continue on whatever basis suits you.',
+      body: 'We launch, submit the sitemap in Search Console and watch for errors in the first weeks. Maintenance and improvements then continue on whatever basis suits you.',
     },
   ],
   faq: [
@@ -83,11 +83,11 @@ export const WEBSITE_DEVELOPMENT_PAGE: ServicePage = {
     },
     {
       q: 'Will a new website hurt my Google rankings?',
-      a: 'A redesign can lose traffic when URLs change without redirects or pages that earn visits are removed. We crawl the old site first, map each important URL to its new address, keep the content that performs and check Search Console after launch, which keeps that risk low.',
+      a: 'A redesign can lose traffic when pages that earn visits are removed or rewritten without care. We keep the content that performs, build the new site with search-friendly structure from the start and check Search Console after launch, so problems are spotted early.',
     },
     {
       q: 'Can you look after the website after launch?',
-      a: 'Yes. We can handle updates, backups, security checks and content changes on a schedule that suits you. If you would rather manage the site yourself, we hand over admin access and short notes on editing pages and keeping the software up to date.',
+      a: 'Yes. We can handle updates, backups, security checks and content changes on a schedule that suits you.',
     },
   ],
   ctaLabel: 'Discuss Your Website',
