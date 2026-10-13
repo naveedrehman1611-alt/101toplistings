@@ -8,11 +8,10 @@ import {
 } from '@/lib/queries';
 import { Results, parsePage, parseSort } from '@/components/results';
 import { ListingFilters } from '@/components/listing-filters';
-import { SITE_URL } from '@/lib/supabase';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
-import { redirectOrNotFound } from '@/lib/redirects';
-import { MIN_CITY_LISTINGS_TO_INDEX, SHARE_IMAGE, resultsPageSeo } from '@/lib/seo';
+import { redirectOrNotFound, redirectToLowercase } from '@/lib/redirects';
+import { MIN_CITY_LISTINGS_TO_INDEX, pageMetadata, resultsPageSeo } from '@/lib/seo';
 import { getPageContent } from '@/lib/content/get';
 import { fill, fillNodes } from '@/components/browse/fill';
 
@@ -39,19 +38,20 @@ export async function generateMetadata({
   const count = (await getCityListingCounts([city.id])).get(city.id);
   const title = `Businesses in ${city.name}`;
   const description = city.intro_copy ?? `Local businesses listed in ${city.name}.`;
-  const variant = Boolean(sp.sort || sp.q?.trim() || sp.category);
-  return {
+  // ?sort= alone is the same listings reordered (canonical to the plain page);
+  // a search or category filter is a different subset (noindex).
+  const filtered = Boolean(sp.q?.trim() || sp.category);
+  const path = `/city/${city.slug}`;
+  return pageMetadata(path, {
     title,
     description,
     ...resultsPageSeo(
-      `/city/${city.slug}`,
+      path,
       parsePage(sp.page),
-      variant,
+      filtered,
       count !== undefined && count < MIN_CITY_LISTINGS_TO_INDEX,
     ),
-    openGraph: { title, description, url: `${SITE_URL}/city/${city.slug}`, images: [SHARE_IMAGE] },
-    twitter: { card: 'summary_large_image', title, description, images: [SHARE_IMAGE] },
-  };
+  });
 }
 
 export default async function CityPage({
@@ -64,7 +64,10 @@ export default async function CityPage({
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const city = await getCityBySlug(slug);
   // A retired slug may have a stored redirect; otherwise this renders the 404.
-  if (!city) return redirectOrNotFound(`/city/${encodeURIComponent(slug)}`);
+  if (!city) {
+    await redirectToLowercase('/city', slug, getCityBySlug, sp);
+    return redirectOrNotFound(`/city/${encodeURIComponent(slug)}`);
+  }
 
   const page = parsePage(sp.page);
   const sort = parseSort(sp.sort);

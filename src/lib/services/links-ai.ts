@@ -1,6 +1,6 @@
 import type { ServicePage } from '@/lib/service-pages';
 
-const SEO_QUOTE = '/contact?subject=SEO%20services';
+const SEO_QUOTE = '/contact?subject=seo%20services';
 const SEO_GUIDES = { label: 'SEO guides and how-tos', href: '/blog/seo' };
 
 /**

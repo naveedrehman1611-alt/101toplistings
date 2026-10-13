@@ -6,6 +6,7 @@ import { getCurrentUser, roleAtLeast } from '@/lib/auth';
 import { Breadcrumbs } from '@/components/ui';
 import { GoogleSignIn } from '@/components/google-sign-in';
 import { getPageContent } from '@/lib/content/get';
+import { nextParam } from '@/lib/legacy-redirects';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,7 +45,7 @@ async function signIn(formData: FormData) {
 /** Carries ?next= over to the sign-up page, so the visitor still lands where they were going. */
 function withNext(href: string, next: string | undefined): string {
   if (!next) return href;
-  return `${href}${href.includes('?') ? '&' : '?'}next=${encodeURIComponent(next)}`;
+  return `${href}${href.includes('?') ? '&' : '?'}next=${nextParam(next)}`;
 }
 
 export default async function LoginPage({

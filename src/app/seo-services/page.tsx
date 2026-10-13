@@ -12,6 +12,7 @@ import { HubSectionHeader } from '@/components/services-hub/hub-section-header';
 import { ServiceCard } from '@/components/services-hub/service-card';
 import { IndustryTile } from '@/components/services-hub/industry-tile';
 import { HubCtaBand } from '@/components/services-hub/hub-cta-band';
+import { chunk } from '@/lib/chunk';
 
 export const revalidate = 3600;
 
@@ -144,13 +145,20 @@ export default async function ServicesPage() {
                   title={industries.title}
                   count={`${industryCount} ${ind.count}`}
                 />
-                <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-                  {industries.services.map((s) => (
-                    <li key={s.slug}>
-                      <IndustryTile name={s.name} icon={s.icon} href={s.path} />
-                    </li>
-                  ))}
-                </ul>
+                {/* One <ul> per 48 tiles: 64+ in one list is past the 60 children an
+                    audit flags, and 48 fills whole rows at 2, 3 and 4 columns. */}
+                {chunk(industries.services, 48).map((run, i) => (
+                  <ul
+                    key={i}
+                    className={`${i > 0 ? 'mt-3' : ''} grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4`}
+                  >
+                    {run.map((s) => (
+                      <li key={s.slug}>
+                        <IndustryTile name={s.name} icon={s.icon} href={s.path} />
+                      </li>
+                    ))}
+                  </ul>
+                ))}
               </section>
             ) : null}
           </div>

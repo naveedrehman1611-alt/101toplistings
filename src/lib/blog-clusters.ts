@@ -55,7 +55,7 @@ export const BLOG_CLUSTERS = [
     h1: 'Digital marketing guides',
     intro:
       'Digital marketing is how a business earns attention and customers online, through search, content, local listings and outreach. These guides show how the channels fit together so you can decide where to spend your time first.',
-    cta: { label: 'Contact', href: '/contact?subject=Digital%20marketing' },
+    cta: { label: 'Contact', href: '/contact?subject=digital%20marketing' },
     moneyLinks: [
       { label: 'Digital marketing services', href: '/digital-marketing' },
       { label: 'SEO services', href: '/seo-services' },

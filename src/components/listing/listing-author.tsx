@@ -42,7 +42,9 @@ export function ListingAuthor({
           </span>
         )}
         <div className="min-w-0">
-          <h3 className="font-title-md text-title-md text-on-surface">{listing.name}</h3>
+          {/* Not a heading: the name is already the page's h1, and repeating it
+              as h3 gave the page two identical headings. */}
+          <p className="font-title-md text-title-md text-on-surface">{listing.name}</p>
           {phone ? (
             <p className="font-body-sm text-body-sm text-primary-container">{phone}</p>
           ) : null}

@@ -92,7 +92,7 @@ const top_rated = defineSection({
     ),
     empty_button: link(
       'No businesses yet: button',
-      { label: 'Add your business', href: '/dashboard/listings/new' },
+      { label: 'Add your business', href: '/add-business' },
       'Leave the text blank to hide the button.',
     ),
     empty_button_icon: icon('No businesses yet: button icon', 'add_business'),
@@ -410,7 +410,7 @@ const grow_visibility = defineSection({
     checklist_bullet: icon('Checklist bullet icon', 'check_circle'),
     button: link(
       'Button',
-      { label: "Add Your Business — It's Free", href: '/dashboard/listings/new' },
+      { label: "Add Your Business — It's Free", href: '/add-business' },
       'Leave the text blank to hide the button.',
     ),
     button_icon: icon('Button icon', 'add_business'),
@@ -559,7 +559,7 @@ const final_cta = defineSection({
     ),
     button: link(
       'Button',
-      { label: "Add Your Business — It's Free", href: '/dashboard/listings/new' },
+      { label: "Add Your Business — It's Free", href: '/add-business' },
       'Leave the text blank to hide the button.',
     ),
     button_icon: icon('Button icon', 'add_circle'),

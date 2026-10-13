@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { canonicalHref } from '@/lib/legacy-redirects';
 
 /**
  * A deliberately small markdown renderer for blog bodies: paragraphs, headings,
@@ -175,5 +176,6 @@ export function safeHref(href: string): string | null {
   if (href.includes('\\') || href.startsWith('//')) return null;
   if (/^https?:\/\/[^/]/i.test(href)) return href;
   if (/^[^/?#]*:/.test(href)) return null;
-  return href;
+  // A post written before a route change can link to a URL that now redirects.
+  return canonicalHref(href);
 }

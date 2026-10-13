@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { getBlogPost, getBlogPosts } from '@/lib/queries';
 import { PageHero } from '@/components/page-hero';
 import { SITE_URL } from '@/lib/supabase';
-import { SHARE_IMAGE } from '@/lib/seo';
+import { pageMetadata } from '@/lib/seo';
 import { Markdown } from '@/components/markdown';
-import { redirectOrNotFound } from '@/lib/redirects';
+import { redirectOrNotFound, redirectToLowercase } from '@/lib/redirects';
 import { jsonLdHtml } from '@/lib/json-ld';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { InlineMarkdown } from '@/components/markdown';
@@ -29,22 +29,28 @@ export async function generateMetadata({
   if (!post) return { title: 'Not found' };
   const title = post.seo_title ?? post.title;
   const description = post.seo_description ?? post.standfirst ?? '';
-  const url = `${SITE_URL}/blog/${post.slug}`;
-  return {
+  return pageMetadata(`/blog/${post.slug}`, {
     title,
     description,
     // Self-canonical unless the editor set an override (validated as http(s) on save).
-    alternates: { canonical: post.canonical_url ?? url },
-    openGraph: { title, description, url, type: 'article', images: [SHARE_IMAGE] },
-    twitter: { card: 'summary_large_image', title, description, images: [SHARE_IMAGE] },
-  };
+    alternates: post.canonical_url ? { canonical: post.canonical_url } : undefined,
+    openGraph: {
+      title,
+      description,
+      type: 'article',
+      ...(post.published_at ? { publishedTime: post.published_at } : {}),
+    },
+  });
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getBlogPost(slug);
   // A retired slug may have a stored redirect; otherwise this renders the 404.
-  if (!post) return redirectOrNotFound(`/blog/${encodeURIComponent(slug)}`);
+  if (!post) {
+    await redirectToLowercase('/blog', slug, getBlogPost);
+    return redirectOrNotFound(`/blog/${encodeURIComponent(slug)}`);
+  }
 
   const [all, { hero, footer, related: relatedCopy }] = await Promise.all([
     getBlogPosts(),

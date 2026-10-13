@@ -29,10 +29,16 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 export async function ServicePageView({
   page,
   extra,
+  extraSlugs = [],
   directory = [],
 }: {
   page: ServicePage;
   extra?: ReactNode;
+  /**
+   * Services `extra` already shows as cards. They are left out of "Related
+   * services", which would otherwise repeat their card headings on the page.
+   */
+  extraSlugs?: string[];
   /** Matching directory categories, for industry pages (src/lib/service-directory.ts). */
   directory?: { label: string; href: string }[];
 }) {
@@ -72,7 +78,9 @@ export async function ServicePageView({
     provider: { '@id': `${SITE_URL}/#organization` },
     areaServed: page.areaServed ?? DEFAULT_AREA_SERVED,
   };
-  const related = page.related.flatMap((slug) => servicePage(slug) ?? []);
+  const related = page.related.flatMap((slug) =>
+    extraSlugs.includes(slug) ? [] : (servicePage(slug) ?? []),
+  );
   // /digital-marketing sits outside the hub sections, so it keeps its own tag.
   const eyebrow = isMarketing ? tag : hubTitle(hub, page.hub) || tag;
   const isAudit = cta.href === '/seo-audit';
@@ -103,7 +111,7 @@ export async function ServicePageView({
           {/* The second button offers whichever of audit and quote the first one doesn't. */}
           {isAudit ? (
             <Link
-              href={quoteHref(page.name)}
+              href={quoteHref(page.slug)}
               className={`${HUB_BUTTON} border border-white/40 text-white hover:bg-white/10`}
             >
               <Icon name={t.hero.quote_icon} size={18} />
@@ -293,7 +301,7 @@ export async function ServicePageView({
           primaryIcon={t.cta.primary_icon}
           quoteLabel={t.cta.secondary_label}
           quoteIcon={t.cta.secondary_icon}
-          quoteHref={quoteHref(page.name)}
+          quoteHref={quoteHref(page.slug)}
         />
       ) : null}
     </>

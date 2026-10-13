@@ -7,7 +7,7 @@ const SCHEMA_TOOL = {
   href: '/free-tools/schema-markup-generator',
 };
 const AUDIT = { ctaLabel: 'Get a Free SEO Audit', ctaHref: '/seo-audit' };
-const QUOTE = { ctaLabel: 'Request a quote', ctaHref: '/contact?subject=SEO%20services' };
+const QUOTE = { ctaLabel: 'Request a quote', ctaHref: '/contact?subject=seo%20services' };
 
 /**
  * Industry service pages, part 3: iGaming, crypto, financial services, dental

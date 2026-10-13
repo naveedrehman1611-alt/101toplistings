@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { getMediaByIds, getSettings, reportError, settingText } from '../queries';
 import { supabase } from '../supabase';
 import { mediaUrl } from '../media';
+import { canonicalHref } from '../legacy-redirects';
 import { CONTENT_PAGES, type PageId } from './registry';
 import {
   fillBrand,
@@ -67,7 +68,8 @@ function resolveField(field: Field, value: unknown, media: Media, brand: string)
       return fillBrand(value as string, brand);
     case 'link': {
       const l = value as { label: string; href: string };
-      return { label: fillBrand(l.label, brand), href: l.href };
+      // A saved link can predate a route change: render the final URL, not a redirect.
+      return { label: fillBrand(l.label, brand), href: canonicalHref(l.href) };
     }
     case 'image':
       return resolveImage(field, value as StoredImage, media, brand);

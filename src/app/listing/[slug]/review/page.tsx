@@ -7,6 +7,7 @@ import { Breadcrumbs } from '@/components/ui';
 import { ReviewForm } from '@/components/listing/review-form';
 import { getPageContent } from '@/lib/content/get';
 import { fill, fillNodes } from '@/components/browse/fill';
+import { signInHref } from '@/lib/legacy-redirects';
 
 // Separate from the listing page so that page can stay statically cached; this
 // one depends on who is signed in.
@@ -45,16 +46,13 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
           <p className="mt-6 text-[var(--text-muted)]">
             {fillNodes(t.signin, {
               signin: (
-                <Link
-                  href={`/login?next=${encodeURIComponent(here)}`}
-                  className="text-brand-700 hover:underline"
-                >
+                <Link href={signInHref(here)} className="text-brand-700 hover:underline">
                   {t.signin_link}
                 </Link>
               ),
               register: (
                 <Link
-                  href={`/register?next=${encodeURIComponent(here)}`}
+                  href={signInHref(here, '/register')}
                   className="text-brand-700 hover:underline"
                 >
                   {t.register_link}

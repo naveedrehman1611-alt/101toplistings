@@ -32,16 +32,15 @@ const getFeatured = cache(async function getFeatured(): Promise<BrowseRow[]> {
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const meta = await seoMetadata('/featured-businesses', {
+  // A page with no featured listings has nothing to index (and so no canonical).
+  const empty = (await getFeatured()).length === 0;
+  return seoMetadata('/featured-businesses', {
     title: TITLE,
     description: DESCRIPTION,
+    robots: empty ? { index: false, follow: true } : undefined,
     openGraph: { title: TITLE, description: DESCRIPTION },
     twitter: { card: 'summary_large_image', title: TITLE },
   });
-  // A page with no featured listings has nothing to index.
-  return (await getFeatured()).length === 0
-    ? { ...meta, robots: { index: false, follow: true } }
-    : meta;
 }
 
 export default async function FeaturedBusinessesPage() {

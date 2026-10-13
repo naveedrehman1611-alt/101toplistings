@@ -8,6 +8,7 @@ import { submitClaim } from '@/lib/public-actions';
 import { Breadcrumbs } from '@/components/ui';
 import { getPageContent } from '@/lib/content/get';
 import { fill, fillNodes } from '@/components/browse/fill';
+import { signInHref } from '@/lib/legacy-redirects';
 
 // Depends on who is signed in, so it is rendered per request like the review page.
 export const dynamic = 'force-dynamic';
@@ -101,16 +102,13 @@ export default async function ClaimPage({
           <p className="mt-6 text-[var(--text-muted)]">
             {fillNodes(t.signin, {
               signin: (
-                <Link
-                  href={`/login?next=${encodeURIComponent(here)}`}
-                  className="text-brand-700 hover:underline"
-                >
+                <Link href={signInHref(here)} className="text-brand-700 hover:underline">
                   {t.signin_link}
                 </Link>
               ),
               register: (
                 <Link
-                  href={`/register?next=${encodeURIComponent(here)}`}
+                  href={signInHref(here, '/register')}
                   className="text-brand-700 hover:underline"
                 >
                   {t.register_link}

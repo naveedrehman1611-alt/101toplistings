@@ -5,7 +5,7 @@ import { Icon } from '@/components/icon';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { SITE_URL } from '@/lib/supabase';
-import { SHARE_IMAGE } from '@/lib/seo';
+import { pageMetadata } from '@/lib/seo';
 import type { SectionValues } from '@/lib/content/schema';
 import type { TOOLS_PAGES } from '@/lib/content/pages/tools';
 import {
@@ -22,19 +22,18 @@ import {
 import { RichBlocks, type RichClasses } from './rich-text';
 
 /**
- * Static metadata for a tool page. Deliberately not seoMetadata(): that reads
- * seo_meta from Supabase, and these pages keep their metadata static. (Their
- * copy is read through getPageContent, a cached read.)
+ * Metadata for a tool page. Deliberately not seoMetadata(): that reads seo_meta
+ * from Supabase. pageMetadata() only adds the cached Settings read the root
+ * layout already makes, for the site name and X account, and fills in the
+ * self canonical and the rest of the share tags (SHARE_IMAGE included).
  */
-export function toolMetadata(slug: string, title: string, description: string): Metadata {
-  const path = toolHref(getTool(slug));
-  return {
+export function toolMetadata(slug: string, title: string, description: string): Promise<Metadata> {
+  return pageMetadata(toolHref(getTool(slug)), {
     title,
     description,
-    alternates: { canonical: path },
-    openGraph: { title, description, url: path, type: 'website', images: [SHARE_IMAGE] },
+    openGraph: { title, description },
     twitter: { card: 'summary_large_image', title, description },
-  };
+  });
 }
 
 type Values<P extends keyof typeof TOOLS_PAGES> = {

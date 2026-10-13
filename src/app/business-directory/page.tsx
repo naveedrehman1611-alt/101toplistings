@@ -25,18 +25,16 @@ export async function generateMetadata({
   searchParams: Promise<{ q?: string; category?: string; city?: string }>;
 }): Promise<Metadata> {
   const sp = await searchParams;
-  const meta = await seoMetadata('/business-directory', {
+  // Filtered views are near-duplicates of /business-directory; category and city pages
+  // are the indexable versions of the same filters. Noindex, so no canonical either.
+  const filtered = Boolean(sp.q || sp.category || sp.city);
+  return seoMetadata('/business-directory', {
     title: TITLE,
     description: DESCRIPTION,
-    alternates: { canonical: '/business-directory' },
+    robots: filtered ? { index: false, follow: true } : undefined,
     openGraph: { title: TITLE, description: DESCRIPTION },
     twitter: { card: 'summary_large_image', title: TITLE },
   });
-  // Filtered views are near-duplicates of /business-directory; category and city pages
-  // are the indexable versions of the same filters.
-  return sp.q || sp.category || sp.city
-    ? { ...meta, robots: { index: false, follow: true } }
-    : meta;
 }
 
 export default async function ListingsPage({

@@ -1,5 +1,6 @@
-import type { Metadata, ResolvingMetadata } from 'next';
+import type { Metadata } from 'next';
 import { SITE_URL, supabase } from './supabase';
+import { getSettings, settingText } from './queries';
 
 /**
  * Per-route SEO overrides for the static public routes (§9.5.4), stored in
@@ -71,33 +72,36 @@ export const MIN_CITY_LISTINGS_TO_INDEX = 5;
 export const MIN_CATEGORY_LISTINGS_TO_INDEX = 5;
 
 /**
- * Canonical and robots for a city or category results page.
+ * Canonical and robots for a city or category results page. A noindex page
+ * never carries a canonical (see pageMetadata), so each case gets one or the
+ * other:
  *
- * - Page 2+ is its own canonical: pointing it at page 1 tells Google the
- *   listings further down are duplicates, so they are never discovered there.
- * - A sorted or filtered copy (?sort=, ?q=, ?city=, ?category=) is the same
- *   listings again: canonical to the plain page and noindex, so it drops out
- *   of the "not indexed" reports instead of being crawled once per order.
- * - `thin` is the listing threshold above.
+ * - `thin` (the listing threshold above): noindex, with every page, order and
+ *   filter of it. No canonical: its only target would be a noindex URL.
+ * - `filtered` (?q=, ?city=, ?category=): a different subset of listings, so
+ *   not a duplicate of the plain page. Noindex, no canonical; the category and
+ *   city pages are the indexable versions of those filters.
+ * - Otherwise indexable. Page 2+ is its own canonical: pointing it at page 1
+ *   tells Google the listings further down are duplicates, so they are never
+ *   discovered there. A ?sort= copy is the same listings in another order, so
+ *   the caller leaves it out of `filtered` and it canonicals to the plain page
+ *   (an indexable URL) instead of being indexed once per order.
  */
 export function resultsPageSeo(
   path: string,
   page: number,
-  variant: boolean,
+  filtered: boolean,
   thin: boolean,
 ): Pick<Metadata, 'alternates' | 'robots'> {
-  return {
-    alternates: {
-      canonical: `${SITE_URL}${path}${!variant && page > 1 ? `?page=${page}` : ''}`,
-    },
-    robots: variant || thin ? { index: false, follow: true } : undefined,
-  };
+  if (thin || filtered) return { robots: { index: false, follow: true } };
+  return { alternates: { canonical: `${SITE_URL}${path}${page > 1 ? `?page=${page}` : ''}` } };
 }
 
 /**
  * The site-wide share image (src/app/opengraph-image.tsx). The root file only
  * reaches pages that set no openGraph of their own: Next.js replaces the whole
- * openGraph object per page, so every page that sets one lists this again.
+ * openGraph object per page, so pageMetadata() lists this again for any page
+ * without an image of its own.
  */
 export const SHARE_IMAGE = {
   url: '/opengraph-image',
@@ -105,6 +109,135 @@ export const SHARE_IMAGE = {
   height: 630,
   alt: 'RankYouSite — business directory and SEO services',
 };
+
+/** `${SITE_URL}/path` for a site path ("/" is SITE_URL itself); an absolute URL is kept. */
+export function absoluteUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return p === '/' ? SITE_URL : `${SITE_URL}${p}`;
+}
+
+/** First path segments on x.com that are pages of X itself, not profiles. */
+const X_RESERVED = new Set([
+  'home',
+  'i',
+  'intent',
+  'share',
+  'search',
+  'explore',
+  'hashtag',
+  'settings',
+  'login',
+  'signup',
+  'messages',
+  'notifications',
+]);
+
+/**
+ * The "@handle" in an X (Twitter) profile URL such as https://x.com/handle or
+ * twitter.com/@handle, for twitter:site and twitter:creator. Anything that is
+ * not a profile URL gives undefined: no handle is better than a made-up one.
+ */
+export function xHandle(profileUrl: string): string | undefined {
+  const value = profileUrl.trim();
+  if (!value) return undefined;
+  let url: URL;
+  try {
+    url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+  } catch {
+    return undefined;
+  }
+  if (!/^(?:www\.|mobile\.)?(?:x|twitter)\.com$/i.test(url.hostname)) return undefined;
+  const name = url.pathname.split('/').filter(Boolean)[0]?.replace(/^@/, '');
+  if (!name || !/^[A-Za-z0-9_]{1,15}$/.test(name) || X_RESERVED.has(name.toLowerCase())) {
+    return undefined;
+  }
+  return `@${name}`;
+}
+
+/** True when a robots value asks not to be indexed. */
+export function isNoindex(robots: Metadata['robots']): boolean {
+  if (!robots) return false;
+  if (typeof robots === 'string') return /\b(?:noindex|none)\b/i.test(robots);
+  return robots.index === false;
+}
+
+type Alternates = NonNullable<Metadata['alternates']>;
+
+function canonicalOf(canonical: Alternates['canonical']): string | undefined {
+  if (!canonical) return undefined;
+  if (typeof canonical === 'string') return canonical;
+  if (canonical instanceof URL) return canonical.toString();
+  return canonical.url.toString();
+}
+
+/** The plain text of a title that may be a template object. */
+function plainTitle(title: Metadata['title']): string | undefined {
+  if (!title) return undefined;
+  if (typeof title === 'string') return title;
+  if ('absolute' in title && title.absolute) return title.absolute;
+  return 'default' in title ? title.default : undefined;
+}
+
+/**
+ * Completes a page's metadata. Every public page's metadata goes through this
+ * (seoMetadata() calls it), because Next.js merges metadata shallowly: a page
+ * that sets openGraph or twitter replaces the layout's whole object, and with
+ * it the site name, URL, image and X account.
+ *
+ * - Canonical: an indexable page keeps the canonical it set, or gets `path`
+ *   (its own URL) as a self canonical. A noindex page gets none: a canonical
+ *   on a noindex page, or one pointing at a noindex URL, is a contradictory
+ *   signal, and Google advises against mixing the two. Both are absolute.
+ * - Open Graph: title, description, url (the canonical, else `path`), type
+ *   (website unless the page set one), site name, and images (the page's own,
+ *   else SHARE_IMAGE with its size and alt text).
+ * - Twitter: card, title, description and images, defaulting to the Open
+ *   Graph values, plus site/creator from the X profile URL in Settings
+ *   (social.x) when one is set.
+ *
+ * Fields the page set itself win over every default above, except og:url,
+ * which always follows the canonical.
+ */
+export async function pageMetadata(path: string, meta: Metadata): Promise<Metadata> {
+  const settings = await getSettings();
+  const siteName = settingText(settings, 'brand.name', 'RankYouSite');
+  const handle = xHandle(settingText(settings, 'social.x'));
+
+  const { canonical: ownCanonical, ...otherAlternates } = meta.alternates ?? {};
+  const own = canonicalOf(ownCanonical);
+  const canonical = isNoindex(meta.robots) ? undefined : absoluteUrl(own ?? path);
+
+  const og = meta.openGraph ?? {};
+  const title = plainTitle(og.title) ?? plainTitle(meta.title);
+  const description = og.description ?? meta.description ?? undefined;
+  const images = og.images ?? [SHARE_IMAGE];
+  const openGraph = {
+    ...og,
+    type: ('type' in og && og.type) || 'website',
+    siteName: og.siteName ?? siteName,
+    url: canonical ?? (og.url ? og.url : absoluteUrl(path)),
+    title,
+    description,
+    images,
+  } as Metadata['openGraph'];
+
+  const tw = meta.twitter ?? {};
+  const twitter = {
+    ...tw,
+    card: ('card' in tw && tw.card) || 'summary_large_image',
+    title: plainTitle(tw.title) ?? title,
+    description: tw.description ?? description,
+    images: tw.images ?? images,
+    ...(handle ? { site: tw.site ?? handle, creator: tw.creator ?? handle } : {}),
+  } as Metadata['twitter'];
+
+  const out: Metadata = { ...meta, openGraph, twitter };
+  delete out.alternates;
+  if (canonical) out.alternates = { ...otherAlternates, canonical };
+  else if (Object.keys(otherAlternates).length > 0) out.alternates = otherAlternates;
+  return out;
+}
 
 /** The stored robots value for the "hide from search engines" toggle. */
 export const NOINDEX_ROBOTS = 'noindex, follow';
@@ -126,60 +259,33 @@ export async function getSeoOverride(route: SeoRoute): Promise<SeoOverride | nul
 }
 
 /**
- * The page's own metadata with the stored override laid over it. Open Graph
- * and Twitter are merged too, because Next.js merges metadata shallowly: a
- * page that sets openGraph replaces the layout's whole object, so its title
- * has to change there as well or share cards keep the old one.
+ * The page's own metadata with the stored override laid over it, completed by
+ * pageMetadata(): the route is its own canonical (unless the page set one, or
+ * the page is noindex) and its Open Graph and Twitter tags are filled in.
  *
- * A page with no metadata of its own (the home page) passes `parent`, so the
- * replacement Open Graph object can keep the layout's site name.
+ * The override's title and description replace the page's Open Graph and
+ * Twitter copy too, or share cards would keep the old text. Set `robots` on
+ * `base` (not on the result) for a page that is noindex in some states, so
+ * pageMetadata() can leave its canonical out.
  */
-export async function seoMetadata(
-  route: SeoRoute,
-  base: Metadata,
-  parent?: ResolvingMetadata,
-): Promise<Metadata> {
-  // Every static route is its own canonical (resolved against metadataBase),
-  // unless the page already set one.
-  base = { ...base, alternates: { canonical: route, ...base.alternates } };
-  if (base.openGraph) base.openGraph = { images: [SHARE_IMAGE], ...base.openGraph };
-  if (base.twitter) base.twitter = { images: [SHARE_IMAGE], ...base.twitter };
+export async function seoMetadata(route: SeoRoute, base: Metadata): Promise<Metadata> {
   const o = await getSeoOverride(route);
-  if (!o) return base;
-
-  const text: { title?: string; description?: string } = {};
-  if (o.title) text.title = o.title;
-  if (o.description) text.description = o.description;
-
   const merged: Metadata = { ...base };
-  // The home page's default title is the full site title, not "x · Brand",
-  // so its override escapes the layout's template the same way.
-  if (text.title) merged.title = route === '/' ? { absolute: text.title } : text.title;
-  if (text.description) merged.description = text.description;
-  if (text.title || text.description) {
-    if (base.openGraph) {
+  if (o) {
+    const text: { title?: string; description?: string } = {};
+    if (o.title) text.title = o.title;
+    if (o.description) text.description = o.description;
+    // The home page's default title is the full site title, not "x · Brand",
+    // so its override escapes the layout's template the same way.
+    if (text.title) merged.title = route === '/' ? { absolute: text.title } : text.title;
+    if (text.description) merged.description = text.description;
+    if (text.title || text.description) {
       merged.openGraph = { ...base.openGraph, ...text };
-    } else if (parent) {
-      const { openGraph } = await parent;
-      merged.openGraph = {
-        siteName: openGraph?.siteName,
-        type: 'website',
-        url: '/',
-        images: [SHARE_IMAGE],
-        ...text,
-      };
+      merged.twitter = { ...base.twitter, ...text };
     }
-    if (base.twitter || parent) {
-      merged.twitter = {
-        card: 'summary_large_image',
-        images: [SHARE_IMAGE],
-        ...base.twitter,
-        ...text,
-      };
-    }
+    if (o.noindex) merged.robots = { index: false, follow: true };
   }
-  if (o.noindex) merged.robots = { index: false, follow: true };
-  return merged;
+  return pageMetadata(route, merged);
 }
 
 /**

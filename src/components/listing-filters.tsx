@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import type { FiltersContent } from '@/lib/content/pages/directory';
+import { MAX_FLAT_OPTIONS, byInitial, categoryTree } from '@/lib/select-groups';
 import { NearMeButton } from './near-me-button';
 
-type Option = { slug: string; name: string; parent_id?: string | null };
+type Option = { id: string; slug: string; name: string; parent_id?: string | null };
 
 /**
  * Keyword + category + city filters (§7.5.6, criterion 46). A plain GET form,
@@ -64,12 +65,24 @@ export function ListingFilters({
           <span className="sr-only">Category</span>
           <select name="category" defaultValue={category ?? ''} className={selectCls}>
             <option value="">{t.category_all}</option>
-            {categories.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {/* Subcategories follow their parent (getCategories is tree-ordered). */}
-                {c.parent_id ? `\u00a0\u00a0\u00a0${c.name}` : c.name}
-              </option>
-            ))}
+            {/* A parent with subcategories heads its own group and stays selectable as
+                its group's first option (its results include the subcategories). */}
+            {categoryTree(categories).map(({ root, children }) =>
+              children.length ? (
+                <optgroup key={root.slug} label={root.name}>
+                  <option value={root.slug}>{root.name}</option>
+                  {children.map((c) => (
+                    <option key={c.slug} value={c.slug}>
+                      {c.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : (
+                <option key={root.slug} value={root.slug}>
+                  {root.name}
+                </option>
+              ),
+            )}
           </select>
         </label>
       ) : null}
@@ -78,11 +91,21 @@ export function ListingFilters({
           <span className="sr-only">City</span>
           <select name="city" defaultValue={city ?? ''} className={selectCls}>
             <option value="">{t.city_all}</option>
-            {cities.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
+            {cities.length > MAX_FLAT_OPTIONS
+              ? byInitial(cities).map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.items.map((c) => (
+                      <option key={c.slug} value={c.slug}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))
+              : cities.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.name}
+                  </option>
+                ))}
           </select>
         </label>
       ) : null}

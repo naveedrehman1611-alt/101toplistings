@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { LEGACY_REDIRECTS } from './src/lib/legacy-redirects';
 
 // Listing and library images are served from the public Supabase Storage bucket
 // (migration 0015). next/image only optimises remote images whose host is listed
@@ -106,49 +107,9 @@ const nextConfig: NextConfig = {
             },
           ]
         : []),
-      { source: '/listing-category/:slug', destination: '/category/:slug', permanent: true },
-      { source: '/listing-location/:slug', destination: '/city/:slug', permanent: true },
-      { source: '/listing-top-filter', destination: '/business-directory', permanent: true },
-      // The SEO strategy's URL structure: the old paths keep working (query
-      // strings are carried over, so filtered /listings links still land).
-      { source: '/listings', destination: '/business-directory', permanent: true },
-      { source: '/categories', destination: '/business-categories', permanent: true },
-      { source: '/services', destination: '/seo-services', permanent: true },
-      { source: '/submission', destination: '/dashboard/listings/new', permanent: true },
-      { source: '/about-us', destination: '/about', permanent: true },
-      { source: '/contact-us', destination: '/contact', permanent: true },
-      // Service pages merged into the page with the same search intent, and one
-      // slug renamed; the old URLs are no longer generated (dynamicParams=false).
-      {
-        source: '/seo-services/global-seo',
-        destination: '/seo-services/international-seo',
-        permanent: true,
-      },
-      {
-        source: '/seo-services/multilingual-seo',
-        destination: '/seo-services/international-seo',
-        permanent: true,
-      },
-      {
-        source: '/seo-services/seo-reseller',
-        destination: '/seo-services/white-label-seo',
-        permanent: true,
-      },
-      {
-        source: '/seo-services/bespoke-seo',
-        destination: '/seo-services/custom-seo',
-        permanent: true,
-      },
-      {
-        source: '/seo-services/seo-for-online-stores',
-        destination: '/seo-services/ecommerce-seo',
-        permanent: true,
-      },
-      {
-        source: '/seo-services/nationwide-seo',
-        destination: '/seo-services/multi-location-seo',
-        permanent: true,
-      },
+      // Old public URLs (WordPress paths, renamed and merged pages). The same
+      // table rewrites stale stored links at read time, so it lives in one place.
+      ...LEGACY_REDIRECTS.map((r) => ({ ...r, permanent: true })),
     ];
   },
   experimental: {

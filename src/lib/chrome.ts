@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { getMediaByIds, getMenu, getSettings, settingText, type MenuItem } from './queries';
 import { mediaUrl } from './media';
 import { fillBrand } from './sections';
+import { canonicalHref } from './legacy-redirects';
 import type { ChromeVM, Img, LinkVM, SocialNetwork } from './home-types';
 
 /**
@@ -30,9 +31,13 @@ function safeExternal(value: string): string | null {
   }
 }
 
-/** A setting that holds a same-site path; falls back when blank or unsafe. */
+/**
+ * A setting that holds a same-site path; falls back when blank or unsafe. A
+ * stored path that now redirects (0021 seeded header.cta_url with the
+ * sign-in-only listing form) is swapped for its final URL.
+ */
 function sitePath(value: string, fallback: string): string {
-  return value.startsWith('/') && !value.startsWith('//') ? value : fallback;
+  return canonicalHref(value.startsWith('/') && !value.startsWith('//') ? value : fallback);
 }
 
 export const getChrome = cache(async function getChrome(): Promise<ChromeVM> {
@@ -78,7 +83,7 @@ export const getChrome = cache(async function getChrome(): Promise<ChromeVM> {
     },
     addListing: {
       label: s('header.cta_label', 'Add Listing') || 'Add Listing',
-      href: sitePath(s('header.cta_url'), '/dashboard/listings/new'),
+      href: sitePath(s('header.cta_url'), '/add-business'),
     },
     footer: {
       tagline: fillBrand(s('footer.tagline'), brand),

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { getCategories, getCategoryListingCounts } from '@/lib/queries';
 import { ServicePageView } from '@/components/service-page';
 import { SERVICE_PAGES, servicePage } from '@/lib/service-pages';
@@ -7,7 +7,10 @@ import { MIN_CATEGORY_LISTINGS_TO_INDEX, seoMetadata, type SeoRoute } from '@/li
 import { MAX_DIRECTORY_LINKS, SERVICE_DIRECTORY_CATEGORIES } from '@/lib/service-directory';
 
 export const revalidate = 3600;
-export const dynamicParams = false;
+// Every service page is prerendered below. Other slugs still reach the page
+// (rather than a framework 404) only so a slug typed with capitals can 308 to
+// its lowercase page; anything else is notFound() and cached like any page.
+export const dynamicParams = true;
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -32,7 +35,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SeoServicePage({ params }: Props) {
   const { slug } = await params;
   const page = servicePage(slug);
-  if (!page || !page.path.startsWith('/seo-services/')) notFound();
+  if (!page || !page.path.startsWith('/seo-services/')) {
+    const lower = servicePage(slug.toLowerCase());
+    if (lower?.path.startsWith('/seo-services/')) permanentRedirect(lower.path);
+    notFound();
+  }
   const directory = await directoryLinks(slug);
   return <ServicePageView page={page} directory={directory} />;
 }
