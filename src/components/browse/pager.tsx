@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { listingsHref, type ListingsParams } from './href';
+import { fill } from './fill';
 
 const WINDOW = 2;
 const STEP =
@@ -9,10 +10,12 @@ export function Pager({
   page,
   pages,
   params,
+  labels: t,
 }: {
   page: number;
   pages: number;
   params: ListingsParams;
+  labels: { previous: string; next: string; page_of: string };
 }) {
   if (pages <= 1) return null;
 
@@ -38,7 +41,7 @@ export function Pager({
             rel="prev"
             className={`${STEP} hover:bg-[var(--surface-2)]`}
           >
-            <span aria-hidden>‹</span> Previous
+            <span aria-hidden>‹</span> {t.previous}
           </Link>
         ) : (
           // role="link" so screen readers announce it as an unavailable link;
@@ -48,7 +51,7 @@ export function Pager({
             aria-disabled="true"
             className={`${STEP} text-[var(--text-muted)] opacity-50`}
           >
-            <span aria-hidden>‹</span> Previous
+            <span aria-hidden>‹</span> {t.previous}
           </span>
         )}
 
@@ -80,7 +83,7 @@ export function Pager({
             rel="next"
             className={`${STEP} hover:bg-[var(--surface-2)]`}
           >
-            Next <span aria-hidden>›</span>
+            {t.next} <span aria-hidden>›</span>
           </Link>
         ) : (
           <span
@@ -88,13 +91,11 @@ export function Pager({
             aria-disabled="true"
             className={`${STEP} text-[var(--text-muted)] opacity-50`}
           >
-            Next <span aria-hidden>›</span>
+            {t.next} <span aria-hidden>›</span>
           </span>
         )}
       </div>
-      <p className="text-sm text-[var(--text-muted)]">
-        Page {page} of {pages}
-      </p>
+      <p className="text-sm text-[var(--text-muted)]">{fill(t.page_of, { page, pages })}</p>
     </nav>
   );
 }

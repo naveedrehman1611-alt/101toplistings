@@ -5,6 +5,11 @@ import type { ListingCard as Card, ListingHighlight } from '@/lib/queries';
 import { Icon } from './icon';
 import { Distance } from './ui';
 
+/** The card's own words; Admin → Content → Directory: filters, results and cards. */
+export type ListingCardLabels = { verified: string; view_profile: string };
+
+const LABELS: ListingCardLabels = { verified: 'Verified Business', view_profile: 'View Profile' };
+
 /**
  * The Stitch "featured" listing card. `featured` is the home page's
  * top-rated card (tall image, description); `compact` is the same card for
@@ -22,6 +27,7 @@ export function ListingCard({
   highlight,
   status,
   variant = 'compact',
+  labels = LABELS,
 }: {
   listing: Card;
   cityName?: string;
@@ -30,6 +36,7 @@ export function ListingCard({
   /** Extra badge in the top-left corner, e.g. the listing page's live open/closed status. */
   status?: ReactNode;
   variant?: 'featured' | 'compact';
+  labels?: ListingCardLabels;
 }) {
   const featured = variant === 'featured';
   const href = `/listing/${listing.slug}`;
@@ -70,7 +77,7 @@ export function ListingCard({
             {highlight?.verified ? (
               <span className="bg-verified-teal font-badge text-badge inline-flex items-center gap-1 rounded-full px-3 py-1 tracking-wider text-white uppercase shadow-xs">
                 <Icon name="verified" size={14} />
-                <span>Verified Business</span>
+                <span>{labels.verified}</span>
               </span>
             ) : null}
           </div>
@@ -147,10 +154,10 @@ export function ListingCard({
           ) : null}
           <Link
             href={href}
-            aria-label={`View Profile: ${listing.name}`}
+            aria-label={`${labels.view_profile}: ${listing.name}`}
             className="bg-primary-container font-label-sm text-label-sm text-on-primary hover:bg-primary focus-visible:ring-primary-container relative z-10 ml-auto inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
           >
-            <span>View Profile</span>
+            <span>{labels.view_profile}</span>
             <Icon name="arrow_forward" size={16} />
           </Link>
         </div>

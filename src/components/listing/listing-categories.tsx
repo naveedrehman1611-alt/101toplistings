@@ -2,8 +2,10 @@ import Link from 'next/link';
 
 export function ListingCategories({
   categories,
+  heading = 'Categories',
 }: {
   categories: { name: string; slug: string }[];
+  heading?: string;
 }) {
   // One pill per category, even if the same one is passed twice.
   const unique = [...new Map(categories.map((c) => [c.slug, c])).values()];
@@ -11,7 +13,7 @@ export function ListingCategories({
 
   return (
     <section className="surface-card p-5">
-      <h2 className="font-title-md text-title-md text-on-surface">Categories</h2>
+      <h2 className="font-title-md text-title-md text-on-surface">{heading}</h2>
       <ul className="mt-4 flex flex-wrap gap-2">
         {unique.map((c) => (
           <li key={c.slug}>

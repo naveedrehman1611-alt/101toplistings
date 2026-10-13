@@ -7,6 +7,8 @@ import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { redirectOrNotFound } from '@/lib/redirects';
 import { MIN_CITY_LISTINGS_TO_INDEX, SHARE_IMAGE } from '@/lib/seo';
+import { getPageContent } from '@/lib/content/get';
+import { fill, fillNodes } from '@/components/browse/fill';
 
 export const revalidate = 600;
 const PER_PAGE = 12;
@@ -53,7 +55,12 @@ export default async function CityPage({
   const page = parsePage(sp.page);
   const sort = parseSort(sp.sort);
   const q = sp.q?.trim().slice(0, 100) || undefined;
-  const [cities, categories] = await Promise.all([getCities(), getCategories()]);
+  const [cities, categories, { hero, empty }, shared] = await Promise.all([
+    getCities(),
+    getCategories(),
+    getPageContent('city_page'),
+    getPageContent('directory_shared'),
+  ]);
   const cat = categories.find((c) => c.slug === sp.category);
   const listings = await searchListings({
     query: q,
@@ -80,14 +87,12 @@ export default async function CityPage({
       ) : null}
       <PageHero
         trail={trail}
-        eyebrow="Local business directory"
-        heading={
-          <>
-            Businesses in <span className="text-hero-green-light">{city.name}</span>
-          </>
-        }
+        eyebrow={hero.eyebrow}
+        heading={fillNodes(hero.heading, {
+          city: <span className="text-hero-green-light">{city.name}</span>,
+        })}
         subheading={city.intro_copy}
-        stats={total > 0 ? [{ value: total, label: 'Listings' }] : undefined}
+        stats={total > 0 ? [{ value: total, label: hero.stat_listings }] : undefined}
       />
       <div className="container-page py-10 md:py-12">
         <div>
@@ -97,6 +102,7 @@ export default async function CityPage({
             category={cat?.slug}
             sort={sort}
             categories={categories}
+            labels={shared.filters}
           />
         </div>
         <div className="mt-8">
@@ -109,12 +115,12 @@ export default async function CityPage({
             query={q}
             params={{ category: cat?.slug }}
             cityNames={new Map(cities.map((c) => [c.id, c.name]))}
-            emptyTitle={filtered ? 'No matches' : `Nothing listed in ${city.name} yet`}
-            emptyBody={
-              filtered
-                ? `Nothing in ${city.name} matches these filters. Try another category or clear them.`
-                : 'Be the first to add a business here.'
-            }
+            emptyTitle={fill(filtered ? empty.filtered_title : empty.empty_title, {
+              city: city.name,
+            })}
+            emptyBody={fill(filtered ? empty.filtered_body : empty.empty_body, { city: city.name })}
+            labels={shared.results}
+            cardLabels={shared.cards}
           />
         </div>
       </div>

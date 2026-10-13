@@ -25,6 +25,18 @@ const noSubscription = () => () => {};
 const hasNativeShare = () => typeof navigator.share === 'function';
 const noNativeShareOnServer = () => false;
 
+/** Button labels, from Admin → Content → Listing pages. */
+export type ListingActionLabels = {
+  share: string;
+  copy_link: string;
+  email: string;
+  save: string;
+  saved: string;
+  review: string;
+  copied: string;
+  copy_failed: string;
+};
+
 type ToggleResult = Awaited<ReturnType<typeof toggleSavedListing>>;
 
 /**
@@ -38,11 +50,13 @@ export function ListingActions({
   slug,
   name,
   shareUrl,
+  labels: t,
 }: {
   listingId: string;
   slug: string;
   name: string;
   shareUrl: string;
+  labels: ListingActionLabels;
 }) {
   const id = useId();
   const menuId = `${id}-share-menu`;
@@ -215,7 +229,7 @@ export function ListingActions({
               <path d="m8 7 4-4 4 4" />
               <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
             </Icon>
-            Share
+            {t.share}
           </button>
           {menuOpen ? (
             <div
@@ -233,7 +247,7 @@ export function ListingActions({
                 onClick={copyLink}
                 className={MENU_ITEM}
               >
-                Copy link
+                {t.copy_link}
               </button>
               {networks.map((n) => (
                 <a
@@ -257,7 +271,7 @@ export function ListingActions({
                 onClick={closeMenu}
                 className={MENU_ITEM}
               >
-                Email
+                {t.email}
               </a>
             </div>
           ) : null}
@@ -274,7 +288,7 @@ export function ListingActions({
           <Icon fill={saved ? 'currentColor' : 'none'}>
             <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.5L5 21V4a1 1 0 0 1 1-1Z" />
           </Icon>
-          {saved ? 'Saved' : 'Save'}
+          {saved ? t.saved : t.save}
         </button>
 
         <a href="#reviews" className={ACTION}>
@@ -282,16 +296,16 @@ export function ListingActions({
             <path d="M12 20h9" />
             <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
           </Icon>
-          Submit Review
+          {t.review}
         </a>
       </div>
 
       <p role="status" className="font-body-sm text-body-sm text-primary-container not-empty:mt-2">
-        {copyNote === 'copied' ? 'Link copied' : ''}
+        {copyNote === 'copied' ? t.copied : ''}
       </p>
       {copyNote === 'failed' ? (
         <p role="alert" className="font-body-sm text-body-sm text-error mt-2">
-          Could not copy the link. Copy it from the address bar instead.
+          {t.copy_failed}
         </p>
       ) : null}
       {saveError ? (
