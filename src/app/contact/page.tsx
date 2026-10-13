@@ -5,6 +5,10 @@ import { findSection, getPageSections, getSettings, settingText } from '@/lib/qu
 import { PageHero } from '@/components/page-hero';
 import { submitContact } from '@/lib/public-actions';
 import { seoMetadata } from '@/lib/seo';
+import { getPageContent } from '@/lib/content/get';
+import type { SectionValues } from '@/lib/content/schema';
+import type { CONTACT_PAGE } from '@/lib/content/pages/company';
+import { HighlightedHeading } from '@/components/company/highlighted';
 
 const TITLE = 'Contact Us | SEO Services & Business Listings';
 const DESCRIPTION =
@@ -19,28 +23,18 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-// Stored as-is in form_submissions.payload.subject, which the admin inbox shows.
-const SUBJECTS = [
-  'General question',
-  'Listing issue or correction',
-  'Help with my account',
-  'Partnership or advertising',
-  'Report a problem',
-  'SEO services',
-  'Digital marketing',
-  'Guest posting',
-  'Link building',
-  'Other',
-];
+type Sections = (typeof CONTACT_PAGE)['sections'];
+type Content = { [K in keyof Sections]: SectionValues<Sections[K]> };
 
 /**
  * ?subject=SEO%20services (the home hero's service links) preselects that
- * subject. Matched case-insensitively against SUBJECTS; anything else keeps the
- * "Select a subject" placeholder.
+ * subject. Matched case-insensitively against the form's subjects (stored
+ * as-is in form_submissions.payload.subject, which the admin inbox shows);
+ * anything else keeps the "Select a subject" placeholder.
  */
-function presetSubject(param: string | string[] | undefined): string {
+function presetSubject(param: string | string[] | undefined, subjects: string[]): string {
   const wanted = (Array.isArray(param) ? param[0] : param)?.trim().toLowerCase();
-  return SUBJECTS.find((s) => s.toLowerCase() === wanted) ?? '';
+  return subjects.find((s) => s.toLowerCase() === wanted) ?? '';
 }
 
 /**
@@ -52,28 +46,6 @@ function presetMessage(param: string | string[] | undefined): string {
   const name = (Array.isArray(param) ? param[0] : param)?.trim().slice(0, 100).trim();
   return name ? `I'm interested in ${name}.` : '';
 }
-
-const FAQ: { q: string; a: string; link?: { label: string; href: string } }[] = [
-  {
-    q: 'How do I list my business?',
-    a: "It's free and takes just a couple of minutes. Fill in your details and submit — every listing is reviewed before it goes live.",
-    link: { label: 'Add your listing', href: '/dashboard/listings/new' },
-  },
-  {
-    q: 'Is it free to use?',
-    a: 'Yes. Browsing the directory and listing your business are both completely free — no pay-to-rank tricks or hidden fees.',
-  },
-  {
-    q: 'How do I edit my listing?',
-    a: 'Sign in and open My listings from your dashboard, then choose the listing you want to update.',
-    link: { label: 'Go to my listings', href: '/dashboard' },
-  },
-  {
-    q: 'What areas do you cover?',
-    a: "Every city and category currently in the directory — browse by category to see what's listed near you.",
-    link: { label: 'Browse categories', href: '/business-categories' },
-  },
-];
 
 // Floating label: the label sits inside the field as a placeholder and moves up
 // once the field has focus or a value (placeholder=" " drives :placeholder-shown).
@@ -170,84 +142,40 @@ export default async function ContactPage({
 }) {
   // Reading ?sent / ?error / ?subject makes this page render per request.
   const sp = await searchParams;
-  const subject = presetSubject(sp.subject);
+  const [content, sections, settings] = await Promise.all([
+    getPageContent('contact'),
+    getPageSections('contact'),
+    getSettings(),
+  ]);
+  const { hero, info, help, form } = content;
+  const subjects = form.subjects.map((s) => s.subject).filter(Boolean);
+  const subject = presetSubject(sp.subject, subjects);
   const message = presetMessage(sp.service);
-  const [sections, settings] = await Promise.all([getPageSections('contact'), getSettings()]);
   const header = findSection(sections, 'header');
   const email = settingText(settings, 'contact.email');
-  const label = header?.heading ?? 'Contact us';
+  const label = header?.heading ?? hero.breadcrumb;
+  const aside = info.visible || help.visible;
 
   return (
     <>
       <PageHero
         trail={[{ label: 'Home', href: '/' }, { label }]}
-        eyebrow="We reply by email"
-        heading={
-          <>
-            Get in <span className="text-hero-green-light">touch</span>
-          </>
-        }
-        subheading={
-          header?.subheading ||
-          "Have a question, a listing issue, or a partnership idea? Send us a message and we'll get back to you."
-        }
+        eyebrow={hero.eyebrow}
+        heading={<HighlightedHeading c={hero} className="text-hero-green-light" />}
+        subheading={header?.subheading || hero.intro}
       />
 
-      <div className="container-page grid grid-cols-1 items-start gap-8 py-12 sm:py-16 lg:grid-cols-[minmax(0,5fr)_minmax(0,11fr)]">
-        <aside className="space-y-8 lg:sticky lg:top-24">
-          <div className="surface-card p-6 shadow-sm sm:p-7">
-            <h2 className="font-headline-sm text-headline-sm flex items-center gap-2.5">
-              <ChatIcon className="text-brand-700 size-5" />
-              Contact information
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
-              Questions about the directory, your account, or how listings work — email us and
-              we&apos;ll get back to you.
-            </p>
-            {email ? (
-              <a
-                href={`mailto:${email}`}
-                className="hover:border-brand-300 hover:bg-brand-50 mt-5 flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 transition-colors"
-              >
-                <span className="bg-primary-container text-on-primary grid size-11 shrink-0 place-items-center rounded-full">
-                  <MailIcon className="size-5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-xs text-[var(--text-muted)]">Email us</span>
-                  <span className="block truncate font-semibold">{email}</span>
-                </span>
-              </a>
-            ) : null}
-            <div className="mt-6 border-t border-[var(--border)] pt-6">
-              <p className="font-title-md text-title-md">Ready to get listed?</p>
-              <p className="mt-1 text-sm text-[var(--text-muted)]">
-                It only takes a couple of minutes, and it&apos;s free.
-              </p>
-              <ArrowLink href="/dashboard/listings/new">Add your listing</ArrowLink>
-            </div>
-          </div>
-
-          <div className="surface-card p-6 shadow-sm sm:p-7">
-            <h2 className="font-headline-sm text-headline-sm flex items-center gap-2.5">
-              <HelpIcon className="text-brand-700 size-5" />
-              Quick help
-            </h2>
-            <div className="mt-4 divide-y divide-[var(--border)]">
-              {FAQ.map((item) => (
-                <details key={item.q} open className="group py-4 first:pt-2 last:pb-0">
-                  <summary className="hover:text-brand-700 flex cursor-pointer list-none items-center justify-between gap-3 font-semibold marker:content-none [&::-webkit-details-marker]:hidden">
-                    {item.q}
-                    <ChevronIcon className="size-4 shrink-0 text-[var(--text-muted)] transition-transform group-open:rotate-180" />
-                  </summary>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{item.a}</p>
-                  {item.link ? (
-                    <ArrowLink href={item.link.href}>{item.link.label}</ArrowLink>
-                  ) : null}
-                </details>
-              ))}
-            </div>
-          </div>
-        </aside>
+      <div
+        className={`container-page grid grid-cols-1 items-start gap-8 py-12 sm:py-16 ${
+          aside ? 'lg:grid-cols-[minmax(0,5fr)_minmax(0,11fr)]' : ''
+        }`}
+      >
+        {aside ? (
+          <aside className="space-y-8 lg:sticky lg:top-24">
+            {info.visible ? <InfoCard c={info} email={email} /> : null}
+            {help.visible ? <HelpCard c={help} /> : null}
+          </aside>
+        ) : null}
 
         <section
           className="surface-card order-first p-6 shadow-sm sm:p-10 lg:order-none"
@@ -258,7 +186,7 @@ export default async function ContactPage({
             className="font-headline-sm text-headline-sm flex items-center gap-2.5"
           >
             <MailIcon className="text-brand-700 size-5" />
-            Send us a message
+            {form.heading}
           </h2>
 
           {sp.sent ? (
@@ -268,15 +196,19 @@ export default async function ContactPage({
             >
               <CheckIcon className="text-brand-700 size-12" />
               <p className="font-display text-brand-800 mt-4 text-xl font-semibold">
-                Thanks — your message has been sent.
+                {form.sent_heading}
               </p>
-              <p className="mt-2 text-sm text-[var(--text-muted)]">We will reply by email.</p>
-              <Link
-                href="/contact"
-                className="text-brand-700 mt-6 text-sm font-semibold hover:underline"
-              >
-                Send another message
-              </Link>
+              {form.sent_text ? (
+                <p className="mt-2 text-sm text-[var(--text-muted)]">{form.sent_text}</p>
+              ) : null}
+              {form.sent_link.label && form.sent_link.href ? (
+                <Link
+                  href={form.sent_link.href}
+                  className="text-brand-700 mt-6 text-sm font-semibold hover:underline"
+                >
+                  {form.sent_link.label}
+                </Link>
+              ) : null}
             </div>
           ) : (
             <form action={submitContact} className="mt-8 space-y-5">
@@ -300,7 +232,7 @@ export default async function ContactPage({
                     className={`${field} h-14`}
                   />
                   <label htmlFor="contact-name" className={floatLabel}>
-                    Your name
+                    {form.name_label}
                     <Required />
                   </label>
                 </div>
@@ -316,7 +248,7 @@ export default async function ContactPage({
                     className={`${field} h-14`}
                   />
                   <label htmlFor="contact-email" className={floatLabel}>
-                    Email address
+                    {form.email_label}
                     <Required />
                   </label>
                 </div>
@@ -333,10 +265,10 @@ export default async function ContactPage({
                   className={`${field} h-14 cursor-pointer appearance-none pr-10`}
                 >
                   <option value="" disabled>
-                    Select a subject
+                    {form.subject_placeholder}
                   </option>
-                  {SUBJECTS.map((s) => (
-                    <option key={s} value={s}>
+                  {subjects.map((s, i) => (
+                    <option key={`${s}-${i}`} value={s}>
                       {s}
                     </option>
                   ))}
@@ -345,7 +277,7 @@ export default async function ContactPage({
                   htmlFor="contact-subject"
                   className="pointer-events-none absolute top-2 left-4 text-xs text-[var(--text-muted)]"
                 >
-                  Subject
+                  {form.subject_label}
                   <Required />
                 </label>
                 <ChevronIcon className="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-[var(--text-muted)]" />
@@ -364,7 +296,7 @@ export default async function ContactPage({
                   className={`${field} resize-y pt-7`}
                 />
                 <label htmlFor="contact-message" className={floatLabel}>
-                  Message
+                  {form.message_label}
                   <Required />
                 </label>
               </div>
@@ -379,7 +311,7 @@ export default async function ContactPage({
                 type="submit"
                 className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex h-12 items-center justify-center gap-2 rounded-xl px-7 shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
               >
-                Send message
+                {form.button}
                 <SendIcon className="size-4" />
               </button>
             </form>
@@ -387,5 +319,69 @@ export default async function ContactPage({
         </section>
       </div>
     </>
+  );
+}
+
+function InfoCard({ c, email }: { c: Content['info']; email: string }) {
+  return (
+    <div className="surface-card p-6 shadow-sm sm:p-7">
+      <h2 className="font-headline-sm text-headline-sm flex items-center gap-2.5">
+        <ChatIcon className="text-brand-700 size-5" />
+        {c.heading}
+      </h2>
+      {c.body ? (
+        <p className="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">{c.body}</p>
+      ) : null}
+      {email ? (
+        <a
+          href={`mailto:${email}`}
+          className="hover:border-brand-300 hover:bg-brand-50 mt-5 flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 transition-colors"
+        >
+          <span className="bg-primary-container text-on-primary grid size-11 shrink-0 place-items-center rounded-full">
+            <MailIcon className="size-5" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-xs text-[var(--text-muted)]">{c.email_label}</span>
+            <span className="block truncate font-semibold">{email}</span>
+          </span>
+        </a>
+      ) : null}
+      {c.cta_heading || c.cta_text || (c.cta_link.label && c.cta_link.href) ? (
+        <div className="mt-6 border-t border-[var(--border)] pt-6">
+          {c.cta_heading ? <p className="font-title-md text-title-md">{c.cta_heading}</p> : null}
+          {c.cta_text ? (
+            <p className="mt-1 text-sm text-[var(--text-muted)]">{c.cta_text}</p>
+          ) : null}
+          {c.cta_link.label && c.cta_link.href ? (
+            <ArrowLink href={c.cta_link.href}>{c.cta_link.label}</ArrowLink>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function HelpCard({ c }: { c: Content['help'] }) {
+  return (
+    <div className="surface-card p-6 shadow-sm sm:p-7">
+      <h2 className="font-headline-sm text-headline-sm flex items-center gap-2.5">
+        <HelpIcon className="text-brand-700 size-5" />
+        {c.heading}
+      </h2>
+      <div className="mt-4 divide-y divide-[var(--border)]">
+        {c.items.map((item, i) => (
+          <details key={i} open className="group py-4 first:pt-2 last:pb-0">
+            <summary className="hover:text-brand-700 flex cursor-pointer list-none items-center justify-between gap-3 font-semibold marker:content-none [&::-webkit-details-marker]:hidden">
+              {item.question}
+              <ChevronIcon className="size-4 shrink-0 text-[var(--text-muted)] transition-transform group-open:rotate-180" />
+            </summary>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{item.answer}</p>
+            {item.link.label && item.link.href ? (
+              <ArrowLink href={item.link.href}>{item.link.label}</ArrowLink>
+            ) : null}
+          </details>
+        ))}
+      </div>
+    </div>
   );
 }
