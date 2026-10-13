@@ -12,7 +12,7 @@ import { SITE_URL } from '@/lib/supabase';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { redirectOrNotFound } from '@/lib/redirects';
-import { MIN_CITY_LISTINGS_TO_INDEX, SHARE_IMAGE } from '@/lib/seo';
+import { MIN_CITY_LISTINGS_TO_INDEX, SHARE_IMAGE, resultsPageSeo } from '@/lib/seo';
 
 export const revalidate = 600;
 const PER_PAGE = 12;
@@ -24,10 +24,12 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; q?: string; category?: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const city = await getCityBySlug(slug);
   if (!city) return { title: 'Not found' };
   // A count that failed to load is left undefined, so a database blip does not
@@ -35,14 +37,16 @@ export async function generateMetadata({
   const count = (await getCityListingCounts([city.id])).get(city.id);
   const title = `Businesses in ${city.name}`;
   const description = city.intro_copy ?? `Local businesses listed in ${city.name}.`;
+  const variant = Boolean(sp.sort || sp.q?.trim() || sp.category);
   return {
     title,
     description,
-    alternates: { canonical: `${SITE_URL}/city/${city.slug}` },
-    robots:
-      count !== undefined && count < MIN_CITY_LISTINGS_TO_INDEX
-        ? { index: false, follow: true }
-        : undefined,
+    ...resultsPageSeo(
+      `/city/${city.slug}`,
+      parsePage(sp.page),
+      variant,
+      count !== undefined && count < MIN_CITY_LISTINGS_TO_INDEX,
+    ),
     openGraph: { title, description, url: `${SITE_URL}/city/${city.slug}`, images: [SHARE_IMAGE] },
     twitter: { card: 'summary_large_image', title, description, images: [SHARE_IMAGE] },
   };
