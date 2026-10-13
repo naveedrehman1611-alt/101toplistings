@@ -43,7 +43,31 @@ if (process.env.VERCEL_ENV === 'production' && siteIsLocal) {
   );
 }
 
+// Security headers on every response. The CSP is limited to directives that
+// cannot break the app: a script-src allowlist would need a per-request nonce
+// for Next's inline scripts, which makes every page dynamic and gives up ISR.
+// object-src and base-uri still close the plugin and <base> injection routes
+// for XSS, and frame-ancestors (with X-Frame-Options for older browsers) stops
+// other sites framing the pages.
+const securityHeaders = [
+  {
+    key: 'Content-Security-Policy',
+    value: "base-uri 'self'; object-src 'none'; frame-ancestors 'self'; upgrade-insecure-requests",
+  },
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+];
+
 const nextConfig: NextConfig = {
+  // Next streams generateMetadata into <body> for any user agent missing from
+  // its bot list, so SEO crawlers that are not on it (site auditors, smaller
+  // search engines) saw no <title>, and canonical and robots tags outside
+  // <head>. Matching every user agent keeps metadata in <head> for all.
+  htmlLimitedBots: /.*/,
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }];
+  },
   images: {
     // Uploads get a fresh, unguessable object name and are never overwritten
     // (media-upload.ts), so an optimised variant can be cached for a month
