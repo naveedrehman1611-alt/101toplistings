@@ -8,14 +8,12 @@ import { Icon } from '@/components/icon';
 import { SiteLogo } from '@/components/site-logo';
 import { drawer } from '@/lib/motion';
 import { useSignedIn } from '@/lib/use-signed-in';
-import { TOOLS_BASE, toolHref, toolsByCategory } from '@/lib/free-tools';
+import { TOOLS_BASE, toolHref, toolsByCategory, type FreeTool } from '@/lib/free-tools';
 import { NewPill, SoonPill, ToolsMegaMenu } from '@/components/tools/tools-mega-menu';
 import { SERVICES_BASE, ServicesMegaMenu, isServicePath } from '@/components/services-mega-menu';
 import type { MenuItem } from '@/lib/queries';
 import type { ServiceNavItem } from '@/lib/service-pages';
 import type { SiteContent } from '@/lib/content/pages/global';
-
-const TOOL_CATEGORIES = toolsByCategory();
 
 const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
@@ -49,14 +47,18 @@ export function Header({
   nav,
   mobileNav,
   services,
+  tools,
   content,
 }: {
   nav: MenuItem[];
   mobileNav: MenuItem[];
   services: ServiceNavItem[];
+  /** The free tools with their edited card copy (Admin → Content), hidden cards left out. */
+  tools: FreeTool[];
   content: Pick<SiteContent, 'header' | 'services_menu'>;
 }) {
   const c = content.header;
+  const toolCategories = toolsByCategory(tools);
   const servicesMenu = content.services_menu;
   const pathname = usePathname();
   // null while unknown: neither the login link nor the account icon shows yet.
@@ -169,7 +171,7 @@ export function Header({
         />
       </button>
       <div id="mobile-free-tools" hidden={!toolsOpen} className="px-3 pb-2">
-        {TOOL_CATEGORIES.map((category) => (
+        {toolCategories.map((category) => (
           <div key={category.id} className="mt-3">
             <p className="font-label-sm text-label-sm text-secondary mb-1 tracking-wider uppercase">
               {category.label}
@@ -243,7 +245,13 @@ export function Header({
                   );
                 }
                 if (item === toolsLink) {
-                  return <ToolsMegaMenu key={`${item.url}|${item.label}`} label={item.label} />;
+                  return (
+                    <ToolsMegaMenu
+                      key={`${item.url}|${item.label}`}
+                      label={item.label}
+                      tools={tools}
+                    />
+                  );
                 }
                 const active = isActive(pathname, item.url);
                 return (
@@ -264,7 +272,7 @@ export function Header({
               {servicesLink ? null : (
                 <ServicesMegaMenu services={services} content={servicesMenu} />
               )}
-              {toolsLink ? null : <ToolsMegaMenu />}
+              {toolsLink ? null : <ToolsMegaMenu tools={tools} />}
             </nav>
 
             <div className="flex shrink-0 items-center gap-2 sm:gap-4">

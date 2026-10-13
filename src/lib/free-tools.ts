@@ -178,10 +178,13 @@ export function getTool(slug: string): FreeTool {
   return tool;
 }
 
-export function toolsByCategory(): { id: ToolCategoryId; label: string; tools: FreeTool[] }[] {
+/** Pass `tools` (from withCardCopy) to group the edited, visible cards instead of the defaults. */
+export function toolsByCategory(
+  tools: FreeTool[] = FREE_TOOLS,
+): { id: ToolCategoryId; label: string; tools: FreeTool[] }[] {
   return TOOL_CATEGORIES.map((category) => ({
     ...category,
-    tools: FREE_TOOLS.filter((tool) => tool.category === category.id),
+    tools: tools.filter((tool) => tool.category === category.id),
   }));
 }
 

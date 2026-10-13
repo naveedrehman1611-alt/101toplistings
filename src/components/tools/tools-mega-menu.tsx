@@ -6,8 +6,6 @@ import { Icon } from '@/components/icon';
 import { MegaMenu, MegaMenuFooter, focusRing } from '@/components/mega-menu';
 import { TOOLS_BASE, toolHref, toolsByCategory, type FreeTool } from '@/lib/free-tools';
 
-const CATEGORIES = toolsByCategory();
-
 export function NewPill() {
   return (
     <span className="bg-brand-50 text-primary-container rounded-full px-1.5 py-0.5 text-[10px] leading-none font-bold tracking-wider uppercase">
@@ -61,10 +59,14 @@ function ToolRow({ tool }: { tool: FreeTool }) {
 /** Desktop "Free SEO Tools" trigger and its panel. */
 export function ToolsMegaMenu({
   label,
+  tools,
 }: {
   /** The admin's label when the menu replaces their link to the tools hub. */
   label?: string;
+  /** The tools with their edited card copy, hidden cards left out. */
+  tools?: FreeTool[];
 } = {}) {
+  const categories = toolsByCategory(tools);
   const pathname = usePathname();
   const active = pathname === TOOLS_BASE || pathname.startsWith(`${TOOLS_BASE}/`);
   const full = label ?? 'Free SEO Tools';
@@ -77,7 +79,7 @@ export function ToolsMegaMenu({
       active={active}
     >
       <div className="grid grid-cols-4 gap-6 p-6">
-        {CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <div key={category.id}>
             <p className="font-label-sm text-label-sm text-secondary mb-2 px-2 tracking-wider uppercase">
               {category.label}

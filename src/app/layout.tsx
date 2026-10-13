@@ -11,6 +11,7 @@ import { jsonLdHtml } from '@/lib/json-ld';
 import { serviceNavItems } from '@/lib/service-pages';
 import { getPageContent } from '@/lib/content/get';
 import { ErrorContentProvider } from '@/components/error-content';
+import { toolsWithCopy } from '@/components/tools/tool-page';
 import GoogleAnalytics from './google-analytics';
 
 // Criterion 36: critical fonts preloaded.
@@ -53,12 +54,13 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Content reads go through the cached anon client, like settings and menus,
   // so every public route stays statically cacheable.
-  const [settings, nav, mobileNav, site, errors] = await Promise.all([
+  const [settings, nav, mobileNav, site, errors, toolsHub] = await Promise.all([
     getSettings(),
     getMenu('header', 'Primary'),
     getMenu('mobile', 'Mobile'),
     getPageContent('site'),
     getPageContent('errors'),
+    getPageContent('free_tools'),
   ]);
 
   const brand = settingText(settings, 'brand.name', 'RankYouSite');
@@ -115,6 +117,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           nav={nav}
           mobileNav={mobileNav}
           services={serviceNavItems()}
+          tools={toolsWithCopy(toolsHub).filter((t) => t.visible)}
           content={{ header: site.header, services_menu: site.services_menu }}
         />
         {/* tabIndex lets the skip link move keyboard focus here, not just scroll. */}
