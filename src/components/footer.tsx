@@ -18,6 +18,7 @@ const WHATSAPP_LINK: FooterLink = {
 const QUICK_LINKS: FooterLink[] = [
   { label: 'Home', href: '/' },
   { label: 'All SEO Services', href: '/seo-services' },
+  { label: 'Website Development', href: '/website-development' },
   { label: 'Business Directory', href: '/business-directory' },
   { label: 'SEO Blog', href: '/blog' },
   { label: 'About Us', href: '/about' },

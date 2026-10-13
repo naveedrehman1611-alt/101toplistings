@@ -28,7 +28,8 @@ const DEFAULT_STEPS = [
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /**
- * Shared layout for the SEO service pages and /digital-marketing, in the style of
+ * Shared layout for the SEO service pages and the standalone service pages
+ * (/digital-marketing, /website-development), in the style of
  * the /seo-services hub: navy hero, white "What's included" cards, a numbered
  * process, a native <details> FAQ (no client JS), related hub cards and the green
  * CTA band. `extra` renders after "What's included", inside the page container.
@@ -45,9 +46,10 @@ export function ServicePageView({
   /** Matching directory categories, for industry pages (src/lib/service-directory.ts). */
   directory?: { label: string; href: string }[];
 }) {
-  const isMarketing = page.slug === 'digital-marketing';
-  const trail = isMarketing
-    ? [{ label: 'Home', href: '/' }, { label: 'Digital marketing' }]
+  // Standalone pages sit at the top level, outside /seo-services.
+  const standalone = !page.path.startsWith('/seo-services/');
+  const trail = standalone
+    ? [{ label: 'Home', href: '/' }, { label: page.name }]
     : [
         { label: 'Home', href: '/' },
         { label: 'SEO services', href: '/seo-services' },
@@ -65,11 +67,12 @@ export function ServicePageView({
   };
   const steps = page.steps ?? DEFAULT_STEPS;
   const related = page.related.flatMap((slug) => servicePage(slug) ?? []);
-  // /digital-marketing sits outside the hub sections, so it keeps its own tag.
-  const eyebrow = isMarketing
+  // Standalone pages are not under a hub section heading, so they keep their own tag.
+  const eyebrow = standalone
     ? page.tag
     : (HUB_CATEGORIES.find((c) => c.id === page.hub)?.title ?? page.tag);
   const isAudit = page.ctaHref === '/seo-audit';
+  const quote = quoteHref(page.name, page.quoteSubject);
 
   return (
     <>
@@ -98,7 +101,7 @@ export function ServicePageView({
           {/* The second button offers whichever of audit and quote the first one doesn't. */}
           {isAudit ? (
             <Link
-              href={quoteHref(page.name)}
+              href={quote}
               className={`${HUB_BUTTON} border border-white/40 text-white hover:bg-white/10`}
             >
               <Icon name="mail" size={18} />
@@ -257,7 +260,7 @@ export function ServicePageView({
         </div>
       </div>
 
-      <HubCtaBand heading={`Talk to ${brand}`} quoteHref={quoteHref(page.name)} />
+      <HubCtaBand heading={`Talk to ${brand}`} quoteHref={quote} />
     </>
   );
 }
