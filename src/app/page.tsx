@@ -1,4 +1,4 @@
-import type { Metadata, ResolvingMetadata } from 'next';
+import type { Metadata } from 'next';
 import {
   getCategories,
   getCities,
@@ -29,24 +29,17 @@ import { FinalCta } from '@/components/home/final-cta';
 export const revalidate = 300; // ISR — §1.5 rendering table
 
 // Strategy title and description; an override held by the SEO manager for "/" still wins.
-export async function generateMetadata(
-  _props: unknown,
-  parent: ResolvingMetadata,
-): Promise<Metadata> {
+export async function generateMetadata(): Promise<Metadata> {
   const brand = settingText(await getSettings(), 'brand.name', 'RankYouSite');
   const title = `${brand} | Business Directory & SEO Services`;
   const description =
     'List your business, get discovered online, and grow with SEO and digital marketing. Explore businesses worldwide or promote your own.';
-  return seoMetadata(
-    '/',
-    {
-      title: { absolute: title },
-      description,
-      openGraph: { title, description, siteName: brand, type: 'website', url: '/' },
-      twitter: { card: 'summary_large_image', title, description },
-    },
-    parent,
-  );
+  return seoMetadata('/', {
+    title: { absolute: title },
+    description,
+    openGraph: { title, description },
+    twitter: { card: 'summary_large_image', title, description },
+  });
 }
 
 /**
