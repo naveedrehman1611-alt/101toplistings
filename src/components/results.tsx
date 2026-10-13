@@ -27,6 +27,7 @@ export function Results({
   query,
   params,
   nearest,
+  defaultSort = 'newest',
   cityNames,
   emptyTitle,
   emptyBody,
@@ -43,6 +44,8 @@ export function Results({
   params?: Record<string, string | undefined>;
   /** Offer "Nearest" as a sort — only when the search has an origin. */
   nearest?: boolean;
+  /** The page's own default order, which is left out of the URL. */
+  defaultSort?: SortKey;
   cityNames: Map<string, string>;
   emptyTitle: string;
   emptyBody: string;
@@ -57,6 +60,9 @@ export function Results({
     rating: t.sort_rating,
     alphabetical: t.sort_alphabetical,
   };
+  // The default order is the bare URL, so "Newest" and the page links do not
+  // mint a ?sort= duplicate of every page.
+  const sortParam = (s: SortKey) => (s === defaultSort ? undefined : s);
   const total = listings[0]?.total_count ?? 0;
   const pages = Math.min(MAX_PAGE, Math.max(1, Math.ceil(Number(total) / perPage)));
   // A link per page is fine at 3 pages and is kilobytes of markup on every
@@ -82,7 +88,10 @@ export function Results({
           {(nearest ? (['nearest', ...SORTS] as SortKey[]) : SORTS).map((key) => (
             <Link
               key={key}
-              href={buildHref(basePath, { ...params, q: query, sort: key })}
+              href={buildHref(basePath, { ...params, q: query, sort: sortParam(key) })}
+              // Re-sorted copies of the same page (canonical to it, and
+              // noindex): crawlers need not follow every order of every page.
+              rel={key === defaultSort ? undefined : 'nofollow'}
               className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
                 sort === key
                   ? 'border-brand-500 bg-brand-50 text-brand-800'
@@ -126,7 +135,7 @@ export function Results({
                 href={buildHref(basePath, {
                   ...params,
                   q: query,
-                  sort,
+                  sort: sortParam(sort),
                   page: p === 1 ? undefined : p,
                 })}
                 aria-current={p === page ? 'page' : undefined}

@@ -140,6 +140,7 @@ export default async function SearchPage({
               query={q || undefined}
               params={{ category: cat?.slug, city: city?.slug, ...nearParams }}
               nearest={Boolean(near)}
+              defaultSort={near ? 'nearest' : 'newest'}
               cityNames={new Map(cities.map((c) => [c.id, c.name]))}
               emptyTitle={near ? empty.nearby_title : empty.title}
               emptyBody={near ? fill(empty.nearby_body, { km: near.radius }) : empty.body}
