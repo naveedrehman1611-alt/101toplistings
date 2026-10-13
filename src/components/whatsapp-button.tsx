@@ -2,9 +2,10 @@
 
 import { usePathname } from 'next/navigation';
 import { whatsappHref } from '@/lib/whatsapp';
+import type { SiteContent } from '@/lib/content/pages/global';
 
 /** Floating bottom-right link that opens a WhatsApp chat with a pre-filled greeting. */
-export function WhatsAppButton({ brand }: { brand: string }) {
+export function WhatsAppButton({ content }: { content: SiteContent['whatsapp'] }) {
   const pathname = usePathname();
   // Not inside the admin panel or the user dashboard, only on the public site.
   const hidden = ['/admin', '/dashboard'].some(
@@ -12,16 +13,15 @@ export function WhatsAppButton({ brand }: { brand: string }) {
   );
   if (hidden) return null;
 
-  const message = `Hi ${brand} team! 👋 I found you through your website and would love to know more about getting my business listed and growing it online. Could you help me out?`;
-  const href = whatsappHref(message);
+  const href = whatsappHref(content.message.trim() || undefined);
 
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Chat with us on WhatsApp"
-      title="Chat with us on WhatsApp"
+      aria-label={content.tooltip}
+      title={content.tooltip}
       className="fixed right-5 bottom-5 z-40 rounded-full bg-[#25D366] p-3.5 shadow-[0_0_11px_rgba(0,0,0,0.5)] transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366]"
     >
       <svg

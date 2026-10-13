@@ -2,6 +2,8 @@
 
 import { useId, useState } from 'react';
 import { Icon } from '@/components/icon';
+import type { ToolLabels } from '@/components/tools/tool-page';
+import { RichBlocks, RichInline, lines } from '@/components/tools/rich-text';
 import {
   CopyButton,
   DownloadButton,
@@ -33,11 +35,11 @@ const QUICK_DISALLOW: { label: string; paths: string[]; allow?: string[] }[] = [
   { label: '/*?sort=', paths: ['/*?sort='] },
 ];
 
-const KIND_LABEL: Record<AiBotKind, string> = {
-  training: 'Training',
-  search: 'AI search',
-  user: 'User fetch',
-};
+type Labels = ToolLabels<'tool_robots_txt'>;
+
+function kindLabel(kind: AiBotKind, l: Labels): string {
+  return { training: l.kind_training, search: l.kind_search, user: l.kind_user }[kind];
+}
 
 type Preset = 'allow-all' | 'block-training' | 'block-ai';
 
@@ -59,6 +61,7 @@ function ListEditor({
   onChange,
   placeholder,
   invalid,
+  addLabel,
 }: {
   label: string;
   hint?: string;
@@ -66,6 +69,7 @@ function ListEditor({
   onChange: (next: string[]) => void;
   placeholder: string;
   invalid?: (value: string) => boolean;
+  addLabel: string;
 }) {
   const id = useId();
   return (
@@ -110,7 +114,7 @@ function ListEditor({
         className={`${secondaryButtonClass} mt-2 h-10 px-4`}
       >
         <Icon name="add_circle" size={18} />
-        Add
+        {addLabel}
       </button>
     </fieldset>
   );
@@ -120,11 +124,18 @@ function RuleSelect({
   bot,
   value,
   onChange,
+  labels,
 }: {
   bot: string;
   value: BotRule;
   onChange: (v: BotRule) => void;
+  labels: Labels;
 }) {
+  const optionLabel: Record<BotRule, string> = {
+    default: labels.rule_default,
+    allow: labels.rule_allow,
+    block: labels.rule_block,
+  };
   return (
     <div
       role="radiogroup"
@@ -150,7 +161,7 @@ function RuleSelect({
               active ? activeClass : 'text-on-surface-variant hover:bg-surface-container-low'
             }`}
           >
-            {opt}
+            {optionLabel[opt]}
           </button>
         );
       })}
@@ -162,10 +173,12 @@ function BotTable({
   bots,
   rules,
   setRule,
+  labels,
 }: {
   bots: (BotInfo & { kind?: AiBotKind })[];
   rules: Record<string, BotRule>;
   setRule: (bot: string, rule: BotRule) => void;
+  labels: Labels;
 }) {
   return (
     <ul className="divide-border-subtle border-border-subtle divide-y rounded-lg border">
@@ -185,7 +198,7 @@ function BotTable({
                       : 'bg-brand-50 text-primary-container'
                   }`}
                 >
-                  {KIND_LABEL[bot.kind]}
+                  {kindLabel(bot.kind, labels)}
                 </span>
               ) : null}
             </p>
@@ -197,6 +210,7 @@ function BotTable({
             bot={bot.name}
             value={rules[bot.name] ?? 'default'}
             onChange={(v) => setRule(bot.name, v)}
+            labels={labels}
           />
         </li>
       ))}
@@ -204,7 +218,7 @@ function BotTable({
   );
 }
 
-export function RobotsGenerator() {
+export function RobotsGenerator({ labels: l }: { labels: Labels }) {
   const [policy, setPolicy] = useState<DefaultPolicy>('custom');
   const [disallow, setDisallow] = useState<string[]>(['/wp-admin/']);
   const [allow, setAllow] = useState<string[]>(['/wp-admin/admin-ajax.php']);
@@ -214,6 +228,7 @@ export function RobotsGenerator() {
 
   const config = { policy, disallow, allow, crawlDelay, bots, sitemaps };
   const output = buildRobots(config);
+  const notes = lines(l.output_notes).map((n) => n.replace(/^-\s*/, ''));
   const warnings = robotsWarnings(config);
 
   const setRule = (bot: string, rule: BotRule) => setBots((prev) => ({ ...prev, [bot]: rule }));
@@ -231,18 +246,16 @@ export function RobotsGenerator() {
   };
 
   const policies: { value: DefaultPolicy; label: string; hint: string }[] = [
-    { value: 'allow', label: 'Allow all', hint: 'Crawl everything' },
-    { value: 'disallow', label: 'Disallow all', hint: 'Block the whole site' },
-    { value: 'custom', label: 'Custom', hint: 'Choose paths' },
+    { value: 'allow', label: l.allow_all, hint: l.allow_all_hint },
+    { value: 'disallow', label: l.disallow_all, hint: l.disallow_all_hint },
+    { value: 'custom', label: l.custom, hint: l.custom_hint },
   ];
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="space-y-6">
         <ToolCard>
-          <h2 className="font-title-md text-title-md text-on-surface">
-            Rules for all robots (User-agent: *)
-          </h2>
+          <h2 className="font-title-md text-title-md text-on-surface">{l.rules_heading}</h2>
           <div
             role="radiogroup"
             aria-label="Default policy"
@@ -274,7 +287,7 @@ export function RobotsGenerator() {
           {policy === 'custom' ? (
             <div className="mt-5 space-y-5">
               <div>
-                <p className={labelClass}>Quick add common paths</p>
+                <p className={labelClass}>{l.quick_add}</p>
                 <div className="flex flex-wrap gap-2">
                   {QUICK_DISALLOW.map((q) => (
                     <button
@@ -289,19 +302,21 @@ export function RobotsGenerator() {
                 </div>
               </div>
               <ListEditor
-                label="Disallowed paths"
-                hint="Start with / . Use * as a wildcard and $ to match the end of a URL."
+                label={l.disallow_label}
+                hint={l.disallow_hint}
                 values={disallow}
                 onChange={setDisallow}
-                placeholder="/private/"
+                placeholder={l.disallow_placeholder}
+                addLabel={l.add_row}
                 invalid={(v) => !v.startsWith('/') && !v.startsWith('*')}
               />
               <ListEditor
-                label="Allowed paths"
-                hint="Exceptions inside a disallowed folder. The longest matching rule wins."
+                label={l.allow_label}
+                hint={l.allow_hint}
                 values={allow}
                 onChange={setAllow}
-                placeholder="/private/public-page.html"
+                placeholder={l.allow_placeholder}
+                addLabel={l.add_row}
                 invalid={(v) => !v.startsWith('/') && !v.startsWith('*')}
               />
             </div>
@@ -309,7 +324,7 @@ export function RobotsGenerator() {
 
           <div className="mt-5">
             <label htmlFor="crawl-delay" className={labelClass}>
-              Crawl-delay in seconds (optional)
+              {l.crawl_delay_label}
             </label>
             <input
               id="crawl-delay"
@@ -319,39 +334,27 @@ export function RobotsGenerator() {
               inputMode="numeric"
               value={crawlDelay}
               onChange={(e) => setCrawlDelay(e.target.value)}
-              placeholder="e.g. 5"
+              placeholder={l.crawl_delay_placeholder}
               className={`${inputClass} max-w-40`}
             />
             <p className="font-body-sm text-body-sm text-on-surface-variant mt-2">
-              Googlebot ignores Crawl-delay (Google adjusts its crawl rate automatically). Bing and
-              Yandex respect it.
+              {l.crawl_delay_note}
             </p>
           </div>
         </ToolCard>
 
         <ToolCard>
-          <h2 className="font-title-md text-title-md text-on-surface">Search engine crawlers</h2>
+          <h2 className="font-title-md text-title-md text-on-surface">{l.search_heading}</h2>
           <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 mb-4">
-            <strong>Default</strong> follows the * rules above. <strong>Allow</strong> gives the bot
-            full access (it then ignores the * rules). <strong>Block</strong> disallows the whole
-            site for that bot.
+            <RichInline text={l.search_intro} />
           </p>
-          <BotTable bots={SEARCH_BOTS} rules={bots} setRule={setRule} />
+          <BotTable bots={SEARCH_BOTS} rules={bots} setRule={setRule} labels={l} />
         </ToolCard>
 
         <ToolCard>
-          <h2 className="font-title-md text-title-md text-on-surface">AI crawlers</h2>
+          <h2 className="font-title-md text-title-md text-on-surface">{l.ai_heading}</h2>
           <div className="font-body-sm text-body-sm text-on-surface-variant mt-1 space-y-2">
-            <p>
-              <strong>Training bots</strong> (GPTBot, ClaudeBot, Google-Extended, CCBot…) collect
-              pages to train AI models. Blocking them does not affect your search rankings.
-            </p>
-            <p>
-              <strong>AI search and user bots</strong> (OAI-SearchBot, Claude-SearchBot,
-              PerplexityBot, ChatGPT-User…) fetch pages to show and cite them in AI answers.
-              Blocking them can remove your site from ChatGPT, Claude or Perplexity answers and the
-              traffic they send.
-            </p>
+            <RichBlocks text={l.ai_intro} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
@@ -359,35 +362,36 @@ export function RobotsGenerator() {
               className={`${secondaryButtonClass} h-10 px-3`}
               onClick={() => setBots((b) => ({ ...b, ...presetRules('allow-all') }))}
             >
-              Allow everything
+              {l.preset_allow}
             </button>
             <button
               type="button"
               className={`${secondaryButtonClass} h-10 px-3`}
               onClick={() => setBots((b) => ({ ...b, ...presetRules('block-training') }))}
             >
-              Block AI training, allow AI search
+              {l.preset_training}
             </button>
             <button
               type="button"
               className={`${secondaryButtonClass} h-10 px-3`}
               onClick={() => setBots((b) => ({ ...b, ...presetRules('block-ai') }))}
             >
-              Block all AI bots
+              {l.preset_block}
             </button>
           </div>
           <div className="mt-4">
-            <BotTable bots={AI_BOTS} rules={bots} setRule={setRule} />
+            <BotTable bots={AI_BOTS} rules={bots} setRule={setRule} labels={l} />
           </div>
         </ToolCard>
 
         <ToolCard>
           <ListEditor
-            label="Sitemap URLs"
-            hint="Full URLs, e.g. https://example.com/sitemap.xml. They are listed at the end of the file."
+            label={l.sitemaps_label}
+            hint={l.sitemaps_hint}
             values={sitemaps}
             onChange={setSitemaps}
-            placeholder="https://example.com/sitemap.xml"
+            placeholder={l.sitemaps_placeholder}
+            addLabel={l.add_row}
             invalid={(v) => !isAbsoluteUrl(v)}
           />
         </ToolCard>
@@ -396,10 +400,10 @@ export function RobotsGenerator() {
       <div className="lg:sticky lg:top-24 lg:self-start">
         <ToolCard>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-title-md text-title-md text-on-surface">Your robots.txt</h2>
+            <h2 className="font-title-md text-title-md text-on-surface">{l.output_heading}</h2>
             <div className="flex flex-wrap gap-2">
-              <CopyButton text={output} />
-              <DownloadButton text={output} filename="robots.txt" />
+              <CopyButton text={output} label={l.copy} copiedLabel={l.copied} />
+              <DownloadButton text={output} filename="robots.txt" label={l.download} />
             </div>
           </div>
           <pre
@@ -432,18 +436,15 @@ export function RobotsGenerator() {
             </ul>
           ) : null}
 
-          <ul className="font-body-sm text-body-sm text-on-surface-variant mt-4 list-disc space-y-1 pl-5">
-            <li>
-              Save the file as <code>robots.txt</code> at the root of your domain (e.g.{' '}
-              <code>https://example.com/robots.txt</code>
-              ). Crawlers ignore it anywhere else, and each subdomain needs its own.
-            </li>
-            <li>
-              robots.txt controls crawling, not indexing. A blocked URL can still appear in Google
-              if other sites link to it. To keep a page out of results, use a <code>noindex</code>{' '}
-              meta tag and leave it crawlable.
-            </li>
-          </ul>
+          {notes.length ? (
+            <ul className="font-body-sm text-body-sm text-on-surface-variant mt-4 list-disc space-y-1 pl-5">
+              {notes.map((note, i) => (
+                <li key={i}>
+                  <RichInline text={note} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </ToolCard>
       </div>
     </div>

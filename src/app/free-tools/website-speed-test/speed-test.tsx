@@ -33,10 +33,14 @@ import {
   type Report,
   type Strategy,
 } from '@/lib/pagespeed';
+import type { ToolLabels } from '@/components/tools/tool-page';
+import { fill } from '@/components/tools/rich-text';
 
 const SCOPE = 'speed';
 
-export function SpeedTest() {
+type Labels = ToolLabels<'tool_speed_test'>;
+
+export function SpeedTest({ labels: l }: { labels: Labels }) {
   const [input, setInput] = useState('');
   const [strategy, setStrategy] = useState<Strategy>('mobile');
   const [inputError, setInputError] = useState<string | null>(null);
@@ -63,14 +67,14 @@ export function SpeedTest() {
         <form onSubmit={start} noValidate className="flex flex-col gap-4">
           <div>
             <label htmlFor="speed-url" className={labelClass}>
-              Page URL
+              {l.url_label}
             </label>
             <input
               id="speed-url"
               type="url"
               inputMode="url"
               autoComplete="url"
-              placeholder="https://example.com"
+              placeholder={l.url_placeholder}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               aria-invalid={inputError ? true : undefined}
@@ -85,7 +89,7 @@ export function SpeedTest() {
           </div>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <fieldset>
-              <legend className={labelClass}>Device</legend>
+              <legend className={labelClass}>{l.device_legend}</legend>
               <div className="border-border-subtle inline-flex rounded-lg border p-1">
                 {(['mobile', 'desktop'] as const).map((s) => (
                   <label
@@ -105,14 +109,14 @@ export function SpeedTest() {
                       className="sr-only"
                     />
                     <Icon name={s === 'mobile' ? 'smartphone' : 'language'} size={18} />
-                    {s === 'mobile' ? 'Mobile' : 'Desktop'}
+                    {s === 'mobile' ? l.mobile : l.desktop}
                   </label>
                 ))}
               </div>
             </fieldset>
             <button type="submit" disabled={running} className={primaryButtonClass}>
               <Icon name="speed" size={18} />
-              {running ? 'Testing…' : 'Run test'}
+              {running ? l.running : l.run}
             </button>
           </div>
         </form>
@@ -120,12 +124,13 @@ export function SpeedTest() {
 
       <div aria-live="polite" className="flex flex-col gap-6">
         {state.status === 'running' ? (
-          <ProgressPanel url={state.url} elapsed={elapsed} onCancel={cancel} />
+          <ProgressPanel url={state.url} elapsed={elapsed} onCancel={cancel} labels={l} />
         ) : null}
         {state.status === 'error' ? (
           <ErrorPanel
             message={state.message}
             onRetry={lastUrl ? () => void run(lastUrl, strategy, false) : undefined}
+            labels={l}
           />
         ) : null}
         {state.status === 'done' ? (
@@ -133,6 +138,7 @@ export function SpeedTest() {
             report={state.report}
             cached={state.cached}
             onRerun={() => void run(state.report.requestedUrl, state.report.strategy, false)}
+            labels={l}
           />
         ) : null}
       </div>
@@ -144,33 +150,37 @@ function Results({
   report,
   cached,
   onRerun,
+  labels: l,
 }: {
   report: Report;
   cached: boolean;
   onRerun: () => void;
+  labels: Labels;
 }) {
   const opps = opportunities(report);
   const diags = diagnostics(report);
-  const device = report.strategy === 'mobile' ? 'Mobile' : 'Desktop';
+  const device = report.strategy === 'mobile' ? l.mobile : l.desktop;
 
   return (
     <>
       <ToolCard>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="font-headline-md text-headline-md text-on-surface">{device} results</h2>
+            <h2 className="font-headline-md text-headline-md text-on-surface">
+              {fill(l.results_heading, { device })}
+            </h2>
             <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 break-all">
               {report.finalUrl}
             </p>
             <p className="font-body-sm text-body-sm text-secondary mt-1">
-              Tested {formatTestedAt(report.fetchTime)}
+              {fill(l.tested, { date: formatTestedAt(report.fetchTime) })}
               {report.lighthouseVersion ? ` · Lighthouse ${report.lighthouseVersion}` : ''}
-              {cached ? ' · cached result (under 10 minutes old)' : ''}
+              {cached ? ` · ${l.cached}` : ''}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={onRerun} className={secondaryButtonClass}>
-              Re-run
+              {l.rerun}
             </button>
             <a
               href={pageSpeedReportUrl(report.requestedUrl, report.strategy)}
@@ -178,7 +188,7 @@ function Results({
               rel="noopener noreferrer"
               className={secondaryButtonClass}
             >
-              View full report on PageSpeed Insights <Icon name="north_east" size={16} />
+              {l.full_report} <Icon name="north_east" size={16} />
             </a>
           </div>
         </div>
@@ -203,7 +213,7 @@ function Results({
           <ul className="bg-surface-container-low font-body-sm text-body-sm text-on-surface-variant mt-4 space-y-1 rounded-lg p-4">
             {report.warnings.map((w) => (
               <li key={w} className="break-words">
-                <strong className="text-on-surface">Warning:</strong> <LhText text={w} />
+                <strong className="text-on-surface">{l.warning}</strong> <LhText text={w} />
               </li>
             ))}
           </ul>
@@ -211,17 +221,17 @@ function Results({
       </ToolCard>
 
       <ToolCard>
-        <FieldDataPanel field={report.field} only={['LCP', 'INP', 'CLS']} />
+        <FieldDataPanel field={report.field} only={['LCP', 'INP', 'CLS']} labels={l} />
       </ToolCard>
 
       <ToolCard>
         <div className="grid gap-6 md:grid-cols-[1fr_auto]">
           <div>
-            <h3 className="font-title-md text-title-md text-on-surface">Lab data (Lighthouse)</h3>
+            <h3 className="font-title-md text-title-md text-on-surface">{l.lab_heading}</h3>
             <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-              One simulated load on a{' '}
-              {report.strategy === 'mobile' ? 'throttled mid-range phone' : 'desktop'} from
-              Google&rsquo;s servers. Great for debugging; it can differ from real users.
+              {fill(l.lab_intro, {
+                device: report.strategy === 'mobile' ? l.lab_mobile : l.lab_desktop,
+              })}
             </p>
             <dl className="divide-border-subtle mt-4 divide-y">
               {LAB_METRICS.map((m) => {
@@ -248,18 +258,17 @@ function Results({
                 alt={`How ${report.finalUrl} looked at the end of the ${device.toLowerCase()} test`}
                 className="border-border-subtle max-h-72 w-auto max-w-[180px] rounded-lg border object-contain"
               />
-              <span className="font-label-sm text-label-sm text-secondary">Final screenshot</span>
+              <span className="font-label-sm text-label-sm text-secondary">
+                {l.screenshot_caption}
+              </span>
             </div>
           ) : null}
         </div>
       </ToolCard>
 
       <ToolCard>
-        <h3 className="font-title-md text-title-md text-on-surface">Opportunities</h3>
-        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-          Changes that could make the page load faster, biggest estimated saving first. Savings are
-          estimates and do not directly add to the score.
-        </p>
+        <h3 className="font-title-md text-title-md text-on-surface">{l.opps_heading}</h3>
+        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">{l.opps_intro}</p>
         {opps.length ? (
           <ol className="mt-4 flex flex-col gap-3">
             {opps.map((a) => (
@@ -287,19 +296,15 @@ function Results({
           </ol>
         ) : (
           <p className="font-body-md text-body-md text-primary-container mt-4 flex items-center gap-2">
-            <Icon name="check_circle" size={20} /> No significant load-time opportunities found.
+            <Icon name="check_circle" size={20} /> {l.opps_none}
           </p>
         )}
       </ToolCard>
 
       {diags.length ? (
         <ToolCard>
-          <h3 className="font-title-md text-title-md text-on-surface">
-            Diagnostics &amp; failed audits
-          </h3>
-          <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-            Everything else Lighthouse flagged, grouped by category. Open a group to see details.
-          </p>
+          <h3 className="font-title-md text-title-md text-on-surface">{l.diag_heading}</h3>
+          <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">{l.diag_intro}</p>
           <div className="mt-4 flex flex-col gap-3">
             {diags.map((g) => (
               <details key={g.category.id} className="border-border-subtle group rounded-lg border">

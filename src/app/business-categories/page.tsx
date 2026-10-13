@@ -5,6 +5,8 @@ import { findSection, getCategories, getPageSections, type Category } from '@/li
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { seoMetadata } from '@/lib/seo';
+import { getPageContent } from '@/lib/content/get';
+import { InlineMarkdown } from '@/components/markdown';
 
 export const revalidate = 600;
 const TITLE = 'Business Categories | Find Companies by Industry';
@@ -21,11 +23,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CategoriesPage() {
-  const [sections, categories] = await Promise.all([
+  const [sections, categories, { hero }] = await Promise.all([
     getPageSections('categories'),
     getCategories(),
+    getPageContent('business_categories'),
   ]);
-  const header = findSection(sections, 'header');
+  // A header kept in Admin → Pages (the older page sections) is shown until the hero
+  // is saved in Admin → Content; from then on the Content copy wins.
+  const header = hero.edited ? undefined : findSection(sections, 'header');
 
   // Top-level categories as cards, each listing its subcategories, so a tree of
   // 18 parents and ~150 children reads as 18 groups rather than one long grid.
@@ -37,39 +42,38 @@ export default async function CategoriesPage() {
   }
   const roots = categories.filter((c) => !c.parent_id || !ids.has(c.parent_id));
 
-  const trail = [{ label: 'Home', href: '/' }, { label: header?.heading ?? 'Categories' }];
+  const trail = [{ label: 'Home', href: '/' }, { label: header?.heading ?? hero.crumb }];
 
-  const intro = (
-    <>
-      This business directory by category groups companies by the industry they work in. Pick a
-      category to see the businesses listed under it, or{' '}
-      <Link href="/add-business" className="text-hero-green-light hover:underline">
-        list your business
-      </Link>{' '}
-      in the category that fits.
-    </>
-  );
+  const intro = hero.intro ? (
+    <InlineMarkdown text={hero.intro} linkClassName="text-hero-green-light hover:underline" />
+  ) : undefined;
 
   return (
     <>
       <JsonLd data={breadcrumbSchema(trail, '/business-categories')} />
       <PageHero
         trail={trail}
-        eyebrow="Browse by industry"
+        eyebrow={hero.eyebrow}
         heading={
           header?.heading ?? (
             <>
-              Business <span className="text-hero-green-light">categories</span>
+              {hero.heading}
+              {hero.highlight ? (
+                <>
+                  {' '}
+                  <span className="text-hero-green-light">{hero.highlight}</span>
+                </>
+              ) : null}
             </>
           )
         }
         subheading={header?.subheading ?? intro}
         stats={[
-          { value: roots.length, label: 'Categories' },
-          { value: categories.length - roots.length, label: 'Subcategories' },
+          { value: roots.length, label: hero.stat_categories },
+          { value: categories.length - roots.length, label: hero.stat_subcategories },
         ]}
       >
-        {header?.subheading ? (
+        {header?.subheading && intro ? (
           <p className="max-w-[580px] text-base leading-[1.75] text-white/60">{intro}</p>
         ) : null}
       </PageHero>

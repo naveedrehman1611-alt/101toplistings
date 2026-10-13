@@ -4,6 +4,8 @@ import { useId, useState, useSyncExternalStore } from 'react';
 import { Icon } from '@/components/icon';
 import { CopyButton, ToolCard, inputClass, labelClass } from '@/components/tools/tool-ui';
 import { breadcrumbUrl, buildSnippet, clean, parseUrl, type MetaInput } from '@/lib/meta-tags';
+import type { ToolLabels } from '@/components/tools/tool-page';
+import { RichInline } from '@/components/tools/rich-text';
 
 /** Google's result typography (approximate): titles 20px, snippets 14px, Arial. */
 const TITLE_FONT = '20px Arial, sans-serif';
@@ -114,7 +116,7 @@ const EMPTY: MetaInput = {
   language: 'en',
 };
 
-export function MetaTagGenerator() {
+export function MetaTagGenerator({ labels: l }: { labels: ToolLabels<'tool_meta_tags'> }) {
   const id = useId();
   const isClient = useIsClient();
   const [m, setM] = useState<MetaInput>(EMPTY);
@@ -132,15 +134,14 @@ export function MetaTagGenerator() {
 
   // Cheap: a binary search of a few canvas measurements per render.
   const shownTitle = truncate(
-    title || 'Your page title appears here',
+    title || l.preview_title,
     TITLE_FONT,
     TITLE_PX,
     TITLE_CHARS,
     isClient,
   );
   const shownDesc = truncate(
-    description ||
-      'Your meta description appears here. Write one or two sentences that tell searchers what the page offers and why they should click.',
+    description || l.preview_desc,
     DESC_FONT,
     DESC_PX[device],
     DESC_CHARS[device],
@@ -167,21 +168,15 @@ export function MetaTagGenerator() {
         ? 'warn'
         : 'good';
   const titleNote = {
-    empty: 'Aim for 30–60 characters and under 600 pixels.',
-    good: 'Good length: it should show in full.',
-    warn:
-      title.length < 30
-        ? 'A little short: add a benefit, location or brand.'
-        : 'Slightly long: the end may be cut off.',
-    bad: 'Too long: Google will cut it off. Put the important words first.',
+    empty: l.title_empty,
+    good: l.title_good,
+    warn: title.length < 30 ? l.title_short : l.title_long,
+    bad: l.title_too_long,
   }[titleLevel];
   const descNote = {
-    empty: 'Aim for 70–160 characters.',
-    good: 'Good length.',
-    warn:
-      description.length < 70
-        ? 'Short: there is room to say more about the page.'
-        : 'Long: Google will likely truncate it, so lead with the key message.',
+    empty: l.desc_empty,
+    good: l.desc_good,
+    warn: description.length < 70 ? l.desc_short : l.desc_long,
     bad: '',
   }[descLevel];
 
@@ -193,34 +188,34 @@ export function MetaTagGenerator() {
       <ToolCard>
         <form className="grid grid-cols-1 gap-5" onSubmit={(e) => e.preventDefault()}>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-title-md text-title-md text-on-surface">Page details</h2>
+            <h2 className="font-title-md text-title-md text-on-surface">{l.form_heading}</h2>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setM(EXAMPLE)}
                 className="font-label-md text-label-md text-primary-container hover:bg-brand-50 rounded-lg px-3 py-2"
               >
-                Example
+                {l.example}
               </button>
               <button
                 type="button"
                 onClick={() => setM(EMPTY)}
                 className="font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low rounded-lg px-3 py-2"
               >
-                Clear
+                {l.clear}
               </button>
             </div>
           </div>
 
           <div>
             <label htmlFor={`${id}-title`} className={labelClass}>
-              Page title
+              {l.title_label}
             </label>
             <input
               id={`${id}-title`}
               value={m.title}
               onChange={set('title')}
-              placeholder="Primary keyword – benefit | Brand"
+              placeholder={l.title_placeholder}
               aria-describedby={`${id}-title-meter`}
               className={inputClass}
             />
@@ -229,9 +224,9 @@ export function MetaTagGenerator() {
               className="mt-2 flex flex-wrap items-center gap-2"
               aria-live="polite"
             >
-              <Meter label="Characters" value={`${title.length} / 60`} level={titleLevel} />
+              <Meter label={l.meter_characters} value={`${title.length} / 60`} level={titleLevel} />
               <Meter
-                label="Pixels"
+                label={l.meter_pixels}
                 value={titlePx === null ? '–' : `${Math.round(titlePx)} / ${TITLE_PX}`}
                 level={titleLevel}
               />
@@ -241,14 +236,14 @@ export function MetaTagGenerator() {
 
           <div>
             <label htmlFor={`${id}-desc`} className={labelClass}>
-              Meta description
+              {l.desc_label}
             </label>
             <textarea
               id={`${id}-desc`}
               value={m.description}
               onChange={set('description')}
               rows={3}
-              placeholder="One or two sentences that sell the click."
+              placeholder={l.desc_placeholder}
               aria-describedby={`${id}-desc-meter`}
               className={`${inputClass} resize-y`}
             />
@@ -257,9 +252,13 @@ export function MetaTagGenerator() {
               className="mt-2 flex flex-wrap items-center gap-2"
               aria-live="polite"
             >
-              <Meter label="Characters" value={`${description.length} / 160`} level={descLevel} />
               <Meter
-                label="Pixels"
+                label={l.meter_characters}
+                value={`${description.length} / 160`}
+                level={descLevel}
+              />
+              <Meter
+                label={l.meter_pixels}
                 value={descPx === null ? '–' : `${Math.round(descPx)} / ${DESC_PX[device]}`}
                 level={descLevel}
               />
@@ -270,7 +269,7 @@ export function MetaTagGenerator() {
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor={`${id}-url`} className={labelClass}>
-                Page URL
+                {l.url_label}
               </label>
               <input
                 id={`${id}-url`}
@@ -278,19 +277,19 @@ export function MetaTagGenerator() {
                 inputMode="url"
                 value={m.url}
                 onChange={set('url')}
-                placeholder="https://www.example.com/services/"
+                placeholder={l.url_placeholder}
                 className={inputClass}
               />
             </div>
             <div>
               <label htmlFor={`${id}-site`} className={labelClass}>
-                Site name
+                {l.site_label}
               </label>
               <input
                 id={`${id}-site`}
                 value={m.siteName}
                 onChange={set('siteName')}
-                placeholder="Your brand"
+                placeholder={l.site_placeholder}
                 className={inputClass}
               />
             </div>
@@ -298,7 +297,7 @@ export function MetaTagGenerator() {
 
           <details className="group border-border-subtle rounded-lg border">
             <summary className="font-label-md text-label-md text-on-surface flex cursor-pointer list-none items-center justify-between gap-2 p-4">
-              Advanced: robots, canonical, social image, language
+              {l.advanced}
               <Icon
                 name="expand_more"
                 size={20}
@@ -309,7 +308,7 @@ export function MetaTagGenerator() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor={`${id}-index`} className={labelClass}>
-                    Indexing
+                    {l.index_label}
                   </label>
                   <select
                     id={`${id}-index`}
@@ -323,7 +322,7 @@ export function MetaTagGenerator() {
                 </div>
                 <div>
                   <label htmlFor={`${id}-follow`} className={labelClass}>
-                    Links
+                    {l.follow_label}
                   </label>
                   <select
                     id={`${id}-follow`}
@@ -338,13 +337,12 @@ export function MetaTagGenerator() {
               </div>
               {m.index === 'noindex' ? (
                 <p className="font-body-sm text-body-sm rounded-lg bg-amber-50 p-3 text-amber-800">
-                  noindex keeps this page out of Google’s results entirely. Use it only for pages
-                  such as thank-you pages, internal search results or duplicates.
+                  {l.noindex_warning}
                 </p>
               ) : null}
               <div>
                 <label htmlFor={`${id}-canonical`} className={labelClass}>
-                  Canonical URL
+                  {l.canonical_label}
                 </label>
                 <input
                   id={`${id}-canonical`}
@@ -352,13 +350,13 @@ export function MetaTagGenerator() {
                   inputMode="url"
                   value={m.canonical}
                   onChange={set('canonical')}
-                  placeholder="Usually the same as the page URL"
+                  placeholder={l.canonical_placeholder}
                   className={inputClass}
                 />
               </div>
               <div>
                 <label htmlFor={`${id}-image`} className={labelClass}>
-                  Social share image URL
+                  {l.image_label}
                 </label>
                 <input
                   id={`${id}-image`}
@@ -366,14 +364,14 @@ export function MetaTagGenerator() {
                   inputMode="url"
                   value={m.image}
                   onChange={set('image')}
-                  placeholder="https://www.example.com/og-image.jpg (1200×630)"
+                  placeholder={l.image_placeholder}
                   className={inputClass}
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div>
                   <label htmlFor={`${id}-ogtype`} className={labelClass}>
-                    og:type
+                    {l.og_type_label}
                   </label>
                   <select
                     id={`${id}-ogtype`}
@@ -388,7 +386,7 @@ export function MetaTagGenerator() {
                 </div>
                 <div>
                   <label htmlFor={`${id}-card`} className={labelClass}>
-                    Twitter card
+                    {l.card_label}
                   </label>
                   <select
                     id={`${id}-card`}
@@ -396,19 +394,19 @@ export function MetaTagGenerator() {
                     onChange={set('twitterCard')}
                     className={inputClass}
                   >
-                    <option value="summary_large_image">Large image</option>
-                    <option value="summary">Summary</option>
+                    <option value="summary_large_image">{l.card_large}</option>
+                    <option value="summary">{l.card_summary}</option>
                   </select>
                 </div>
                 <div>
                   <label htmlFor={`${id}-lang`} className={labelClass}>
-                    Language
+                    {l.language_label}
                   </label>
                   <input
                     id={`${id}-lang`}
                     value={m.language}
                     onChange={set('language')}
-                    placeholder="en, en-PK, ur"
+                    placeholder={l.language_placeholder}
                     className={inputClass}
                   />
                 </div>
@@ -421,7 +419,7 @@ export function MetaTagGenerator() {
       <div className="grid grid-cols-1 content-start gap-6">
         <ToolCard>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-title-md text-title-md text-on-surface">Google preview</h2>
+            <h2 className="font-title-md text-title-md text-on-surface">{l.preview_heading}</h2>
             <div role="group" aria-label="Preview device" className="flex gap-1">
               {(['desktop', 'mobile'] as const).map((d) => (
                 <button
@@ -480,15 +478,14 @@ export function MetaTagGenerator() {
             </p>
           </div>
           <p className="font-body-sm text-body-sm text-on-surface-variant mt-3">
-            Widths are measured in pixels with the fonts Google uses, so wide letters (W, M) cut off
-            sooner than narrow ones (i, l). Google may still rewrite titles and snippets.
-            {shownTitle.cut && title ? ' Your title is truncated.' : ''}
-            {shownDesc.cut && description ? ' Your description is truncated.' : ''}
+            {l.preview_note}
+            {shownTitle.cut && title ? ` ${l.title_truncated}` : ''}
+            {shownDesc.cut && description ? ` ${l.desc_truncated}` : ''}
           </p>
         </ToolCard>
 
         <ToolCard>
-          <h2 className="font-title-md text-title-md text-on-surface">Social share preview</h2>
+          <h2 className="font-title-md text-title-md text-on-surface">{l.social_heading}</h2>
           <div className="border-border-subtle mt-4 overflow-hidden rounded-xl border bg-white">
             {m.twitterCard === 'summary_large_image' || showImage ? (
               <div className="bg-surface-container-low text-secondary grid aspect-[1.91/1] place-items-center">
@@ -503,7 +500,7 @@ export function MetaTagGenerator() {
                 ) : (
                   <span className="font-body-sm text-body-sm flex flex-col items-center gap-1 p-4 text-center">
                     <Icon name="visibility" size={24} />
-                    {image ? 'Image could not be loaded' : 'Add a 1200×630 image URL'}
+                    {image ? l.image_failed : l.image_missing}
                   </span>
                 )}
               </div>
@@ -513,10 +510,10 @@ export function MetaTagGenerator() {
                 {host}
               </p>
               <p className="font-title-md text-title-md text-on-surface mt-0.5 line-clamp-2 break-words">
-                {title || 'Your page title'}
+                {title || l.social_title}
               </p>
               <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5 line-clamp-2 break-words">
-                {description || 'Your description'}
+                {description || l.social_desc}
               </p>
             </div>
           </div>
@@ -524,15 +521,14 @@ export function MetaTagGenerator() {
 
         <ToolCard>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-title-md text-title-md text-on-surface">Your meta tags</h2>
-            <CopyButton text={snippet} label="Copy HTML" />
+            <h2 className="font-title-md text-title-md text-on-surface">{l.tags_heading}</h2>
+            <CopyButton text={snippet} label={l.copy_html} copiedLabel={l.copied} />
           </div>
           <pre className="bg-surface-container-low text-on-surface mt-4 max-h-96 overflow-auto rounded-lg p-4 font-mono text-[13px] leading-relaxed">
             <code>{snippet}</code>
           </pre>
           <p className="font-body-sm text-body-sm text-on-surface-variant mt-3">
-            Paste inside the <code>&lt;head&gt;</code> of your page. Empty fields are left out and
-            special characters are escaped for you.
+            <RichInline text={l.tags_note} />
           </p>
         </ToolCard>
       </div>

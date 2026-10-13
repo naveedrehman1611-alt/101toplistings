@@ -6,11 +6,25 @@ import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { SITE_URL } from '@/lib/supabase';
 import { SHARE_IMAGE } from '@/lib/seo';
-import { TOOLS_BASE, TOOL_CATEGORIES, getTool, relatedTools, toolHref } from '@/lib/free-tools';
+import type { SectionValues } from '@/lib/content/schema';
+import type { TOOLS_PAGES } from '@/lib/content/pages/tools';
+import {
+  FREE_TOOLS,
+  TOOLS_BASE,
+  cardKey,
+  getTool,
+  relatedTools,
+  toolHref,
+  withCardCopy,
+  type ShownTool,
+  type ToolCardCopy,
+} from '@/lib/free-tools';
+import { RichBlocks, type RichClasses } from './rich-text';
 
 /**
  * Static metadata for a tool page. Deliberately not seoMetadata(): that reads
- * seo_meta from Supabase, and these pages should add no database reads.
+ * seo_meta from Supabase, and these pages keep their metadata static. (Their
+ * copy is read through getPageContent, a cached read.)
  */
 export function toolMetadata(slug: string, title: string, description: string): Metadata {
   const path = toolHref(getTool(slug));
@@ -23,41 +37,69 @@ export function toolMetadata(slug: string, title: string, description: string): 
   };
 }
 
-export type ToolFaq = { q: string; a: string };
+type Values<P extends keyof typeof TOOLS_PAGES> = {
+  [S in keyof (typeof TOOLS_PAGES)[P]['sections']]: SectionValues<
+    (typeof TOOLS_PAGES)[P]['sections'][S]
+  >;
+};
+
+/** The resolved /free-tools hub content (getPageContent('free_tools')). */
+export type HubContent = Values<'free_tools'>;
+
+/** A tool page's own labels (its `tool` section), for the client component. */
+export type ToolLabels<P extends keyof typeof TOOLS_PAGES> =
+  Values<P> extends {
+    tool: infer T;
+  }
+    ? T
+    : never;
+
+/** The sections every tool page shares; `tool` (the tool's own labels) differs per page. */
+export type ToolPageContent = Omit<Values<'tool_robots_txt'>, 'tool'>;
+
+/** Every tool with its card copy from the hub content (names, summaries, icons). */
+export function toolsWithCopy(hub: HubContent): ShownTool[] {
+  // The card sections are generated from FREE_TOOLS (see pages/tools.ts), so
+  // their keys are not spelled out in the type.
+  const cards = hub as unknown as Record<string, ToolCardCopy | undefined>;
+  return FREE_TOOLS.map((t) => withCardCopy(t, cards[cardKey(t.slug)]));
+}
 
 /**
  * The frame every free tool page shares: a navy hero (breadcrumbs, H1, intro), the
  * interactive tool (children, a client component), how-it-works steps, a
  * guide, FAQ and related tools, plus WebApplication, FAQPage and
  * BreadcrumbList JSON-LD built from the same content that is shown.
+ * Copy comes from Admin → Content: the tool's own page (`content`) and the hub
+ * (`hub`: tool names, summaries and icons, and the hub's breadcrumb name).
  */
 export function ToolPage({
   slug,
-  h1,
-  intro,
+  content: c,
+  hub,
   children,
-  steps,
-  guide,
-  faqs,
+  rich,
 }: {
   slug: string;
-  h1: string;
-  intro: string;
+  content: ToolPageContent;
+  hub: HubContent;
   children: ReactNode;
-  steps: { title: string; body: string }[];
-  /** Long-form explainer sections below the tool. */
-  guide?: { heading: string; body: ReactNode }[];
-  faqs: ToolFaq[];
+  /** Classes for `code`, **bold** and links in the guide, matching each page's design. */
+  rich?: RichClasses;
 }) {
-  const tool = getTool(slug);
+  const tools = toolsWithCopy(hub);
+  const tool = tools.find((t) => t.slug === slug) ?? withCardCopy(getTool(slug), undefined);
   const path = toolHref(tool);
   const trail = [
     { label: 'Home', href: '/' },
-    { label: 'Free SEO Tools', href: TOOLS_BASE },
+    { label: hub.hero.breadcrumb, href: TOOLS_BASE },
     { label: tool.name },
   ];
-  const related = relatedTools(slug);
-  const category = TOOL_CATEGORIES.find((c) => c.id === tool.category)?.label;
+  const related = c.related.visible ? relatedTools(slug, 4, tools) : [];
+  const steps = c.steps.visible ? c.steps.items : [];
+  const guide = c.guide.visible ? c.guide.parts : [];
+  // A hidden FAQ is left out of the FAQPage data too, so the data matches the page.
+  const faqs = c.faq.visible ? c.faq.items : [];
 
   return (
     <>
@@ -68,7 +110,7 @@ export function ToolPage({
           '@type': 'WebApplication',
           name: tool.name,
           url: `${SITE_URL}${path}`,
-          description: intro,
+          description: c.hero.intro,
           applicationCategory: 'SEO tool',
           operatingSystem: 'Any (runs in the browser)',
           isAccessibleForFree: true,
@@ -82,18 +124,25 @@ export function ToolPage({
             '@type': 'FAQPage',
             mainEntity: faqs.map((f) => ({
               '@type': 'Question',
-              name: f.q,
-              acceptedAnswer: { '@type': 'Answer', text: f.a },
+              name: f.question,
+              acceptedAnswer: { '@type': 'Answer', text: f.answer },
             })),
           }}
         />
       ) : null}
 
-      <PageHero trail={trail} eyebrow={category ?? 'Free SEO Tool'} heading={h1} subheading={intro}>
-        <span className="font-label-sm text-label-sm inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
-          <Icon name={tool.icon} size={16} />
-          Free · No signup
-        </span>
+      <PageHero
+        trail={trail}
+        eyebrow={c.hero.eyebrow || undefined}
+        heading={c.hero.heading}
+        subheading={c.hero.intro}
+      >
+        {c.hero.badge ? (
+          <span className="font-label-sm text-label-sm inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
+            <Icon name={tool.icon} size={16} />
+            {c.hero.badge}
+          </span>
+        ) : null}
       </PageHero>
 
       <div className="container-page py-10 md:py-12">
@@ -101,10 +150,10 @@ export function ToolPage({
 
         {steps.length ? (
           <section className="mt-16">
-            <h2 className="font-headline-md text-headline-md text-on-surface">How it works</h2>
+            <h2 className="font-headline-md text-headline-md text-on-surface">{c.steps.heading}</h2>
             <ol className="mt-6 grid gap-4 md:grid-cols-3">
               {steps.map((step, i) => (
-                <li key={step.title} className="surface-card p-6">
+                <li key={i} className="surface-card p-6">
                   <span className="bg-primary-container text-on-primary font-label-md text-label-md grid size-8 place-items-center rounded-full">
                     {i + 1}
                   </span>
@@ -118,15 +167,15 @@ export function ToolPage({
           </section>
         ) : null}
 
-        {guide?.length ? (
+        {guide.length ? (
           <section className="mt-16 max-w-3xl">
-            {guide.map((section) => (
-              <div key={section.heading} className="mt-10 first:mt-0">
+            {guide.map((section, i) => (
+              <div key={i} className="mt-10 first:mt-0">
                 <h2 className="font-headline-md text-headline-md text-on-surface">
                   {section.heading}
                 </h2>
                 <div className="font-body-md text-body-md text-on-surface-variant mt-4 space-y-4 leading-relaxed">
-                  {section.body}
+                  <RichBlocks text={section.body} classes={rich} />
                 </div>
               </div>
             ))}
@@ -135,20 +184,20 @@ export function ToolPage({
 
         {faqs.length ? (
           <section className="mt-16 max-w-3xl">
-            <h2 className="font-headline-md text-headline-md text-on-surface">
-              Frequently asked questions
-            </h2>
+            <h2 className="font-headline-md text-headline-md text-on-surface">{c.faq.heading}</h2>
             <div className="mt-6 flex flex-col gap-3">
-              {faqs.map((f) => (
-                <details key={f.q} className="surface-card group p-5">
+              {faqs.map((f, i) => (
+                <details key={i} className="surface-card group p-5">
                   <summary className="font-title-md text-title-md text-on-surface flex cursor-pointer list-none items-center justify-between gap-4">
-                    {f.q}
+                    {f.question}
                     <Icon
                       name="expand_more"
                       className="text-secondary transition-transform group-open:rotate-180"
                     />
                   </summary>
-                  <p className="font-body-md text-body-md text-on-surface-variant mt-3">{f.a}</p>
+                  <p className="font-body-md text-body-md text-on-surface-variant mt-3">
+                    {f.answer}
+                  </p>
                 </details>
               ))}
             </div>
@@ -158,7 +207,7 @@ export function ToolPage({
         {related.length ? (
           <section className="mt-16">
             <h2 className="font-headline-md text-headline-md text-on-surface">
-              More free SEO tools
+              {c.related.heading}
             </h2>
             <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {related.map((t) => (
@@ -178,12 +227,14 @@ export function ToolPage({
                 </li>
               ))}
             </ul>
-            <Link
-              href={TOOLS_BASE}
-              className="font-label-md text-label-md text-primary-container hover:text-primary mt-6 inline-flex items-center gap-1 font-semibold"
-            >
-              View all free tools <Icon name="north_east" size={16} />
-            </Link>
+            {c.related.all.label && c.related.all.href ? (
+              <Link
+                href={c.related.all.href}
+                className="font-label-md text-label-md text-primary-container hover:text-primary mt-6 inline-flex items-center gap-1 font-semibold"
+              >
+                {c.related.all.label} <Icon name="north_east" size={16} />
+              </Link>
+            ) : null}
           </section>
         ) : null}
       </div>

@@ -26,9 +26,11 @@ const noMinuteOnServer = () => null;
 export function OpenStatusBadge({
   hours,
   showDetail = false,
+  labels = { open: 'Open now', closed: 'Closed now' },
 }: {
   hours: OpeningHour[];
   showDetail?: boolean;
+  labels?: { open: string; closed: string };
 }) {
   const minute = useSyncExternalStore(subscribe, currentMinute, noMinuteOnServer);
   if (minute === null) return null;
@@ -48,7 +50,7 @@ export function OpenStatusBadge({
           aria-hidden
           className={`size-1.5 rounded-full ${status.open ? 'bg-brand-500' : 'bg-error'}`}
         />
-        {status.open ? 'Open now' : 'Closed now'}
+        {status.open ? labels.open : labels.closed}
       </span>
       {showDetail && status.detail ? (
         <span className="font-body-sm text-body-sm text-secondary">{status.detail}</span>

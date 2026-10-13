@@ -5,6 +5,8 @@ import { useActionState, useEffect, useRef, useState } from 'react';
 import { submitListingReview } from '@/lib/review-actions';
 import type { ReviewFormState } from '@/lib/review-actions';
 import { REVIEW_CRITERIA } from '@/lib/review-criteria';
+import { fillNodes } from '@/components/browse/fill';
+import type { ListingContent } from '@/lib/content/pages/directory';
 
 const INITIAL_STATE: ReviewFormState = { status: 'idle', message: '' };
 
@@ -16,7 +18,15 @@ const INPUT_CLASS =
  * works for everyone to fill in; the action decides whether the visitor is
  * signed in and, if not, sends back what they wrote so nothing is lost.
  */
-export function ReviewForm({ listingId, slug }: { listingId: string; slug: string }) {
+export function ReviewForm({
+  listingId,
+  slug,
+  labels: t,
+}: {
+  listingId: string;
+  slug: string;
+  labels: ListingContent['review_form'];
+}) {
   const [state, formAction, pending] = useActionState(submitListingReview, INITIAL_STATE);
   const messageRef = useRef<HTMLDivElement>(null);
 
@@ -62,20 +72,24 @@ export function ReviewForm({ listingId, slug }: { listingId: string; slug: strin
         >
           <p>{state.message}</p>
           <p className="mt-1">
-            <Link
-              href={`/login?next=${back}`}
-              className="text-primary-container font-medium hover:underline"
-            >
-              Sign in
-            </Link>{' '}
-            or{' '}
-            <Link
-              href={`/register?next=${back}`}
-              className="text-primary-container font-medium hover:underline"
-            >
-              create an account
-            </Link>{' '}
-            — you will come straight back to the reviews.
+            {fillNodes(t.signin, {
+              signin: (
+                <Link
+                  href={`/login?next=${back}`}
+                  className="text-primary-container font-medium hover:underline"
+                >
+                  {t.signin_link}
+                </Link>
+              ),
+              register: (
+                <Link
+                  href={`/register?next=${back}`}
+                  className="text-primary-container font-medium hover:underline"
+                >
+                  {t.register_link}
+                </Link>
+              ),
+            })}
           </p>
         </div>
       ) : null}
@@ -83,28 +97,41 @@ export function ReviewForm({ listingId, slug }: { listingId: string; slug: strin
       <input type="hidden" name="listing_id" value={listingId} />
       <input type="hidden" name="slug" value={slug} />
 
-      <StarRating name="rating" legend="Overall rating" required initial={fields.rating} />
+      <StarRating
+        name="rating"
+        legend={t.rating}
+        required
+        initial={fields.rating}
+        clearLabel={t.clear}
+      />
 
       <fieldset>
         <legend className="font-label-md text-label-md">
-          Rate the details <span className="text-secondary font-normal">(optional)</span>
+          {t.details} <span className="text-secondary font-normal">{t.optional}</span>
         </legend>
         <div className="mt-2 grid gap-4 sm:grid-cols-3">
           {REVIEW_CRITERIA.map(({ key, label }) => (
-            <StarRating key={key} name={key} legend={label} initial={fields[key]} small />
+            <StarRating
+              key={key}
+              name={key}
+              legend={label}
+              initial={fields[key]}
+              small
+              clearLabel={t.clear}
+            />
           ))}
         </div>
       </fieldset>
 
       <label className="block">
         <span className="font-label-md text-label-md">
-          Title <span className="text-secondary font-normal">(optional)</span>
+          {t.title} <span className="text-secondary font-normal">{t.optional}</span>
         </span>
         <input name="title" maxLength={120} defaultValue={fields.title} className={INPUT_CLASS} />
       </label>
 
       <label className="block">
-        <span className="font-label-md text-label-md">Your review</span>
+        <span className="font-label-md text-label-md">{t.body}</span>
         <textarea
           name="body"
           required
@@ -116,16 +143,14 @@ export function ReviewForm({ listingId, slug }: { listingId: string; slug: strin
         />
       </label>
 
-      <p className="font-body-sm text-body-sm text-secondary">
-        Reviews are posted from your RankYouSite account and checked before they appear.
-      </p>
+      <p className="font-body-sm text-body-sm text-secondary">{t.note}</p>
 
       <button
         type="submit"
         disabled={pending}
         className="bg-primary-container text-on-primary hover:bg-primary font-label-md text-label-md focus-visible:ring-primary-container inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:opacity-60"
       >
-        {pending ? 'Submitting…' : 'Submit Review'}
+        {pending ? t.submitting : t.submit}
       </button>
     </form>
   );
@@ -142,12 +167,14 @@ function StarRating({
   initial,
   required = false,
   small = false,
+  clearLabel,
 }: {
   name: string;
   legend: string;
   initial?: string;
   required?: boolean;
   small?: boolean;
+  clearLabel: string;
 }) {
   const [value, setValue] = useState(() => Number(initial) || 0);
   const groupRef = useRef<HTMLFieldSetElement>(null);
@@ -195,7 +222,8 @@ function StarRating({
             onClick={clear}
             className="font-label-sm text-label-sm text-secondary hover:underline"
           >
-            Clear<span className="sr-only"> {legend.toLowerCase()} rating</span>
+            {clearLabel}
+            <span className="sr-only"> {legend.toLowerCase()} rating</span>
           </button>
         ) : null}
       </div>

@@ -1,7 +1,17 @@
 import { signInWithGoogle } from '@/lib/oauth-actions';
+import type { AuthContent } from '@/lib/content/pages/global';
 
 /** "Continue with Google" plus the "or" divider above the email form. */
-export function GoogleSignIn({ next, from }: { next?: string; from: 'login' | 'register' }) {
+export function GoogleSignIn({
+  next,
+  from,
+  content,
+}: {
+  next?: string;
+  from: 'login' | 'register';
+  content: AuthContent['google'];
+}) {
+  if (!content.visible) return null;
   return (
     <>
       <form action={signInWithGoogle} className="mt-6">
@@ -29,7 +39,7 @@ export function GoogleSignIn({ next, from }: { next?: string; from: 'login' | 'r
               d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"
             />
           </svg>
-          Continue with Google
+          {content.button}
         </button>
       </form>
       <div
@@ -37,7 +47,7 @@ export function GoogleSignIn({ next, from }: { next?: string; from: 'login' | 'r
         role="separator"
       >
         <span className="h-px flex-1 bg-[var(--border)]" />
-        or
+        {content.divider}
         <span className="h-px flex-1 bg-[var(--border)]" />
       </div>
     </>

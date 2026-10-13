@@ -5,6 +5,24 @@ import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { getClusterPosts, type BlogCluster } from '@/lib/blog-clusters';
 import { seoMetadata } from '@/lib/seo';
+import { getPageContent } from '@/lib/content/get';
+import type { BlogClusterContent } from '@/lib/content/pages/directory';
+import { fill } from '@/components/browse/fill';
+
+/** The Admin → Content section holding a hub's copy ("business-directory" → business_directory). */
+export function clusterSection(
+  content: Awaited<ReturnType<typeof getPageContent<'blog_clusters'>>>,
+  slug: BlogCluster['slug'],
+): BlogClusterContent {
+  switch (slug) {
+    case 'business-directory':
+      return content.business_directory;
+    case 'seo':
+      return content.seo;
+    case 'digital-marketing':
+      return content.digital_marketing;
+  }
+}
 
 /** Shared generateMetadata body: noindex (but followed) while the cluster has no posts. */
 export async function clusterMetadata(cluster: BlogCluster): Promise<Metadata> {
@@ -21,23 +39,34 @@ export async function clusterMetadata(cluster: BlogCluster): Promise<Metadata> {
 
 /** A guide hub: answer-first intro, the cluster's posts, related service pages and a CTA. */
 export async function BlogClusterPage({ cluster }: { cluster: BlogCluster }) {
-  const posts = await getClusterPosts(cluster.slug);
+  const [posts, content] = await Promise.all([
+    getClusterPosts(cluster.slug),
+    getPageContent('blog_clusters'),
+  ]);
+  const { shared } = content;
+  const c = clusterSection(content, cluster.slug);
+  const links = c.links.filter((l) => l.link.label && l.link.href);
   const trail = [
     { label: 'Home', href: '/' },
-    { label: 'Blog', href: '/blog' },
-    { label: cluster.name },
+    { label: shared.blog_crumb, href: '/blog' },
+    { label: c.name },
   ];
   return (
     <>
       <JsonLd data={breadcrumbSchema(trail, cluster.path)} />
       <PageHero
         trail={trail}
-        eyebrow="Guide hub"
-        heading={cluster.h1}
-        subheading={cluster.intro}
+        eyebrow={shared.eyebrow}
+        heading={c.heading}
+        subheading={c.intro || undefined}
         stats={
           posts.length > 0
-            ? [{ value: posts.length, label: posts.length === 1 ? 'Guide' : 'Guides' }]
+            ? [
+                {
+                  value: posts.length,
+                  label: posts.length === 1 ? shared.stat_guide : shared.stat_guides,
+                },
+              ]
             : undefined
         }
       />
@@ -45,12 +74,17 @@ export async function BlogClusterPage({ cluster }: { cluster: BlogCluster }) {
         <div>
           {posts.length === 0 ? (
             <EmptyState
-              title="Guides coming soon"
-              body="No guides are published here yet. Check back soon, or browse the rest of the blog."
+              title={shared.empty_title}
+              body={shared.empty_body}
               action={
-                <Link href="/blog" className="text-brand-700 font-semibold hover:underline">
-                  Browse all articles
-                </Link>
+                shared.empty_link.label && shared.empty_link.href ? (
+                  <Link
+                    href={shared.empty_link.href}
+                    className="text-brand-700 font-semibold hover:underline"
+                  >
+                    {shared.empty_link.label}
+                  </Link>
+                ) : undefined
               }
             />
           ) : (
@@ -69,7 +103,7 @@ export async function BlogClusterPage({ cluster }: { cluster: BlogCluster }) {
                   ) : null}
                   {p.read_minutes ? (
                     <p className="mt-3 text-xs text-[var(--text-muted)]">
-                      {p.read_minutes} min read
+                      {fill(shared.read_time, { minutes: p.read_minutes })}
                     </p>
                   ) : null}
                 </Link>
@@ -78,27 +112,31 @@ export async function BlogClusterPage({ cluster }: { cluster: BlogCluster }) {
           )}
         </div>
 
-        <section className="mt-16">
-          <h2 className="font-headline-md text-headline-md">Related services</h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-            {cluster.moneyLinks.map((l) => (
-              <li key={l.href}>
-                <Link href={l.href} className="surface-card hover:border-brand-500 block p-4">
-                  <span className="font-title-md text-title-md">{l.label}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {links.length > 0 ? (
+          <section className="mt-16">
+            <h2 className="font-headline-md text-headline-md">{shared.related_heading}</h2>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              {links.map(({ link: l }, i) => (
+                <li key={i}>
+                  <Link href={l.href} className="surface-card hover:border-brand-500 block p-4">
+                    <span className="font-title-md text-title-md">{l.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
-        <div className="mt-12">
-          <Link
-            href={cluster.cta.href}
-            className="bg-primary-container text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex items-center gap-2 rounded-xl px-6 py-3.5 font-semibold shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
-          >
-            {cluster.cta.label}
-          </Link>
-        </div>
+        {c.cta.label && c.cta.href ? (
+          <div className="mt-12">
+            <Link
+              href={c.cta.href}
+              className="bg-primary-container text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex items-center gap-2 rounded-xl px-6 py-3.5 font-semibold shadow-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
+            >
+              {c.cta.label}
+            </Link>
+          </div>
+        ) : null}
       </div>
     </>
   );

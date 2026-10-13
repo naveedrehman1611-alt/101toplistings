@@ -113,7 +113,19 @@ function renderBlock(block: Block, i: number) {
 const INLINE =
   /\[([^\]\n]+)\]\(\s*((?:[^()\s]|\([^()\s]*\))+)\s*\)|\*\*(.{1,500}?)\*\*|__(.{1,500}?)__|\*(?!\s)(.{1,500}?)\*|(?<![A-Za-z0-9])_(?!\s)(.{1,500}?)_(?![A-Za-z0-9])/;
 
-function inline(text: string): ReactNode[] {
+const LINK_CLS = 'text-brand-700 underline hover:no-underline';
+
+/**
+ * One line of editable copy with **bold**, *italic* and [links](/path), for
+ * text inside an existing element: no paragraphs or headings. Links use
+ * plain anchors with the class given, so they can match the
+ * surrounding design.
+ */
+export function InlineMarkdown({ text, linkClassName }: { text: string; linkClassName?: string }) {
+  return <>{inline(text, linkClassName)}</>;
+}
+
+function inline(text: string, linkCls = LINK_CLS): ReactNode[] {
   const out: ReactNode[] = [];
   let rest = text;
   let key = 0;
@@ -129,22 +141,22 @@ function inline(text: string): ReactNode[] {
       const safe = safeHref(href);
       out.push(
         safe ? (
-          <a key={key++} href={safe} className="text-brand-700 underline hover:no-underline">
-            {inline(linkText)}
+          <a key={key++} href={safe} className={linkCls}>
+            {inline(linkText, linkCls)}
           </a>
         ) : (
           // An unsafe link keeps its text and loses the href.
-          <span key={key++}>{inline(linkText)}</span>
+          <span key={key++}>{inline(linkText, linkCls)}</span>
         ),
       );
     } else if (strong !== undefined || strong2 !== undefined) {
       out.push(
         <strong key={key++} className="font-semibold text-[var(--text)]">
-          {inline(strong ?? strong2)}
+          {inline(strong ?? strong2, linkCls)}
         </strong>,
       );
     } else {
-      out.push(<em key={key++}>{inline(em ?? em2)}</em>);
+      out.push(<em key={key++}>{inline(em ?? em2, linkCls)}</em>);
     }
     rest = rest.slice(m.index + whole.length);
   }

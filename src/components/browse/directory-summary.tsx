@@ -1,35 +1,43 @@
 import Link from 'next/link';
 import type { DirectoryFacets, FacetCount } from '@/lib/browse';
+import type { SectionValues } from '@/lib/content/schema';
+import type { DIRECTORY_PAGES } from '@/lib/content/pages/directory';
 import { listingsHref, type ListingsParams } from './href';
 
 const NUMBER = new Intl.NumberFormat('en-US');
 
+export type DirectorySummaryContent = SectionValues<
+  (typeof DIRECTORY_PAGES)['business_directory']['sections']['summary']
+>;
+
 export function DirectorySummary({
   facets,
   params,
+  content: c,
 }: {
   facets: DirectoryFacets;
   params: ListingsParams;
+  content: DirectorySummaryContent;
 }) {
   if (facets.total === 0) return null;
 
   const stats = [
-    { label: 'Listings', value: facets.total },
-    { label: 'Featured', value: facets.featured },
-    { label: 'With phone', value: facets.withPhone },
-    { label: 'Categories', value: facets.categoryCount },
-    { label: 'Cities', value: facets.cityCount },
+    { label: c.stat_listings, value: facets.total },
+    { label: c.stat_featured, value: facets.featured },
+    { label: c.stat_phone, value: facets.withPhone },
+    { label: c.stat_categories, value: facets.categoryCount },
+    { label: c.stat_cities, value: facets.cityCount },
   ];
   const hasChips = facets.topCategories.length > 0 || facets.topCities.length > 0;
 
   return (
     <section aria-labelledby="directory-summary-heading">
       <h2 id="directory-summary-heading" className="font-headline-sm text-headline-sm">
-        Directory at a glance
+        {c.heading}
       </h2>
       <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {stats.map((s) => (
-          <div key={s.label} className="bg-surface-card flex flex-col rounded-2xl p-4 shadow-md">
+        {stats.map((s, i) => (
+          <div key={i} className="bg-surface-card flex flex-col rounded-2xl p-4 shadow-md">
             {/* dt must come first inside the group; order-first puts the
                 number on top visually. */}
             <dt className="font-body-sm text-body-sm text-secondary mt-1">{s.label}</dt>
@@ -43,13 +51,13 @@ export function DirectorySummary({
       {hasChips ? (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <FacetChips
-            heading="Top categories"
+            heading={c.top_categories}
             items={facets.topCategories}
             active={params.category}
             hrefFor={(category) => listingsHref({ ...params, category, page: undefined })}
           />
           <FacetChips
-            heading="Top cities"
+            heading={c.top_cities}
             items={facets.topCities}
             active={params.city}
             hrefFor={(city) => listingsHref({ ...params, city, page: undefined })}

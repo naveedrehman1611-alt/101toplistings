@@ -3,6 +3,7 @@ import type { ListingDetail, ListingImage } from '@/lib/queries';
 import { Icon } from '@/components/icon';
 import { Badge, Stars } from '@/components/ui';
 import { ListingActions } from './listing-actions';
+import type { ListingContent } from '@/lib/content/pages/directory';
 
 /**
  * Cover, badges, name and the at-a-glance facts at the top of a listing page.
@@ -17,6 +18,7 @@ export function ListingHero({
   cover,
   logo,
   shareUrl,
+  labels,
 }: {
   listing: ListingDetail;
   categoryName: string | null;
@@ -24,6 +26,7 @@ export function ListingHero({
   cover: ListingImage | null;
   logo: ListingImage | null;
   shareUrl: string;
+  labels: ListingContent['actions'];
 }) {
   const verified = listing.verification === 'verified';
   const hasBadges = listing.is_featured || verified || Boolean(categoryName);
@@ -57,13 +60,13 @@ export function ListingHero({
           {listing.is_featured ? (
             <span className="bg-badge-gold font-badge text-badge text-on-secondary-fixed inline-flex items-center gap-1 rounded-full px-3 py-1 tracking-wider uppercase shadow-xs">
               <Icon name="star" size={14} />
-              Featured
+              {labels.featured}
             </span>
           ) : null}
           {verified ? (
             <span className="bg-verified-teal font-badge text-badge inline-flex items-center gap-1 rounded-full px-3 py-1 tracking-wider text-white uppercase shadow-xs">
               <Icon name="verified" size={14} />
-              Verified
+              {labels.verified}
             </span>
           ) : null}
           {categoryName ? <Badge>{categoryName}</Badge> : null}
@@ -123,6 +126,7 @@ export function ListingHero({
           slug={listing.slug}
           name={listing.name}
           shareUrl={shareUrl}
+          labels={labels}
         />
       </div>
     </div>

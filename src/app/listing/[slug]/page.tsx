@@ -31,6 +31,7 @@ import { ContactAuthorForm } from '@/components/listing/contact-author-form';
 import { SimilarListings } from '@/components/listing/similar-listings';
 import { SubmitListingCta } from '@/components/listing/submit-listing-cta';
 import { jsonLdHtml } from '@/lib/json-ld';
+import { getPageContent } from '@/lib/content/get';
 import { getCityCountry } from '@/lib/locations';
 
 export const revalidate = 600;
@@ -153,7 +154,8 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
     reviews,
     images,
     similar,
-    settings,
+    c,
+    shared,
     country,
   ] = await Promise.all([
     taxonomyFor(listing),
@@ -161,7 +163,8 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
     getApprovedReviews(listing.id),
     getListingImages(listing.id),
     getSimilarListings(listing),
-    getSettings(),
+    getPageContent('listing_page'),
+    getPageContent('directory_shared'),
     getCityCountry(listing.city_id),
   ]);
 
@@ -268,14 +271,20 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
         cover={images.cover}
         logo={images.logo}
         shareUrl={url}
+        labels={c.actions}
       />
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
         {/* Main column, in the reference order: description, reviews, gallery. */}
         <div className="min-w-0 [&>section:first-child]:mt-0">
-          <ListingDescription text={listing.description} />
-          <ListingReviews listing={listing} reviews={reviews} />
-          <ListingGallery images={images.gallery} name={listing.name} />
+          <ListingDescription text={listing.description} labels={c.description} />
+          <ListingReviews
+            listing={listing}
+            reviews={reviews}
+            labels={c.reviews}
+            formLabels={c.review_form}
+          />
+          <ListingGallery images={images.gallery} name={listing.name} labels={c.gallery} />
         </div>
 
         <aside className="space-y-5">
@@ -283,20 +292,40 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
             listing={listing}
             cityName={city?.name ?? null}
             countryName={country?.name ?? null}
+            labels={c.information}
           />
-          <ListingHours hours={hours} />
-          <ListingCategories
-            categories={[category, subcategory].flatMap((c) =>
-              c ? [{ name: c.name, slug: c.slug }] : [],
-            )}
+          <ListingHours hours={hours} labels={c.hours} />
+          {c.categories.visible ? (
+            <ListingCategories
+              heading={c.categories.heading}
+              categories={[category, subcategory].flatMap((cat) =>
+                cat ? [{ name: cat.name, slug: cat.slug }] : [],
+              )}
+            />
+          ) : null}
+          {c.author.visible ? (
+            <ListingAuthor listing={listing} logo={images.logo} labels={c.author} />
+          ) : null}
+          <ContactAuthorForm
+            listingId={listing.id}
+            slug={listing.slug}
+            name={listing.name}
+            labels={c.contact}
           />
-          <ListingAuthor listing={listing} logo={images.logo} />
-          <ContactAuthorForm listingId={listing.id} slug={listing.slug} name={listing.name} />
         </aside>
       </div>
 
-      <SimilarListings listings={similar} cityNames={cityNames} categories={categoryLinks} />
-      <SubmitListingCta brand={settingText(settings, 'brand.name', 'RankYouSite')} />
+      {c.similar.visible ? (
+        <SimilarListings
+          listings={similar}
+          cityNames={cityNames}
+          categories={categoryLinks}
+          heading={c.similar.heading}
+          cardLabels={shared.cards}
+          statusLabels={{ open: c.hours.open_now, closed: c.hours.closed_now }}
+        />
+      ) : null}
+      {c.cta.visible ? <SubmitListingCta content={c.cta} /> : null}
     </div>
   );
 }

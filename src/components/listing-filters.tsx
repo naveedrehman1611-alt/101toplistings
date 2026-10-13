@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { FiltersContent } from '@/lib/content/pages/directory';
 import { NearMeButton } from './near-me-button';
 
 type Option = { slug: string; name: string; parent_id?: string | null };
@@ -20,6 +21,7 @@ export function ListingFilters({
   cities,
   nearMe,
   near,
+  labels: t,
 }: {
   action: string;
   q?: string;
@@ -34,6 +36,8 @@ export function ListingFilters({
   nearMe?: boolean;
   /** An active location search, kept when the other filters change. */
   near?: { lat: number; lng: number; radius: number };
+  /** Editable copy: Admin → Content → Directory: filters, results and cards. */
+  labels: FiltersContent;
 }) {
   const active = Boolean(q || category || city || near);
   const selectCls =
@@ -51,7 +55,7 @@ export function ListingFilters({
           type="search"
           name="q"
           defaultValue={q}
-          placeholder="Business name or keyword"
+          placeholder={t.keyword_placeholder}
           className={selectCls}
         />
       </label>
@@ -59,7 +63,7 @@ export function ListingFilters({
         <label className="block text-sm">
           <span className="sr-only">Category</span>
           <select name="category" defaultValue={category ?? ''} className={selectCls}>
-            <option value="">All categories</option>
+            <option value="">{t.category_all}</option>
             {categories.map((c) => (
               <option key={c.slug} value={c.slug}>
                 {/* Subcategories follow their parent (getCategories is tree-ordered). */}
@@ -73,7 +77,7 @@ export function ListingFilters({
         <label className="block text-sm">
           <span className="sr-only">City</span>
           <select name="city" defaultValue={city ?? ''} className={selectCls}>
-            <option value="">All cities</option>
+            <option value="">{t.city_all}</option>
             {cities.map((c) => (
               <option key={c.slug} value={c.slug}>
                 {c.name}
@@ -95,12 +99,22 @@ export function ListingFilters({
           type="submit"
           className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 rounded-lg px-5 shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
         >
-          Filter
+          {t.button}
         </button>
-        {nearMe && !near ? <NearMeButton /> : null}
+        {nearMe && !near ? (
+          <NearMeButton
+            label={t.near_me}
+            messages={{
+              busy: t.near_me_busy,
+              unsupported: t.near_me_unsupported,
+              blocked: t.near_me_blocked,
+              failed: t.near_me_failed,
+            }}
+          />
+        ) : null}
         {active ? (
           <Link href={action} className="text-brand-700 text-sm whitespace-nowrap hover:underline">
-            Clear
+            {t.clear}
           </Link>
         ) : null}
       </div>

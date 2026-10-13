@@ -5,6 +5,8 @@ import { getListing } from '@/lib/queries';
 import { submitReport } from '@/lib/public-actions';
 import { REPORT_REASONS } from '@/lib/report-reasons';
 import { Breadcrumbs } from '@/components/ui';
+import { getPageContent } from '@/lib/content/get';
+import { fill, fillNodes } from '@/components/browse/fill';
 
 // Reads ?sent / ?error, so it renders per request; the listing page stays cached.
 export const dynamic = 'force-dynamic';
@@ -22,7 +24,10 @@ export default async function ReportPage({
   searchParams: Promise<{ sent?: string; error?: string }>;
 }) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
-  const listing = await getListing(slug);
+  const [listing, { report: t }] = await Promise.all([
+    getListing(slug),
+    getPageContent('listing_page'),
+  ]);
   if (!listing) notFound();
 
   return (
@@ -31,24 +36,25 @@ export default async function ReportPage({
         trail={[
           { label: 'Home', href: '/' },
           { label: listing.name, href: `/listing/${listing.slug}` },
-          { label: 'Report a problem' },
+          { label: t.heading },
         ]}
       />
       <div className="max-w-xl">
-        <h1 className="font-headline-lg text-headline-lg">Report a problem</h1>
-        <p className="mt-3 text-[var(--text-muted)]">
-          Something wrong with <span className="font-medium">{listing.name}</span>? Let us know and
-          our team will look into it.
-        </p>
+        <h1 className="font-headline-lg text-headline-lg">{t.heading}</h1>
+        {t.intro ? (
+          <p className="mt-3 text-[var(--text-muted)]">
+            {fillNodes(t.intro, { name: <span className="font-medium">{listing.name}</span> })}
+          </p>
+        ) : null}
 
         {sp.sent ? (
           <div className="border-brand-500/40 bg-brand-50 text-brand-800 mt-6 rounded-lg border px-4 py-3 text-sm">
-            <p role="status">Thanks — we&apos;ve received your report and will check it.</p>
+            <p role="status">{t.sent}</p>
             <Link
               href={`/listing/${listing.slug}`}
               className="mt-2 inline-block font-medium hover:underline"
             >
-              ← Back to {listing.name}
+              {fill(t.back, { name: listing.name })}
             </Link>
           </div>
         ) : (
@@ -65,7 +71,7 @@ export default async function ReportPage({
             <input type="hidden" name="slug" value={listing.slug} />
             <input type="hidden" name="listing_name" value={listing.name} />
             <fieldset>
-              <legend className="text-sm font-medium">What&apos;s wrong?</legend>
+              <legend className="text-sm font-medium">{t.reason}</legend>
               <div className="mt-2 space-y-2">
                 {Object.entries(REPORT_REASONS).map(([value, label]) => (
                   <label
@@ -85,17 +91,17 @@ export default async function ReportPage({
               </div>
             </fieldset>
             <label className="block text-sm">
-              <span className="font-medium">Details</span>
+              <span className="font-medium">{t.details}</span>
               <textarea
                 name="details"
                 maxLength={3000}
                 rows={4}
-                placeholder="For example, the correct phone number or address."
+                placeholder={t.details_placeholder}
                 className="focus:border-primary-container focus:ring-primary-container/20 mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 outline-hidden focus:ring-2"
               />
             </label>
             <label className="block text-sm">
-              <span className="font-medium">Your email (optional)</span>
+              <span className="font-medium">{t.email}</span>
               <input
                 name="email"
                 type="email"
@@ -103,9 +109,7 @@ export default async function ReportPage({
                 autoComplete="email"
                 className="focus:border-primary-container focus:ring-primary-container/20 mt-1 h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 outline-hidden focus:ring-2"
               />
-              <span className="mt-1 block text-xs text-[var(--text-muted)]">
-                Only if you&apos;d like us to follow up with you.
-              </span>
+              <span className="mt-1 block text-xs text-[var(--text-muted)]">{t.email_hint}</span>
             </label>
             {/* Honeypot: hidden from people, filled in by bots. */}
             <div aria-hidden className="hidden">
@@ -118,7 +122,7 @@ export default async function ReportPage({
               type="submit"
               className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container h-11 rounded-lg px-6 shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
             >
-              Send report
+              {t.submit}
             </button>
           </form>
         )}

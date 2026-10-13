@@ -8,6 +8,9 @@ import { Markdown } from '@/components/markdown';
 import { redirectOrNotFound } from '@/lib/redirects';
 import { jsonLdHtml } from '@/lib/json-ld';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
+import { InlineMarkdown } from '@/components/markdown';
+import { getPageContent } from '@/lib/content/get';
+import { fill } from '@/components/browse/fill';
 
 export const revalidate = 600;
 
@@ -43,7 +46,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   // A retired slug may have a stored redirect; otherwise this renders the 404.
   if (!post) return redirectOrNotFound(`/blog/${encodeURIComponent(slug)}`);
 
-  const all = await getBlogPosts();
+  const [all, { hero, footer, related: relatedCopy }] = await Promise.all([
+    getBlogPosts(),
+    getPageContent('blog_post'),
+  ]);
   const related = all.filter((p) => p.slug !== post.slug).slice(0, 3);
 
   const jsonLd = {
@@ -57,7 +63,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   const trail = [
     { label: 'Home', href: '/' },
-    { label: 'Blog', href: '/blog' },
+    { label: hero.blog_crumb, href: '/blog' },
     { label: post.title },
   ];
 
@@ -68,32 +74,32 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdHtml(jsonLd)} />
       <PageHero
         trail={trail}
-        eyebrow="From the blog"
+        eyebrow={hero.eyebrow}
         heading={post.title}
         subheading={post.standfirst || undefined}
       >
         {post.read_minutes ? (
-          <p className="text-sm text-white/70">{post.read_minutes} min read</p>
+          <p className="text-sm text-white/70">
+            {fill(hero.read_time, { minutes: post.read_minutes })}
+          </p>
         ) : null}
       </PageHero>
       <div className="container-page py-10 md:py-12">
         <article className="mx-auto max-w-2xl">
           <div>{post.body ? <Markdown source={post.body} /> : null}</div>
-          <p className="border-border-subtle mt-10 border-t pt-6 text-[var(--text-muted)]">
-            <Link href="/seo-services" className="text-brand-700 font-semibold hover:underline">
-              Need help with SEO?
-            </Link>{' '}
-            or{' '}
-            <Link href="/add-business" className="text-brand-700 font-semibold hover:underline">
-              list your business
-            </Link>
-            .
-          </p>
+          {footer.visible && footer.text ? (
+            <p className="border-border-subtle mt-10 border-t pt-6 text-[var(--text-muted)]">
+              <InlineMarkdown
+                text={footer.text}
+                linkClassName="text-brand-700 font-semibold hover:underline"
+              />
+            </p>
+          ) : null}
         </article>
 
-        {related.length > 0 ? (
+        {related.length > 0 && relatedCopy.visible ? (
           <section className="mx-auto mt-16 max-w-2xl">
-            <h2 className="font-headline-sm text-headline-sm">Related articles</h2>
+            <h2 className="font-headline-sm text-headline-sm">{relatedCopy.heading}</h2>
             <ul className="mt-4 space-y-2">
               {related.map((p) => (
                 <li key={p.id}>

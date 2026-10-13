@@ -1,10 +1,13 @@
 import type { IconName } from '@/components/icon';
 import type { HubCategoryId } from '@/lib/service-pages';
+import type { SectionValues } from '@/lib/content/schema';
+import type { SERVICES_PAGES } from '@/lib/content/pages/services';
 
 /**
  * Section headers for the /seo-services hub, in page order. Which services sit
  * in each section comes from ServicePage.hub; the industry section renders as
- * compact tiles instead of cards.
+ * compact tiles instead of cards. The titles here are the defaults; the page
+ * reads the edited ones through hubTitle().
  */
 
 export type HubCategory = {
@@ -28,3 +31,19 @@ export const HUB_CATEGORIES: HubCategory[] = [
 
 /** Sections whose first card is not the navy featured card, as on the reference page. */
 export const UNFEATURED_HUBS: HubCategoryId[] = ['specialty'];
+
+type HubSections = (typeof SERVICES_PAGES)['seo_services']['sections'];
+type HubContent = {
+  groups: SectionValues<HubSections['groups']>;
+  industries: SectionValues<HubSections['industries']>;
+};
+
+/** A hub section's heading as edited in Admin → Content (SEO services hub). */
+export function hubTitle(content: HubContent, id: HubCategoryId): string {
+  return id === 'industry' ? content.industries.heading : content.groups[`${id}_title`];
+}
+
+/** A hub section's header icon as edited in Admin → Content (SEO services hub). */
+export function hubIcon(content: HubContent, id: HubCategoryId): IconName {
+  return id === 'industry' ? content.industries.icon : content.groups[`${id}_icon`];
+}

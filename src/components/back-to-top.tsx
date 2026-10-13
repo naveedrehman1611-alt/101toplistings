@@ -62,10 +62,16 @@ export function BackToTop() {
 }
 
 /** The footer's inline "Back to Top" button: always visible, same scroll and focus handling. */
-export function BackToTopLink({ className = '' }: { className?: string }) {
+export function BackToTopLink({
+  label = 'Back to Top',
+  className = '',
+}: {
+  label?: string;
+  className?: string;
+}) {
   return (
     <button type="button" onClick={toTop} className={className}>
-      <span aria-hidden>↑</span> Back to Top
+      <span aria-hidden>↑</span> {label}
     </button>
   );
 }
