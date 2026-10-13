@@ -21,7 +21,7 @@ export default function Error({
     <div className="container-page grid min-h-[60vh] place-items-center py-20 text-center">
       <div className="max-w-md">
         <span className="bg-surface-container text-primary-container mx-auto grid size-14 place-items-center rounded-xl">
-          <Icon name="error" size={28} />
+          <Icon name={c.icon} size={28} />
         </span>
         <p className="font-label-sm text-label-sm text-primary-container mt-6 tracking-wider uppercase">
           {c.eyebrow}

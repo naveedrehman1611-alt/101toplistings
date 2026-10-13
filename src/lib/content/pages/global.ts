@@ -1,6 +1,7 @@
 import {
   definePage,
   defineSection,
+  icon,
   image,
   link,
   list,
@@ -360,6 +361,7 @@ const not_found = defineSection({
   description: 'Shown for any address that does not exist.',
   hideable: false,
   fields: {
+    icon: icon('Icon', 'travel_explore', 'Shown in the green square above the heading.'),
     eyebrow: text('Small label above the heading', '404', { max: 30 }),
     heading: text('Heading', 'Page not found', { max: 80 }),
     text: textarea(
@@ -387,6 +389,7 @@ const error = defineSection({
   description: 'Shown when a page fails to load because of a problem on the server.',
   hideable: false,
   fields: {
+    icon: icon('Icon', 'error', 'Shown in the green square above the heading.'),
     eyebrow: text('Small label above the heading', 'Error', { max: 30 }),
     heading: text('Heading', "This page didn't load", { max: 80 }),
     text: textarea(
