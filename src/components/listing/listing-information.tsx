@@ -35,7 +35,7 @@ function coordinates(lat: number | null, lng: number | null) {
   return { lat: la, lng: lo };
 }
 
-/** The street address, with the city added unless the address already names it. */
+/** The address with a place (city or country) added, unless the address already names it. */
 function fullAddress(address: string | null, city: string | null): string | null {
   const a = address?.trim();
   if (!a) return null;
@@ -58,10 +58,12 @@ const linkClass = 'text-primary-container hover:underline';
 export function ListingInformation({
   listing,
   cityName,
+  countryName,
   labels,
 }: {
   listing: ListingDetail;
   cityName: string | null;
+  countryName: string | null;
   labels: ListingContent['information'];
 }) {
   const coords = coordinates(listing.latitude, listing.longitude);
@@ -95,9 +97,9 @@ export function ListingInformation({
         .join(',')
     : '';
   // Without coordinates, route to the written address as shown above (street and
-  // city, never the city twice) plus the country, so a bare street name is not
-  // matched somewhere else.
-  const place = address ? (/pakistan/i.test(address) ? address : `${address}, Pakistan`) : null;
+  // city, never the city twice) plus the listing's own country, so a bare street
+  // name is not matched somewhere else.
+  const place = address ? fullAddress(address, countryName) : null;
   const directions = coords
     ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
     : place

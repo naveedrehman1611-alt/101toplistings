@@ -109,7 +109,7 @@ const story = defineSection({
     heading: text('Heading', 'Find Trusted Local Businesses Worldwide', { max: 120 }),
     intro: textarea(
       'Intro text',
-      'Your one-stop commercial directory to discover verified services, check real-time business details, and connect directly with local providers in your city and beyond.',
+      'Local businesses in Pakistan, the UK, the US, the UAE and Europe. Search for what you need where you are, then contact the business directly: we do not sit in between.',
       { max: 500 },
     ),
     highlights: list('Highlights', {
@@ -125,17 +125,17 @@ const story = defineSection({
         {
           icon: 'travel_explore',
           title: 'Discover & Compare',
-          body: 'Quickly narrow searches by city, category, or service type to find matching providers.',
+          body: 'Pick a city and a category, then open any listing for its address, opening hours and reviews.',
         },
         {
           icon: 'verified',
           title: 'Verified Profiles',
-          body: 'Inspect authentic contact info, locations, working hours, and genuine customer feedback.',
+          body: 'Verified badges mark businesses our team has checked, and anyone can report a listing that is wrong.',
         },
         {
           icon: 'storefront',
           title: 'Free Growth for Owners',
-          body: 'Free business listings give local entrepreneurs nationwide online reach without middleman fees.',
+          body: 'Listing a business is free in every country we cover. Owners manage photos, hours and services from their dashboard.',
         },
       ],
     }),

@@ -1,5 +1,11 @@
 import type { Metadata } from 'next';
-import { getCategories, getCities, getCityBySlug, searchListings } from '@/lib/queries';
+import {
+  getCategories,
+  getCities,
+  getCityBySlug,
+  getCityListingCounts,
+  searchListings,
+} from '@/lib/queries';
 import { Results, parsePage, parseSort } from '@/components/results';
 import { ListingFilters } from '@/components/listing-filters';
 import { SITE_URL } from '@/lib/supabase';
@@ -26,15 +32,19 @@ export async function generateMetadata({
   const { slug } = await params;
   const city = await getCityBySlug(slug);
   if (!city) return { title: 'Not found' };
-  const listings = await searchListings({ cityId: city.id, limit: 1 });
-  const count = Number(listings[0]?.total_count ?? 0);
+  // A count that failed to load is left undefined, so a database blip does not
+  // noindex the page (the sitemap leaves such a city out for the same reason).
+  const count = (await getCityListingCounts([city.id])).get(city.id);
   const title = `Businesses in ${city.name}`;
   const description = city.intro_copy ?? `Local businesses listed in ${city.name}.`;
   return {
     title,
     description,
     alternates: { canonical: `${SITE_URL}/city/${city.slug}` },
-    robots: count < MIN_CITY_LISTINGS_TO_INDEX ? { index: false, follow: true } : undefined,
+    robots:
+      count !== undefined && count < MIN_CITY_LISTINGS_TO_INDEX
+        ? { index: false, follow: true }
+        : undefined,
     openGraph: { title, description, url: `${SITE_URL}/city/${city.slug}`, images: [SHARE_IMAGE] },
     twitter: { card: 'summary_large_image', title, description, images: [SHARE_IMAGE] },
   };

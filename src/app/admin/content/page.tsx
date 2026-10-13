@@ -37,7 +37,7 @@ export default async function AdminContent({
         error={
           sp.error ??
           (error
-            ? `Could not read saved content: ${error.message}. Has migration 0026 been applied?`
+            ? `Could not read saved content: ${error.message}. Has migration 0027 been applied?`
             : undefined)
         }
       />

@@ -1,4 +1,4 @@
--- 0026 — site content overrides
+-- 0027 — site content overrides
 --
 -- Every piece of copy, every link and every image on the public pages has a
 -- default in code (src/lib/content/pages/*.ts). A row here overrides one

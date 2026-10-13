@@ -35,8 +35,9 @@ export const SEO_ROUTES = [
   { route: '/contact', label: 'Contact' },
   { route: '/privacy', label: 'Privacy policy' },
   { route: '/terms', label: 'Terms of use' },
-  // Always noindex and disallowed in robots.ts: result pages are thin and
-  // endless. Its title and description can still be changed.
+  // Always noindex: result pages are thin and endless. Not disallowed in
+  // robots.ts, so crawlers can read that noindex. Its title and description
+  // can still be changed.
   { route: '/search', label: 'Search' },
 ] as const;
 
@@ -59,14 +60,15 @@ export type SeoOverride = {
  * never submitted while it asks not to be indexed, and it joins the sitemap on
  * its own once enough listings are approved.
  */
-export const MIN_CITY_LISTINGS_TO_INDEX = 3;
+export const MIN_CITY_LISTINGS_TO_INDEX = 5;
 
 /**
- * The same rule for category pages: one with no approved listings renders
- * only an empty state, so it is noindex and out of the sitemap until a
- * listing is approved into it (or any of its subcategories).
+ * The same rule for category pages: one with only a handful of approved
+ * listings is a near-empty page repeated across the taxonomy, so it is noindex
+ * and out of the sitemap until enough listings are approved into it (or any of
+ * its subcategories).
  */
-export const MIN_CATEGORY_LISTINGS_TO_INDEX = 1;
+export const MIN_CATEGORY_LISTINGS_TO_INDEX = 5;
 
 /**
  * The site-wide share image (src/app/opengraph-image.tsx). The root file only

@@ -20,7 +20,7 @@ import {
 } from './content/schema';
 
 // Admin → Content. Each action re-checks the role: a Server Action is a public
-// endpoint, so the admin layout's check does not protect it. RLS (0026)
+// endpoint, so the admin layout's check does not protect it. RLS (0027)
 // enforces it a third time.
 
 function editorUrl(page: string, section: string, outcome: { ok?: string; error?: string }) {
