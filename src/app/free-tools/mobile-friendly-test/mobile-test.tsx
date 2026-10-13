@@ -26,6 +26,10 @@ import {
   type CategoryId,
   type Report,
 } from '@/lib/pagespeed';
+import type { ToolLabels } from '@/components/tools/tool-page';
+import { fill } from '@/components/tools/rich-text';
+
+type Labels = ToolLabels<'tool_mobile_friendly'>;
 
 const SCOPE = 'mobile';
 // Best practices is included because viewport, image-aspect-ratio and
@@ -116,16 +120,21 @@ function evaluate(report: Report, check: Check): Row {
 
 const statusStyle: Record<
   Status,
-  { icon: 'check_circle' | 'error' | 'report' | 'visibility'; cls: string; word: string }
+  {
+    icon: 'check_circle' | 'error' | 'report' | 'visibility';
+    cls: string;
+    /** The label (Admin → Content) naming this result. */
+    word: `status_${'pass' | 'warn' | 'fail' | 'na' | 'missing'}`;
+  }
 > = {
-  pass: { icon: 'check_circle', cls: 'text-primary-container', word: 'Pass' },
-  warn: { icon: 'report', cls: 'text-amber-700', word: 'Needs work' },
-  fail: { icon: 'error', cls: 'text-error', word: 'Fail' },
-  na: { icon: 'check_circle', cls: 'text-secondary', word: 'Not applicable' },
-  missing: { icon: 'visibility', cls: 'text-secondary', word: 'Not reported' },
+  pass: { icon: 'check_circle', cls: 'text-primary-container', word: 'status_pass' },
+  warn: { icon: 'report', cls: 'text-amber-700', word: 'status_warn' },
+  fail: { icon: 'error', cls: 'text-error', word: 'status_fail' },
+  na: { icon: 'check_circle', cls: 'text-secondary', word: 'status_na' },
+  missing: { icon: 'visibility', cls: 'text-secondary', word: 'status_missing' },
 };
 
-export function MobileTest() {
+export function MobileTest({ labels: l }: { labels: Labels }) {
   const [input, setInput] = useState('');
   const [inputError, setInputError] = useState<string | null>(null);
   const [lastUrl, setLastUrl] = useState<string | null>(null);
@@ -151,14 +160,14 @@ export function MobileTest() {
         <form onSubmit={start} noValidate className="flex flex-col gap-4 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1">
             <label htmlFor="mobile-url" className={labelClass}>
-              Page URL
+              {l.url_label}
             </label>
             <input
               id="mobile-url"
               type="url"
               inputMode="url"
               autoComplete="url"
-              placeholder="https://example.com"
+              placeholder={l.url_placeholder}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               aria-invalid={inputError ? true : undefined}
@@ -168,7 +177,7 @@ export function MobileTest() {
           </div>
           <button type="submit" disabled={running} className={primaryButtonClass}>
             <Icon name="smartphone" size={18} />
-            {running ? 'Testing…' : 'Test on mobile'}
+            {running ? l.running : l.run}
           </button>
         </form>
         {inputError ? (
@@ -180,12 +189,13 @@ export function MobileTest() {
 
       <div aria-live="polite" className="flex flex-col gap-6">
         {state.status === 'running' ? (
-          <ProgressPanel url={state.url} elapsed={elapsed} onCancel={cancel} />
+          <ProgressPanel url={state.url} elapsed={elapsed} onCancel={cancel} labels={l} />
         ) : null}
         {state.status === 'error' ? (
           <ErrorPanel
             message={state.message}
             onRetry={lastUrl ? () => void run(lastUrl, 'mobile', false) : undefined}
+            labels={l}
           />
         ) : null}
         {state.status === 'done' ? (
@@ -193,6 +203,7 @@ export function MobileTest() {
             report={state.report}
             cached={state.cached}
             onRerun={() => void run(state.report.requestedUrl, 'mobile', false)}
+            labels={l}
           />
         ) : null}
       </div>
@@ -204,10 +215,12 @@ function Results({
   report,
   cached,
   onRerun,
+  labels: l,
 }: {
   report: Report;
   cached: boolean;
   onRerun: () => void;
+  labels: Labels;
 }) {
   const layout = LAYOUT_CHECKS.map((c) => evaluate(report, c));
   const speed = SPEED_CHECKS.map((c) => evaluate(report, c));
@@ -228,16 +241,15 @@ function Results({
     <>
       <ToolCard>
         <div className="grid gap-6 md:grid-cols-[auto_1fr] md:items-start">
-          <PhoneFrame report={report} />
+          <PhoneFrame report={report} noScreenshot={l.no_screenshot} />
           <div className="min-w-0">
             {verdict === 'yes' ? (
               <div className="bg-brand-50 rounded-xl p-5">
                 <p className="font-headline-md text-headline-md text-primary-container flex items-center gap-2">
-                  <Icon name="verified" size={28} /> Mobile-friendly
+                  <Icon name="verified" size={28} /> {l.verdict_yes}
                 </p>
                 <p className="font-body-md text-body-md text-on-surface-variant mt-2">
-                  The page sets a responsive viewport and passes the critical layout checks
-                  Lighthouse reported.
+                  {l.verdict_yes_body}
                   {otherIssues.length
                     ? ` There ${otherIssues.length === 1 ? 'is 1 item' : `are ${otherIssues.length} items`} worth improving below.`
                     : ''}
@@ -246,25 +258,24 @@ function Results({
             ) : verdict === 'no' ? (
               <div className="bg-error-container rounded-xl p-5">
                 <p className="font-headline-md text-headline-md text-error flex items-center gap-2">
-                  <Icon name="error" size={28} /> Not mobile-friendly
+                  <Icon name="error" size={28} /> {l.verdict_no}
                 </p>
                 <ul className="font-body-md text-body-md text-on-surface mt-2 list-disc space-y-1 pl-5">
-                  {viewport.status !== 'pass' ? <li>No working responsive viewport tag.</li> : null}
+                  {viewport.status !== 'pass' ? <li>{l.no_viewport}</li> : null}
                   {criticalFails
                     .filter((r) => r !== viewport)
                     .map((r) => (
-                      <li key={r.label}>{r.label}: failed</li>
+                      <li key={r.label}>{fill(l.check_failed, { check: r.label })}</li>
                     ))}
                 </ul>
               </div>
             ) : (
               <div className="bg-surface-container-low rounded-xl p-5">
                 <p className="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
-                  <Icon name="report" size={28} /> Inconclusive
+                  <Icon name="report" size={28} /> {l.verdict_unknown}
                 </p>
                 <p className="font-body-md text-body-md text-on-surface-variant mt-2">
-                  Lighthouse did not report the viewport check for this page, so we cannot give a
-                  verdict. Review the rows below or try again.
+                  {l.verdict_unknown_body}
                 </p>
               </div>
             )}
@@ -273,12 +284,12 @@ function Results({
               {report.finalUrl}
             </p>
             <p className="font-body-sm text-body-sm text-secondary mt-1">
-              Tested on an emulated phone {formatTestedAt(report.fetchTime)}
-              {cached ? ' · cached result (under 10 minutes old)' : ''}
+              {fill(l.tested, { date: formatTestedAt(report.fetchTime) })}
+              {cached ? ` · ${l.cached}` : ''}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <button type="button" onClick={onRerun} className={secondaryButtonClass}>
-                Re-run
+                {l.rerun}
               </button>
               <a
                 href={pageSpeedReportUrl(report.requestedUrl, 'mobile')}
@@ -286,7 +297,7 @@ function Results({
                 rel="noopener noreferrer"
                 className={secondaryButtonClass}
               >
-                Full report on PageSpeed Insights <Icon name="north_east" size={16} />
+                {l.full_report} <Icon name="north_east" size={16} />
               </a>
             </div>
 
@@ -300,28 +311,24 @@ function Results({
       </ToolCard>
 
       <ToolCard>
-        <h3 className="font-title-md text-title-md text-on-surface">
-          Mobile layout &amp; usability
-        </h3>
-        <CheckList rows={layout} />
+        <h3 className="font-title-md text-title-md text-on-surface">{l.layout_heading}</h3>
+        <CheckList rows={layout} labels={l} />
       </ToolCard>
 
       <ToolCard>
-        <h3 className="font-title-md text-title-md text-on-surface">Mobile speed (lab data)</h3>
-        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-          Measured by Lighthouse on a throttled mid-range phone.
-        </p>
-        <CheckList rows={speed} />
+        <h3 className="font-title-md text-title-md text-on-surface">{l.speed_heading}</h3>
+        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">{l.speed_intro}</p>
+        <CheckList rows={speed} labels={l} />
       </ToolCard>
 
       <ToolCard>
-        <FieldDataPanel field={report.field} only={['LCP', 'INP', 'CLS']} />
+        <FieldDataPanel field={report.field} only={['LCP', 'INP', 'CLS']} labels={l} />
       </ToolCard>
     </>
   );
 }
 
-function CheckList({ rows }: { rows: Row[] }) {
+function CheckList({ rows, labels: l }: { rows: Row[]; labels: Labels }) {
   return (
     <ul className="divide-border-subtle mt-3 divide-y">
       {rows.map((r) => {
@@ -333,19 +340,17 @@ function CheckList({ rows }: { rows: Row[] }) {
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                 <p className="font-title-md text-title-md text-on-surface">{r.label}</p>
                 <p className={`font-label-md text-label-md ${s.cls}`}>
-                  {s.word}
+                  {l[s.word]}
                   {r.audit?.displayValue ? ` · ${r.audit.displayValue}` : ''}
                 </p>
               </div>
               <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 break-words">
-                {r.status === 'missing'
-                  ? 'This Lighthouse version did not report this check, so it is not counted against the page. '
-                  : null}
+                {r.status === 'missing' ? `${l.missing_note} ` : null}
                 {r.why}
               </p>
               {r.audit && (r.status === 'fail' || r.status === 'warn') && r.audit.description ? (
                 <p className="font-body-sm text-body-sm text-secondary mt-1 break-words">
-                  Lighthouse: <LhText text={r.audit.description} />
+                  {l.lighthouse_prefix} <LhText text={r.audit.description} />
                 </p>
               ) : null}
             </div>
@@ -356,7 +361,7 @@ function CheckList({ rows }: { rows: Row[] }) {
   );
 }
 
-function PhoneFrame({ report }: { report: Report }) {
+function PhoneFrame({ report, noScreenshot }: { report: Report; noScreenshot: string }) {
   return (
     <div className="mx-auto w-[200px] shrink-0">
       <div className="bg-on-surface rounded-[2rem] p-2.5 shadow-md">
@@ -373,7 +378,7 @@ function PhoneFrame({ report }: { report: Report }) {
             />
           ) : (
             <div className="font-body-sm text-body-sm text-secondary grid aspect-[9/19] place-items-center p-4 text-center">
-              No screenshot returned
+              {noScreenshot}
             </div>
           )}
         </div>

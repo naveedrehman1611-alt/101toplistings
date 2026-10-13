@@ -12,6 +12,28 @@ import {
   type Strategy,
 } from '@/lib/pagespeed';
 import { secondaryButtonClass } from '@/components/tools/tool-ui';
+import { fill } from '@/components/tools/rich-text';
+
+/**
+ * Copy for the panels below, from the speed and mobile tests' content in
+ * Admin → Content (lighthouseFields() in src/lib/content/pages/tools.ts).
+ */
+export type LighthouseLabels = {
+  progress: string;
+  cancel: string;
+  stage_1: string;
+  stage_2: string;
+  stage_3: string;
+  stage_4: string;
+  stage_5: string;
+  progress_note: string;
+  error_heading: string;
+  retry: string;
+  field_heading: string;
+  field_origin: string;
+  field_intro: string;
+  field_none: string;
+};
 
 // ---------- Score colours ----------
 
@@ -163,27 +185,26 @@ const fieldWord: Record<string, string> = {
 export function FieldDataPanel({
   field,
   only,
+  labels: l,
 }: {
   field: FieldData | null;
   only?: ('LCP' | 'INP' | 'CLS' | 'FCP' | 'TTFB')[];
+  labels: LighthouseLabels;
 }) {
   const metrics = field?.metrics.filter((m) => !only || only.includes(m.key)) ?? [];
   return (
     <div>
       <h3 className="font-title-md text-title-md text-on-surface flex flex-wrap items-center gap-2">
-        Real-user data (Chrome UX Report)
+        {l.field_heading}
         {field?.isOrigin ? (
           <span className="bg-surface-container-low font-label-sm text-label-sm text-secondary rounded-full px-2 py-0.5">
-            whole site (origin)
+            {l.field_origin}
           </span>
         ) : null}
       </h3>
       {metrics.length ? (
         <>
-          <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-            75th-percentile experience of real Chrome users over the last 28 days. This is what
-            Google uses for the Core Web Vitals ranking signal.
-          </p>
+          <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">{l.field_intro}</p>
           <ul className="mt-4 grid gap-3 sm:grid-cols-3">
             {metrics.map((m) => {
               const tone = fieldTone[m.category];
@@ -207,10 +228,7 @@ export function FieldDataPanel({
           </ul>
         </>
       ) : (
-        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
-          Not enough real-user traffic for Google to publish field data for this page or site yet.
-          Use the lab data below as your guide.
-        </p>
+        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">{l.field_none}</p>
       )}
     </div>
   );
@@ -302,22 +320,24 @@ export function usePageSpeedRun(scope: string, categories?: CategoryId[]) {
 
 // ---------- Progress & error panels ----------
 
-function stageFor(seconds: number) {
-  if (seconds < 5) return 'Sending your page to Google’s Lighthouse servers…';
-  if (seconds < 15) return 'Loading the page on a throttled test device…';
-  if (seconds < 30) return 'Measuring paint, layout shift and blocking time…';
-  if (seconds < 50) return 'Running accessibility, SEO and best-practice audits…';
-  return 'Still working: heavy pages can take up to a minute and a half…';
+function stageFor(seconds: number, l: LighthouseLabels) {
+  if (seconds < 5) return l.stage_1;
+  if (seconds < 15) return l.stage_2;
+  if (seconds < 30) return l.stage_3;
+  if (seconds < 50) return l.stage_4;
+  return l.stage_5;
 }
 
 export function ProgressPanel({
   url,
   elapsed,
   onCancel,
+  labels: l,
 }: {
   url: string;
   elapsed: number;
   onCancel: () => void;
+  labels: LighthouseLabels;
 }) {
   const pct = Math.min(95, Math.round((elapsed / 45) * 100));
   return (
@@ -326,13 +346,13 @@ export function ProgressPanel({
         <div className="min-w-0">
           <p className="font-title-md text-title-md text-on-surface flex items-center gap-2">
             <Icon name="schedule" size={20} className="text-primary-container animate-pulse" />
-            Testing… {elapsed}s
+            {fill(l.progress, { seconds: elapsed })}
           </p>
           <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 break-all">{url}</p>
         </div>
         <button type="button" onClick={onCancel} className={secondaryButtonClass}>
           <Icon name="close" size={18} />
-          Cancel
+          {l.cancel}
         </button>
       </div>
       <div className="bg-surface-container-low mt-4 h-2 overflow-hidden rounded-full" aria-hidden>
@@ -341,25 +361,33 @@ export function ProgressPanel({
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="font-body-sm text-body-sm text-on-surface-variant mt-3">{stageFor(elapsed)}</p>
-      <p className="font-body-sm text-body-sm text-secondary mt-1">
-        Tests usually take 10–60 seconds. You can keep reading below while you wait.
+      <p className="font-body-sm text-body-sm text-on-surface-variant mt-3">
+        {stageFor(elapsed, l)}
       </p>
+      <p className="font-body-sm text-body-sm text-secondary mt-1">{l.progress_note}</p>
     </div>
   );
 }
 
-export function ErrorPanel({ message, onRetry }: { message: string; onRetry?: () => void }) {
+export function ErrorPanel({
+  message,
+  onRetry,
+  labels: l,
+}: {
+  message: string;
+  onRetry?: () => void;
+  labels: LighthouseLabels;
+}) {
   return (
     <div className="bg-error-container border-error/20 rounded-xl border p-5" role="alert">
       <p className="font-title-md text-title-md text-on-surface flex items-center gap-2">
         <Icon name="error" size={20} className="text-error" />
-        The test could not finish
+        {l.error_heading}
       </p>
       <p className="font-body-md text-body-md text-on-surface mt-2 break-words">{message}</p>
       {onRetry ? (
         <button type="button" onClick={onRetry} className={`${secondaryButtonClass} mt-4`}>
-          Try again
+          {l.retry}
         </button>
       ) : null}
     </div>

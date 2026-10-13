@@ -21,7 +21,15 @@ export function ToolCard({ children, className }: { children: ReactNode; classNa
 }
 
 /** Copies `text` and confirms for two seconds. */
-export function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
+export function CopyButton({
+  text,
+  label = 'Copy',
+  copiedLabel = 'Copied',
+}: {
+  text: string;
+  label?: string;
+  copiedLabel?: string;
+}) {
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -39,7 +47,7 @@ export function CopyButton({ text, label = 'Copy' }: { text: string; label?: str
       className={secondaryButtonClass}
     >
       <Icon name={copied ? 'check_circle' : 'content_copy'} size={18} />
-      <span aria-live="polite">{copied ? 'Copied' : label}</span>
+      <span aria-live="polite">{copied ? copiedLabel : label}</span>
     </button>
   );
 }

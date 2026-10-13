@@ -4,6 +4,10 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { Icon } from '@/components/icon';
 import { ToolCard, inputClass, labelClass, secondaryButtonClass } from '@/components/tools/tool-ui';
 import { analyse, type Phrase } from '@/lib/keyword-density';
+import type { ToolLabels } from '@/components/tools/tool-page';
+import { RichInline, fill } from '@/components/tools/rich-text';
+
+type Labels = ToolLabels<'tool_keyword_density'>;
 
 const LOOKS_LIKE_HTML =
   /<(!doctype|html|head|body|p|div|span|a|h[1-6]|ul|ol|li|article|section|main|title|meta|br|img|table)\b/i;
@@ -60,13 +64,11 @@ function Check({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   );
 }
 
-function PhraseTable({ rows, n }: { rows: Phrase[]; n: 1 | 2 | 3 }) {
+function PhraseTable({ rows, n, labels: l }: { rows: Phrase[]; n: 1 | 2 | 3; labels: Labels }) {
   if (!rows.length) {
     return (
       <p className="font-body-sm text-body-sm text-on-surface-variant py-6 text-center">
-        {n === 1
-          ? 'No keywords yet. Paste some content above.'
-          : `No ${n}-word phrase appears more than once yet.`}
+        {n === 1 ? l.no_keywords : fill(l.no_phrases, { n })}
       </p>
     );
   }
@@ -80,16 +82,16 @@ function PhraseTable({ rows, n }: { rows: Phrase[]; n: 1 | 2 | 3 }) {
               #
             </th>
             <th scope="col" className="py-2 pr-2 font-medium">
-              {n === 1 ? 'Keyword' : 'Phrase'}
+              {n === 1 ? l.col_keyword : l.col_phrase}
             </th>
             <th scope="col" className="py-2 pr-2 text-right font-medium">
-              Count
+              {l.col_count}
             </th>
             <th scope="col" className="py-2 pr-2 text-right font-medium">
-              Density
+              {l.col_density}
             </th>
             <th scope="col" className="py-2 text-center font-medium">
-              In title
+              {l.col_in_title}
             </th>
           </tr>
         </thead>
@@ -134,7 +136,7 @@ function PhraseTable({ rows, n }: { rows: Phrase[]; n: 1 | 2 | 3 }) {
   );
 }
 
-export function KeywordDensityChecker() {
+export function KeywordDensityChecker({ labels: l }: { labels: Labels }) {
   const id = useId();
   const [content, setContent] = useState('');
   const [keyword, setKeyword] = useState('');
@@ -164,7 +166,7 @@ export function KeywordDensityChecker() {
           <div>
             <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
               <label htmlFor={`${id}-content`} className={`${labelClass} mb-0`}>
-                Paste your content
+                {l.content_label}
               </label>
               <div className="flex gap-2">
                 <button
@@ -176,7 +178,7 @@ export function KeywordDensityChecker() {
                     if (!title) setTitle('Local SEO Services in Lahore for Small Businesses');
                   }}
                 >
-                  Try a sample
+                  {l.sample}
                 </button>
                 <button
                   type="button"
@@ -188,7 +190,7 @@ export function KeywordDensityChecker() {
                     setTitle('');
                   }}
                 >
-                  Clear
+                  {l.clear}
                 </button>
               </div>
             </div>
@@ -198,7 +200,7 @@ export function KeywordDensityChecker() {
               onChange={(e) => setContent(e.target.value)}
               rows={12}
               spellCheck={false}
-              placeholder="Paste article text, or the full HTML source of a page (View source → copy all)."
+              placeholder={l.content_placeholder}
               aria-describedby={`${id}-content-hint`}
               className={`${inputClass} min-h-60 resize-y`}
             />
@@ -206,32 +208,31 @@ export function KeywordDensityChecker() {
               id={`${id}-content-hint`}
               className="font-body-sm text-body-sm text-on-surface-variant mt-2"
             >
-              Plain text or HTML. HTML is cleaned in your browser: scripts, styles and markup are
-              removed. Nothing is uploaded.
+              {l.content_hint}
             </p>
           </div>
           <div className="grid gap-5 md:grid-cols-2">
             <div>
               <label htmlFor={`${id}-kw`} className={labelClass}>
-                Target keyword <span className="text-secondary font-normal">(optional)</span>
+                {l.keyword_label} <span className="text-secondary font-normal">{l.optional}</span>
               </label>
               <input
                 id={`${id}-kw`}
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
-                placeholder="e.g. local SEO"
+                placeholder={l.keyword_placeholder}
                 className={inputClass}
               />
             </div>
             <div>
               <label htmlFor={`${id}-title`} className={labelClass}>
-                Page title <span className="text-secondary font-normal">(optional)</span>
+                {l.title_label} <span className="text-secondary font-normal">{l.optional}</span>
               </label>
               <input
                 id={`${id}-title`}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={source.title || 'Your page’s <title> or H1'}
+                placeholder={source.title || l.title_placeholder}
                 className={inputClass}
               />
             </div>
@@ -244,33 +245,33 @@ export function KeywordDensityChecker() {
           <ToolCard className="font-body-sm text-body-sm text-on-surface-variant">
             <p className="text-on-surface font-label-md text-label-md flex items-center gap-2">
               <Icon name="data_object" size={18} className="text-primary-container" />
-              HTML detected: analysing the visible body text
+              {l.html_detected}
             </p>
             <dl className="mt-3 grid gap-2">
               <div>
-                <dt className="inline font-medium">Title tag: </dt>
-                <dd className="inline break-words">{source.title || 'none found'}</dd>
+                <dt className="inline font-medium">{l.title_tag} </dt>
+                <dd className="inline break-words">{source.title || l.none_found}</dd>
               </div>
               <div>
-                <dt className="inline font-medium">Meta description: </dt>
-                <dd className="inline break-words">{source.description || 'none found'}</dd>
+                <dt className="inline font-medium">{l.meta_description} </dt>
+                <dd className="inline break-words">{source.description || l.none_found}</dd>
               </div>
             </dl>
           </ToolCard>
         ) : null}
 
         <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <Stat label="Words" value={report.totalWords.toLocaleString()} />
-          <Stat label="Unique words" value={report.uniqueWords.toLocaleString()} />
-          <Stat label="Characters" value={report.characters.toLocaleString()} />
-          <Stat label="Sentences" value={report.sentences.toLocaleString()} />
-          <Stat label="Reading time" value={empty ? '0 min' : `~${report.readingMinutes} min`} />
+          <Stat label={l.stat_words} value={report.totalWords.toLocaleString()} />
+          <Stat label={l.stat_unique} value={report.uniqueWords.toLocaleString()} />
+          <Stat label={l.stat_characters} value={report.characters.toLocaleString()} />
+          <Stat label={l.stat_sentences} value={report.sentences.toLocaleString()} />
+          <Stat label={l.stat_reading} value={empty ? '0 min' : `~${report.readingMinutes} min`} />
         </dl>
 
         {kw && !empty ? (
           <ToolCard>
             <h2 className="font-title-md text-title-md text-on-surface">
-              Target keyword: <span className="break-words">“{kw.phrase}”</span>
+              {l.keyword_heading} <span className="break-words">“{kw.phrase}”</span>
             </h2>
             <p className="font-body-md text-body-md text-on-surface mt-2">
               Used <strong>{kw.count}</strong> {kw.count === 1 ? 'time' : 'times'} in{' '}
@@ -281,41 +282,22 @@ export function KeywordDensityChecker() {
               .
             </p>
             <ul className="font-body-sm text-body-sm text-on-surface-variant mt-4 grid gap-2">
-              <Check ok={kw.count > 0}>
-                {kw.count > 0
-                  ? 'The exact phrase appears in your content.'
-                  : 'The exact phrase does not appear. Add it where it reads naturally, or check the spelling.'}
-              </Check>
+              <Check ok={kw.count > 0}>{kw.count > 0 ? l.found : l.not_found}</Check>
               <Check ok={kw.inTitle}>
-                {effectiveTitle
-                  ? kw.inTitle
-                    ? 'It appears in the title.'
-                    : 'It is not in the title. Most pages benefit from the main topic in the title.'
-                  : 'Add a title above (or paste HTML with a <title>) to check it.'}
+                {effectiveTitle ? (kw.inTitle ? l.in_title : l.not_in_title) : l.no_title}
               </Check>
-              <Check ok={kw.inFirst100}>
-                {kw.inFirst100
-                  ? 'It appears within the first 100 words.'
-                  : 'It is not in the first 100 words. Mentioning the topic early helps readers and search engines.'}
-              </Check>
-              {kw.density > 3 ? (
-                <Check ok={false}>
-                  Above 3% can read as keyword stuffing. Try synonyms, pronouns or related terms in
-                  some places.
-                </Check>
-              ) : null}
+              <Check ok={kw.inFirst100}>{kw.inFirst100 ? l.in_opening : l.not_in_opening}</Check>
+              {kw.density > 3 ? <Check ok={false}>{l.stuffing}</Check> : null}
             </ul>
             <p className="font-body-sm text-body-sm text-on-surface-variant bg-surface-container-low mt-4 rounded-lg p-3">
-              Keyword density is not a Google ranking factor and there is no ideal percentage. Use
-              it as a sanity check: write for the reader, cover the topic fully, and make sure the
-              phrase is not repeated unnaturally.
+              {l.keyword_note}
             </p>
           </ToolCard>
         ) : null}
 
         <ToolCard>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-title-md text-title-md text-on-surface">Top phrases</h2>
+            <h2 className="font-title-md text-title-md text-on-surface">{l.phrases_heading}</h2>
             <div role="tablist" aria-label="Phrase length" className="flex gap-1">
               {([1, 2, 3] as const).map((n) => (
                 <button
@@ -351,13 +333,10 @@ export function KeywordDensityChecker() {
             aria-labelledby={`${id}-tab-${tab}`}
             className="mt-4"
           >
-            <PhraseTable rows={report.ngrams[tab]} n={tab} />
+            <PhraseTable rows={report.ngrams[tab]} n={tab} labels={l} />
           </div>
           <p className="font-body-sm text-body-sm text-on-surface-variant mt-4">
-            <strong className="text-on-surface">Density</strong> = times the phrase appears ÷ total
-            words × 100. Common words such as “the” and “and” are skipped as keywords, and phrases
-            that start or end with one are left out. Numbers and single letters are not counted. Up
-            to 50 phrases are shown; 2- and 3-word phrases must appear at least twice.
+            <RichInline text={l.phrases_note} classes={{ strong: 'text-on-surface' }} />
           </p>
         </ToolCard>
       </div>

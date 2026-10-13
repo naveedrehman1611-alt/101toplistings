@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Icon } from '@/components/icon';
 import { CopyButton, ToolCard, inputClass, labelClass } from '@/components/tools/tool-ui';
+import type { ToolLabels } from '@/components/tools/tool-page';
+import { fill } from '@/components/tools/rich-text';
 import { DEFAULT_SLUG_OPTIONS, slugify, type SlugOptions } from './slugify';
 
 const RECOMMENDED_MAX = 60;
@@ -39,7 +41,7 @@ function Toggle({
   );
 }
 
-export function SlugGenerator() {
+export function SlugGenerator({ labels: l }: { labels: ToolLabels<'tool_url_slug'> }) {
   const [text, setText] = useState('C++ & C# in 2026: A Beginner’s Guide!');
   const [bulk, setBulk] = useState(false);
   const [opts, setOpts] = useState<SlugOptions>(DEFAULT_SLUG_OPTIONS);
@@ -72,32 +74,27 @@ export function SlugGenerator() {
         <div>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <label htmlFor="slug-text" className="font-label-md text-label-md text-on-surface">
-              Text to slugify
+              {l.text_label}
             </label>
-            <Toggle
-              id="slug-bulk"
-              label="Bulk mode (one slug per line)"
-              checked={bulk}
-              onChange={setBulk}
-            />
+            <Toggle id="slug-bulk" label={l.bulk} checked={bulk} onChange={setBulk} />
           </div>
           <textarea
             id="slug-text"
             rows={bulk ? 8 : 3}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={bulk ? 'One title per line' : 'Paste a headline or page title'}
+            placeholder={bulk ? l.placeholder_bulk : l.placeholder}
             className={inputClass}
           />
         </div>
 
         <fieldset>
-          <legend className={labelClass}>Separator</legend>
+          <legend className={labelClass}>{l.separator}</legend>
           <div className="flex flex-wrap gap-4">
             {(
               [
-                ['-', 'Hyphen (-) — recommended'],
-                ['_', 'Underscore (_)'],
+                ['-', l.hyphen],
+                ['_', l.underscore],
               ] as const
             ).map(([value, label]) => (
               <label
@@ -121,28 +118,28 @@ export function SlugGenerator() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Toggle
             id="slug-lower"
-            label="Lowercase"
+            label={l.lowercase}
             checked={opts.lowercase}
             onChange={(v) => set('lowercase', v)}
           />
           <Toggle
             id="slug-stop"
-            label="Remove stop words"
-            hint="a, the, and, of, in…"
+            label={l.stop_words}
+            hint={l.stop_words_hint}
             checked={opts.removeStopWords}
             onChange={(v) => set('removeStopWords', v)}
           />
           <Toggle
             id="slug-translit"
-            label="Transliterate accents"
-            hint="é → e, ß → ss, ł → l"
+            label={l.transliterate}
+            hint={l.transliterate_hint}
             checked={opts.transliterate}
             onChange={(v) => set('transliterate', v)}
           />
           <Toggle
             id="slug-nonlatin"
-            label="Keep non-Latin scripts"
-            hint="Urdu, Arabic, Hindi, Cyrillic…"
+            label={l.non_latin}
+            hint={l.non_latin_hint}
             checked={opts.keepNonLatin}
             onChange={(v) => set('keepNonLatin', v)}
           />
@@ -151,8 +148,8 @@ export function SlugGenerator() {
         <div>
           <Toggle
             id="slug-limit"
-            label="Limit length"
-            hint={`Cuts at a word boundary. Around ${RECOMMENDED_MAX} characters or fewer is a good target.`}
+            label={l.limit}
+            hint={fill(l.limit_hint, { max: RECOMMENDED_MAX })}
             checked={limitOn}
             onChange={setLimitOn}
           />
@@ -177,14 +174,14 @@ export function SlugGenerator() {
 
         <div>
           <label htmlFor="slug-base" className={labelClass}>
-            Preview base URL
+            {l.base_label}
           </label>
           <input
             id="slug-base"
             type="url"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder="https://example.com/blog/"
+            placeholder={l.base_placeholder}
             className={inputClass}
             spellCheck={false}
           />
@@ -194,16 +191,16 @@ export function SlugGenerator() {
       <ToolCard className="lg:sticky lg:top-24 lg:self-start">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-title-md text-title-md text-on-surface">
-            {bulk ? `Slugs (${results.length})` : 'Your slug'}
+            {bulk ? fill(l.result_heading_bulk, { count: results.length }) : l.result_heading}
           </h2>
-          {bulk && results.length > 1 ? <CopyButton text={allSlugs} label="Copy all" /> : null}
+          {bulk && results.length > 1 ? (
+            <CopyButton text={allSlugs} label={l.copy_all} copiedLabel={l.copied} />
+          ) : null}
         </div>
         <ul aria-live="polite" className="mt-4 space-y-3">
           {results.length === 0 || (results.length === 1 && !results[0].slug) ? (
             <li className="font-body-md text-body-md text-on-surface-variant">
-              {text.trim()
-                ? 'Nothing left to use as a slug. Try turning on “Keep non-Latin scripts”.'
-                : 'Type some text to generate a slug.'}
+              {text.trim() ? l.empty_result : l.empty_prompt}
             </li>
           ) : (
             results.map((r, i) => {
@@ -220,15 +217,15 @@ export function SlugGenerator() {
                   ) : null}
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <code className="text-on-surface min-w-0 flex-1 font-mono text-base break-all">
-                      {r.slug || <span className="text-on-surface-variant">(empty)</span>}
+                      {r.slug || <span className="text-on-surface-variant">{l.empty_slug}</span>}
                     </code>
-                    <CopyButton text={r.slug} />
+                    <CopyButton text={r.slug} label={l.copy} copiedLabel={l.copied} />
                   </div>
                   <p
                     className={`font-label-sm text-label-sm mt-2 ${long ? 'text-amber-700' : 'text-on-surface-variant'}`}
                   >
-                    {r.slug.length} characters
-                    {long ? ` · over ${RECOMMENDED_MAX}, consider shortening` : ''}
+                    {fill(l.length, { count: r.slug.length })}
+                    {long ? ` · ${fill(l.too_long, { max: RECOMMENDED_MAX })}` : ''}
                   </p>
                   {r.slug && base ? (
                     <p className="font-body-sm text-body-sm text-secondary mt-1 flex gap-1.5 break-all">

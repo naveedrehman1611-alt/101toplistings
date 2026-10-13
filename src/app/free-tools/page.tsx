@@ -1,17 +1,20 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Icon, type IconName } from '@/components/icon';
+import { Icon } from '@/components/icon';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { SITE_URL } from '@/lib/supabase';
 import { SHARE_IMAGE } from '@/lib/seo';
-import { LIVE_TOOLS, TOOLS_BASE, toolHref, toolsByCategory, type FreeTool } from '@/lib/free-tools';
+import { getPageContent } from '@/lib/content/get';
+import { categoryField } from '@/lib/content/pages/tools';
+import { toolsWithCopy, type HubContent } from '@/components/tools/tool-page';
+import { TOOLS_BASE, TOOL_CATEGORIES, toolHref, type ShownTool } from '@/lib/free-tools';
 
 const TITLE = 'Free SEO Tools — No Signup';
 const DESCRIPTION =
   'Free SEO tools that run in your browser: speed and mobile tests, keyword density, meta tag and SERP preview, schema, robots.txt and slug generators. No signup.';
 
-// Static on purpose: seoMetadata() would add a Supabase read to this page.
+// Static on purpose: seoMetadata() would add a Supabase read to this page's metadata.
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
@@ -26,27 +29,7 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 };
 
-const TRAIL = [{ label: 'Home', href: '/' }, { label: 'Free SEO Tools' }];
-
-const WHY: { icon: IconName; title: string; body: string }[] = [
-  {
-    icon: 'speed',
-    title: 'They run on your device',
-    body: 'Text tools and generators work entirely in your browser tab. The speed and mobile tests ask Google’s public PageSpeed Insights service directly from your browser, so nothing passes through our servers.',
-  },
-  {
-    icon: 'verified_user',
-    title: 'Nothing is stored',
-    body: 'We do not save the URLs, text or settings you enter. Close the tab and it is gone — there is no account, history or tracking pixel tied to what you check.',
-  },
-  {
-    icon: 'check_circle',
-    title: 'Free with no catch',
-    body: 'Because the work happens in your browser, the tools cost us almost nothing to run. They exist to be useful; if you want a hand applying what they find, our SEO team is there.',
-  },
-];
-
-function ToolCard({ tool }: { tool: FreeTool }) {
+function ToolCard({ tool, labels }: { tool: ShownTool; labels: HubContent['tools'] }) {
   const live = tool.status === 'live';
   const body = (
     <>
@@ -58,14 +41,14 @@ function ToolCard({ tool }: { tool: FreeTool }) {
         >
           <Icon name={tool.icon} size={22} />
         </span>
-        {live && tool.isNew ? (
+        {live && tool.isNew && labels.new_badge ? (
           <span className="bg-brand-50 text-primary-container rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wider uppercase">
-            New
+            {labels.new_badge}
           </span>
         ) : null}
-        {!live ? (
+        {!live && labels.soon_badge ? (
           <span className="bg-surface-container-low text-secondary rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wider uppercase">
-            Coming soon
+            {labels.soon_badge}
           </span>
         ) : null}
       </div>
@@ -75,9 +58,9 @@ function ToolCard({ tool }: { tool: FreeTool }) {
         {tool.name}
       </h3>
       <p className="font-body-sm text-body-sm text-on-surface-variant mt-1.5">{tool.summary}</p>
-      {live ? (
+      {live && labels.open ? (
         <span className="font-label-md text-label-md text-primary-container mt-4 inline-flex items-center gap-1 font-semibold">
-          Open tool
+          {labels.open}
           <Icon
             name="arrow_forward"
             size={16}
@@ -105,19 +88,29 @@ function ToolCard({ tool }: { tool: FreeTool }) {
   );
 }
 
-export default function FreeToolsPage() {
-  const categories = toolsByCategory();
+export default async function FreeToolsPage() {
+  const c = await getPageContent('free_tools');
+  // Hidden cards (Admin → Content) are left out of the grid, the counts and the ItemList.
+  const tools = toolsWithCopy(c).filter((t) => t.visible);
+  const live = tools.filter((t) => t.status === 'live');
+  const labels = c.tools as HubContent['tools'] & Record<string, string>;
+  const categories = TOOL_CATEGORIES.map((category) => ({
+    ...category,
+    label: labels[categoryField(category.id)] ?? category.label,
+    tools: tools.filter((tool) => tool.category === category.id),
+  })).filter((category) => category.tools.length);
+  const trail = [{ label: 'Home', href: '/' }, { label: c.hero.breadcrumb }];
 
   return (
     <>
-      <JsonLd data={breadcrumbSchema(TRAIL, TOOLS_BASE)} />
+      <JsonLd data={breadcrumbSchema(trail, TOOLS_BASE)} />
       <JsonLd
         data={{
           '@context': 'https://schema.org',
           '@type': 'ItemList',
-          name: 'Free SEO Tools',
-          numberOfItems: LIVE_TOOLS.length,
-          itemListElement: LIVE_TOOLS.map((tool, i) => ({
+          name: c.hero.breadcrumb,
+          numberOfItems: live.length,
+          itemListElement: live.map((tool, i) => ({
             '@type': 'ListItem',
             position: i + 1,
             url: `${SITE_URL}${toolHref(tool)}`,
@@ -127,24 +120,32 @@ export default function FreeToolsPage() {
       />
 
       <PageHero
-        trail={TRAIL}
-        eyebrow="Browser-Based SEO Tools"
+        trail={trail}
+        eyebrow={c.hero.eyebrow || undefined}
         heading={
           <>
-            Free <span className="text-hero-green-light">SEO Tools</span>
+            {c.hero.heading}
+            {c.hero.highlight ? (
+              <>
+                {' '}
+                <span className="text-hero-green-light">{c.hero.highlight}</span>
+              </>
+            ) : null}
           </>
         }
-        subheading="Quick, practical checks and generators for small businesses and SEOs. Every tool runs in your browser, so there is no account to create, no limit to hit and nothing saved on our side. Test a page’s speed, preview how it looks in Google, check keyword use or generate schema and robots.txt in seconds."
+        subheading={c.hero.intro}
         stats={[
-          { value: LIVE_TOOLS.length, label: 'Live Tools' },
-          { value: categories.length, label: 'Categories' },
-          { value: 'Free', label: 'No Signup' },
+          { value: live.length, label: c.hero.stat_tools },
+          { value: categories.length, label: c.hero.stat_categories },
+          { value: c.hero.stat_free_value, label: c.hero.stat_free_label },
         ]}
       >
-        <span className="font-label-sm text-label-sm inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
-          <Icon name="rocket_launch" size={16} />
-          Free · No signup · Nothing stored
-        </span>
+        {c.hero.badge ? (
+          <span className="font-label-sm text-label-sm inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">
+            <Icon name={c.hero.badge_icon} size={16} />
+            {c.hero.badge}
+          </span>
+        ) : null}
       </PageHero>
 
       <div className="container-page py-10 md:py-12">
@@ -163,50 +164,51 @@ export default function FreeToolsPage() {
             <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {category.tools.map((tool) => (
                 <li key={tool.slug}>
-                  <ToolCard tool={tool} />
+                  <ToolCard tool={tool} labels={c.tools} />
                 </li>
               ))}
             </ul>
           </section>
         ))}
 
-        <section aria-labelledby="why-free" className="mt-16">
-          <h2 id="why-free" className="font-headline-md text-headline-md text-on-surface">
-            Why these tools are free and private
-          </h2>
-          <ul className="mt-6 grid gap-4 md:grid-cols-3">
-            {WHY.map((item) => (
-              <li key={item.title} className="surface-card p-6">
-                <span className="bg-brand-50 text-primary-container grid size-10 place-items-center rounded-xl">
-                  <Icon name={item.icon} size={20} />
-                </span>
-                <h3 className="font-title-md text-title-md text-on-surface mt-4">{item.title}</h3>
-                <p className="font-body-md text-body-md text-on-surface-variant mt-2">
-                  {item.body}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="surface-card mt-16 flex flex-col items-start gap-6 p-8 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-2xl">
-            <h2 className="font-headline-md text-headline-md text-on-surface">
-              Want the fixes done for you?
+        {c.why.visible ? (
+          <section aria-labelledby="why-free" className="mt-16">
+            <h2 id="why-free" className="font-headline-md text-headline-md text-on-surface">
+              {c.why.heading}
             </h2>
-            <p className="font-body-md text-body-md text-on-surface-variant mt-2">
-              The tools show what needs attention. Our SEO services handle the rest — technical
-              fixes, on-page optimisation and local SEO for businesses worldwide.
-            </p>
-          </div>
-          <Link
-            href="/seo-services"
-            className="bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary focus-visible:outline-primary-container inline-flex h-11 shrink-0 items-center gap-2 rounded-lg px-5 shadow-xs transition-all hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2"
-          >
-            See SEO services
-            <Icon name="arrow_forward" size={18} />
-          </Link>
-        </section>
+            <ul className="mt-6 grid gap-4 md:grid-cols-3">
+              {c.why.items.map((item, i) => (
+                <li key={i} className="surface-card p-6">
+                  <span className="bg-brand-50 text-primary-container grid size-10 place-items-center rounded-xl">
+                    <Icon name={item.icon} size={20} />
+                  </span>
+                  <h3 className="font-title-md text-title-md text-on-surface mt-4">{item.title}</h3>
+                  <p className="font-body-md text-body-md text-on-surface-variant mt-2">
+                    {item.body}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {c.cta.visible ? (
+          <section className="surface-card mt-16 flex flex-col items-start gap-6 p-8 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-2xl">
+              <h2 className="font-headline-md text-headline-md text-on-surface">{c.cta.heading}</h2>
+              <p className="font-body-md text-body-md text-on-surface-variant mt-2">{c.cta.body}</p>
+            </div>
+            {c.cta.button.label && c.cta.button.href ? (
+              <Link
+                href={c.cta.button.href}
+                className="bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary focus-visible:outline-primary-container inline-flex h-11 shrink-0 items-center gap-2 rounded-lg px-5 shadow-xs transition-all hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+              >
+                {c.cta.button.label}
+                <Icon name="arrow_forward" size={18} />
+              </Link>
+            ) : null}
+          </section>
+        ) : null}
       </div>
     </>
   );
