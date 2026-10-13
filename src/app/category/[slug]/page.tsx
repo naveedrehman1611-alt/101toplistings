@@ -11,7 +11,7 @@ import {
 import { Results, parsePage, parseSort } from '@/components/results';
 import { ListingFilters } from '@/components/listing-filters';
 import { SITE_URL } from '@/lib/supabase';
-import { MIN_CATEGORY_LISTINGS_TO_INDEX, SHARE_IMAGE } from '@/lib/seo';
+import { MIN_CATEGORY_LISTINGS_TO_INDEX, SHARE_IMAGE, resultsPageSeo } from '@/lib/seo';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { redirectOrNotFound } from '@/lib/redirects';
@@ -26,24 +26,28 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; q?: string; city?: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const cat = await getCategoryBySlug(slug);
   if (!cat) return { title: 'Not found' };
   const title = `${cat.name} businesses`;
   const description = cat.description ?? `Browse ${cat.name.toLowerCase()} businesses.`;
   // A failed count leaves the page indexable rather than noindex it on a blip.
   const count = (await getCategoryListingCounts([cat.id])).get(cat.id);
+  const variant = Boolean(sp.sort || sp.q?.trim() || sp.city);
   return {
     title,
     description,
-    alternates: { canonical: `${SITE_URL}/category/${cat.slug}` },
-    robots:
-      count !== undefined && count < MIN_CATEGORY_LISTINGS_TO_INDEX
-        ? { index: false, follow: true }
-        : undefined,
+    ...resultsPageSeo(
+      `/category/${cat.slug}`,
+      parsePage(sp.page),
+      variant,
+      count !== undefined && count < MIN_CATEGORY_LISTINGS_TO_INDEX,
+    ),
     openGraph: {
       title,
       description,
