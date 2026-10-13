@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getCategories, getCategoryListingCounts, getSettings, settingText } from '@/lib/queries';
+import { getCategories, getCategoryListingCounts } from '@/lib/queries';
 import { ServicePageView } from '@/components/service-page';
 import { SERVICE_PAGES, servicePage } from '@/lib/service-pages';
 import { MIN_CATEGORY_LISTINGS_TO_INDEX, seoMetadata, type SeoRoute } from '@/lib/seo';
@@ -33,14 +33,8 @@ export default async function SeoServicePage({ params }: Props) {
   const { slug } = await params;
   const page = servicePage(slug);
   if (!page || !page.path.startsWith('/seo-services/')) notFound();
-  const [settings, directory] = await Promise.all([getSettings(), directoryLinks(slug)]);
-  return (
-    <ServicePageView
-      page={page}
-      brand={settingText(settings, 'brand.name', 'RankYouSite')}
-      directory={directory}
-    />
-  );
+  const directory = await directoryLinks(slug);
+  return <ServicePageView page={page} directory={directory} />;
 }
 
 /**
