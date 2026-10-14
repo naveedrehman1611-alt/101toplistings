@@ -23,7 +23,10 @@ export function SiteLogo({
 }: {
   image: ImageValue;
   variant?: keyof typeof LOGOS;
-  /** Above-the-fold logos load eagerly. */
+  /**
+   * Above-the-fold logos load eagerly, at the default priority: the logo is
+   * never the LCP element, so it must not compete with the page's hero image.
+   */
   eager?: boolean;
   className?: string;
 }) {
@@ -36,7 +39,6 @@ export function SiteLogo({
       height={image.width && image.height ? image.height : logo.height}
       unoptimized
       loading={eager ? 'eager' : 'lazy'}
-      fetchPriority={eager ? 'high' : undefined}
       className={className}
     />
   );

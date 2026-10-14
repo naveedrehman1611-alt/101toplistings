@@ -2,8 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@/components/icon';
+import { usePresence } from '@/lib/motion';
 
 export const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
@@ -37,6 +37,7 @@ export function MegaMenu({
   // Open state remembers the path it was opened on, so navigating closes it.
   const [openOn, setOpenOn] = useState<string | null>(null);
   const open = openOn === pathname;
+  const panel = usePresence(open, 150);
   const panelId = useId();
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -129,26 +130,22 @@ export function MegaMenu({
         />
       </button>
 
-      <AnimatePresence>
-        {open ? (
-          <motion.div
-            id={panelId}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15 }}
-            className="pointer-events-none absolute inset-x-0 top-full z-50 px-6 pt-1 lg:px-12"
+      {panel.mounted ? (
+        <div
+          id={panelId}
+          className={`pointer-events-none absolute inset-x-0 top-full z-50 px-6 pt-1 transition-[opacity,translate] duration-150 ease-[cubic-bezier(0.42,0,0.58,1)] lg:px-12 ${
+            panel.shown ? 'translate-y-0 opacity-100' : '-translate-y-[6px] opacity-0'
+          }`}
+        >
+          {/* tabIndex -1: a click on a muted row or the background keeps focus inside. */}
+          <div
+            tabIndex={-1}
+            className={`bg-surface-card border-border-subtle pointer-events-auto mx-auto ${width} rounded-2xl border shadow-[0_12px_40px_rgba(0,0,0,0.12)] outline-none`}
           >
-            {/* tabIndex -1: a click on a muted row or the background keeps focus inside. */}
-            <div
-              tabIndex={-1}
-              className={`bg-surface-card border-border-subtle pointer-events-auto mx-auto ${width} rounded-2xl border shadow-[0_12px_40px_rgba(0,0,0,0.12)] outline-none`}
-            >
-              {children}
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+            {children}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
