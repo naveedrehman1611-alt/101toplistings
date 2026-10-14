@@ -50,20 +50,23 @@ export default async function ServicesPage() {
   const subheading = header?.subheading ?? hero.intro;
   const tagOf = (slug: string, fallback: string) => services[serviceKey(slug)]?.tag ?? fallback;
 
+  // Pages with no hub section (/website-development) are not SEO services, so
+  // they stay out of the cards, the counts and the OfferCatalog below.
+  const hubPages = SERVICE_PAGES.filter((s) => s.hub !== null);
   // Sections in HUB_CATEGORIES order; one with no services yet is skipped.
   const groups = HUB_CATEGORIES.map((c) => ({
     ...c,
     title: hubTitle(content, c.id),
     icon: hubIcon(content, c.id),
-    services: SERVICE_PAGES.filter((s) => s.hub === c.id),
+    services: hubPages.filter((s) => s.hub === c.id),
   })).filter((c) => c.services.length > 0);
   const categories = groups.filter((c) => c.id !== 'industry');
   const industries = groups.find((c) => c.id === 'industry');
   const industryCount = industries?.services.length ?? 0;
-  const serviceCount = SERVICE_PAGES.length - industryCount;
+  const serviceCount = hubPages.length - industryCount;
 
   const trail = [{ label: 'Home', href: '/' }, { label: 'SEO services' }];
-  // Built from SERVICE_PAGES so the structured data always matches the cards.
+  // Built from the hub's pages so the structured data always matches the cards.
   const offerCatalog = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -71,7 +74,7 @@ export default async function ServicesPage() {
     hasOfferCatalog: {
       '@type': 'OfferCatalog',
       name: 'SEO services',
-      itemListElement: SERVICE_PAGES.map((s) => ({
+      itemListElement: hubPages.map((s) => ({
         '@type': 'Offer',
         itemOffered: {
           '@type': 'Service',

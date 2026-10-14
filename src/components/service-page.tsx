@@ -15,7 +15,8 @@ import { SITE_URL } from '@/lib/supabase';
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /**
- * Shared layout for the SEO service pages and /digital-marketing, in the style of
+ * Shared layout for the SEO service pages and the standalone service pages
+ * (/digital-marketing, /website-development), in the style of
  * the /seo-services hub: navy hero, white "What's included" cards, a numbered
  * process, a native <details> FAQ (no client JS), related hub cards and the green
  * CTA band. `extra` renders after "What's included", inside the page container.
@@ -54,9 +55,13 @@ export async function ServicePageView({
   const tagOf = (s: ServicePage) =>
     (pages[serviceKey(s.slug)] as (typeof pages)[string] | undefined)?.tag ?? s.tag;
 
-  const isMarketing = page.slug === 'digital-marketing';
-  const trail = isMarketing
-    ? [{ label: t.hero.crumb_home, href: '/' }, { label: t.hero.crumb_marketing }]
+  // Standalone pages sit at the top level, outside /seo-services.
+  const standalone = !page.path.startsWith('/seo-services/');
+  const trail = standalone
+    ? [
+        { label: t.hero.crumb_home, href: '/' },
+        { label: page.slug === 'digital-marketing' ? t.hero.crumb_marketing : page.name },
+      ]
     : [
         { label: t.hero.crumb_home, href: '/' },
         { label: t.hero.crumb_hub, href: '/seo-services' },
@@ -73,9 +78,10 @@ export async function ServicePageView({
     areaServed: page.areaServed ?? DEFAULT_AREA_SERVED,
   };
   const related = page.related.flatMap((slug) => servicePage(slug) ?? []);
-  // /digital-marketing sits outside the hub sections, so it keeps its own tag.
-  const eyebrow = isMarketing ? tag : hubTitle(hub, page.hub) || tag;
+  // Standalone pages are not under a hub section heading, so they keep their own tag.
+  const eyebrow = standalone || !page.hub ? tag : hubTitle(hub, page.hub) || tag;
   const isAudit = cta.href === '/seo-audit';
+  const quote = quoteHref(page.name, page.quoteSubject);
   // A list emptied in the admin drops its figure and its block.
   const stats = [
     { value: includes.length, label: t.hero.stat_includes },
@@ -103,7 +109,7 @@ export async function ServicePageView({
           {/* The second button offers whichever of audit and quote the first one doesn't. */}
           {isAudit ? (
             <Link
-              href={quoteHref(page.name)}
+              href={quote}
               className={`${HUB_BUTTON} border border-white/40 text-white hover:bg-white/10`}
             >
               <Icon name={t.hero.quote_icon} size={18} />
@@ -293,7 +299,7 @@ export async function ServicePageView({
           primaryIcon={t.cta.primary_icon}
           quoteLabel={t.cta.secondary_label}
           quoteIcon={t.cta.secondary_icon}
-          quoteHref={quoteHref(page.name)}
+          quoteHref={quote}
         />
       ) : null}
     </>

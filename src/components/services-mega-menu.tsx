@@ -15,11 +15,12 @@ export type ServicesMenuContent = SiteContent['services_menu'];
 /** Menu columns, in order; their headings are edited in Admin → Content. */
 const SERVICE_CATEGORIES: {
   id: ServiceCategoryId;
-  heading: 'seo_heading' | 'links_heading' | 'marketing_heading';
+  heading: 'seo_heading' | 'links_heading' | 'marketing_heading' | 'web_heading';
 }[] = [
   { id: 'seo', heading: 'seo_heading' },
   { id: 'links', heading: 'links_heading' },
   { id: 'marketing', heading: 'marketing_heading' },
+  { id: 'web', heading: 'web_heading' },
 ];
 
 /** The page is the services hub or one of the service pages. */
@@ -49,9 +50,9 @@ export function ServicesMegaMenu({
       label={label ?? content.label}
       shortLabel={label ?? content.short_label}
       active={isServicePath(pathname, services)}
-      width="max-w-3xl"
+      width="max-w-4xl"
     >
-      <div className="grid grid-cols-3 gap-6 p-6">
+      <div className="grid grid-cols-4 gap-6 p-6">
         {SERVICE_CATEGORIES.map((category) => (
           <div key={category.id}>
             <p className="font-label-sm text-label-sm text-secondary mb-2 px-2 tracking-wider uppercase">

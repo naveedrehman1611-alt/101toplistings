@@ -7,14 +7,15 @@ import { INDUSTRY_PAGES_1 } from '@/lib/services/industries-1';
 import { INDUSTRY_PAGES_2 } from '@/lib/services/industries-2';
 import { INDUSTRY_PAGES_3 } from '@/lib/services/industries-3';
 import { INDUSTRY_PAGES_4 } from '@/lib/services/industries-4';
+import { WEBSITE_DEVELOPMENT_PAGE } from '@/lib/services/website-development';
 
 /**
- * The SEO and digital marketing service pages: one list that drives each page
- * (/seo-services/<slug> and /digital-marketing), the /seo-services hub cards, the
+ * The service pages: one list that drives each page (/seo-services/<slug>,
+ * /digital-marketing and /website-development), the /seo-services hub cards, the
  * header's Services menu, the OfferCatalog JSON-LD and the sitemap.
  */
 
-export type ServiceCategoryId = 'seo' | 'links' | 'marketing';
+export type ServiceCategoryId = 'seo' | 'links' | 'marketing' | 'web';
 
 /** Section on the /seo-services hub. */
 export type HubCategoryId =
@@ -36,8 +37,11 @@ export type ServicePage = {
   icon: IconName;
   /** Column in the header's Services menu. */
   category: ServiceCategoryId;
-  /** Section on the /seo-services hub. */
-  hub: HubCategoryId;
+  /**
+   * Section on the /seo-services hub; null keeps a page that is not an SEO service
+   * (/website-development) off the hub, its counts and its OfferCatalog.
+   */
+  hub: HubCategoryId | null;
   /** Short badge on the hub card. */
   tag: string;
   includes: { title: string; body: string }[];
@@ -46,6 +50,8 @@ export type ServicePage = {
   faq: { q: string; a: string }[];
   ctaLabel: string;
   ctaHref: string;
+  /** Contact form subject for the page's quote links (see quoteHref); defaults to SEO services. */
+  quoteSubject?: string;
   /** Slugs of sibling services. */
   related: string[];
   guides: { label: string; href: string }[];
@@ -761,9 +767,13 @@ export const MENU_SERVICE_PAGES: ServicePage[] = [
   },
 ];
 
-/** Every service page: the menu pages, then the rest of the catalogue in hub order. */
+/**
+ * Every service page: the menu pages, /website-development, then the rest of the
+ * catalogue in hub order.
+ */
 export const SERVICE_PAGES: ServicePage[] = [
   ...MENU_SERVICE_PAGES,
+  WEBSITE_DEVELOPMENT_PAGE,
   ...CORE_PAGES,
   ...TECHNICAL_PAGES,
   ...LINKS_AI_PAGES,
@@ -783,16 +793,18 @@ export function servicePage(slug: string): ServicePage | undefined {
 export type ServiceNavItem = Pick<ServicePage, 'slug' | 'path' | 'name' | 'icon' | 'category'>;
 
 export function serviceNavItems(): ServiceNavItem[] {
-  return MENU_SERVICE_PAGES.map(({ slug, path, name, icon, category }) => ({
-    slug,
-    path,
-    name,
-    icon,
-    category,
-  }));
+  return [...MENU_SERVICE_PAGES, WEBSITE_DEVELOPMENT_PAGE].map(
+    ({ slug, path, name, icon, category }) => ({
+      slug,
+      path,
+      name,
+      icon,
+      category,
+    }),
+  );
 }
 
-/** The contact form with the SEO services subject and this service named in the message. */
-export function quoteHref(name: string): string {
-  return `/contact?subject=SEO%20services&service=${encodeURIComponent(name)}`;
+/** The contact form with the given subject (SEO services by default) and this service named in the message. */
+export function quoteHref(name: string, subject = 'SEO services'): string {
+  return `/contact?subject=${encodeURIComponent(subject)}&service=${encodeURIComponent(name)}`;
 }

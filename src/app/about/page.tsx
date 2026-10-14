@@ -4,12 +4,15 @@ import {
   findSection,
   getDirectoryStats,
   getPageSections,
+  getSettings,
+  settingText,
   type DirectoryStats,
 } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
 import { Icon, type IconName } from '@/components/icon';
 import { CountUp } from '@/components/home/count-up';
 import { HubCtaBand } from '@/components/services-hub/hub-cta-band';
+import { TeamSection } from '@/components/about/team-section';
 import { InlineMarkdown } from '@/components/markdown';
 import { HighlightedHeading } from '@/components/company/highlighted';
 import { getPageContent } from '@/lib/content/get';
@@ -99,11 +102,13 @@ function ButtonRow({
 }
 
 export default async function AboutPage() {
-  const [content, sections, stats] = await Promise.all([
+  const [content, sections, stats, settings] = await Promise.all([
     getPageContent('about'),
     getPageSections('about'),
     getDirectoryStats(),
+    getSettings(),
   ]);
+  const brand = settingText(settings, 'brand.name', 'RankYouSite');
   // A header kept in Admin → Pages (the older page sections) is shown until the hero
   // is saved in Admin → Content; from then on the Content copy wins.
   const header = content.hero.edited ? undefined : findSection(sections, 'header');
@@ -112,6 +117,8 @@ export default async function AboutPage() {
     <>
       <Hero c={content.hero} heading={header?.heading} subheading={header?.subheading} />
       {content.positioning.visible ? <Positioning c={content.positioning} stats={stats} /> : null}
+      {/* Founders, team and advisors (placeholder data in src/lib/team.ts). */}
+      <TeamSection brand={brand} />
       {content.story.visible || content.values.visible ? (
         <StoryAndValues story={content.story} values={content.values} />
       ) : null}

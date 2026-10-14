@@ -73,8 +73,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const sameAs = social.map((s) => s.href);
   // The phone in Settings, else the WhatsApp number the site already shows.
   const telephone = settingText(settings, 'contact.phone').trim() || `+${WHATSAPP_NUMBER}`;
-  // Only a real stored address: the footer's fallback city is not one.
-  const address = settingText(settings, 'contact.address').trim();
 
   // Site-wide Organization + WebSite schema. The logo is a square PNG (Google
   // wants at least 112px, in a raster format) so the brand can show in results;
@@ -101,7 +99,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           telephone,
           ...(email ? { email } : {}),
         },
-        ...(address ? { address } : {}),
         ...(sameAs.length ? { sameAs } : {}),
       },
       {
@@ -155,7 +152,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           trustLine={settingText(settings, 'footer.trust_line').trim()}
           copyright={settingText(settings, 'footer.copyright', brand)}
           email={email}
-          address={settingText(settings, 'contact.address').trim() || 'Manchester, United Kingdom'}
           social={social}
           content={{
             footer: site.footer,

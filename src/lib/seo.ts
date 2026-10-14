@@ -25,6 +25,7 @@ export const SEO_ROUTES = [
   { route: '/seo-services/guest-posting', label: 'Guest posting' },
   { route: '/seo-services/content-marketing', label: 'Content marketing' },
   { route: '/digital-marketing', label: 'Digital marketing' },
+  { route: '/website-development', label: 'Website development' },
   { route: '/seo-audit', label: 'SEO audit' },
   { route: '/pricing', label: 'Pricing' },
   { route: '/blog', label: 'Blog' },

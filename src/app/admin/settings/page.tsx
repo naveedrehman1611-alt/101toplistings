@@ -56,8 +56,7 @@ const HELP: Record<string, string> = {
   'footer.copyright': 'Follows the year in the footer bottom bar. {brand} becomes the brand name.',
   'contact.email': 'Rendered in the footer and on the contact page.',
   'contact.phone': 'Not shown by the current footer design.',
-  'contact.address':
-    'Location shown in the footer, linked to Google Maps. Leave it blank to show Manchester, United Kingdom.',
+  'contact.address': 'Not shown on the public site; kept for internal reference only.',
   'social.facebook': `Full https:// address of the Facebook page. ${SOCIAL_HELP}`,
   'social.instagram': `Full https:// address of the Instagram profile. ${SOCIAL_HELP}`,
   'social.x': `Full https:// address of the X (Twitter) profile. ${SOCIAL_HELP}`,
