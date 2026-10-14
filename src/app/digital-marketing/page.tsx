@@ -39,6 +39,8 @@ export default async function DigitalMarketingPage() {
   return (
     <ServicePageView
       page={PAGE}
+      // Related services repeat sub-service cards; only a hidden block leaves them in.
+      extraSlugs={c.visible ? subServices.map((s) => s.slug) : []}
       extra={
         c.visible ? (
           <section aria-labelledby="sp-sub-services">

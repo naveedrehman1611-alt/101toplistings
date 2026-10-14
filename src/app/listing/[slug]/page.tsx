@@ -16,8 +16,8 @@ import {
 } from '@/lib/queries';
 import { Breadcrumbs } from '@/components/ui';
 import { SITE_URL } from '@/lib/supabase';
-import { SHARE_IMAGE } from '@/lib/seo';
-import { redirectOrNotFound } from '@/lib/redirects';
+import { SHARE_IMAGE, pageMetadata } from '@/lib/seo';
+import { redirectOrNotFound, redirectToLowercase } from '@/lib/redirects';
 import { DAYS } from '@/lib/hours';
 import { ListingHero } from '@/components/listing/listing-hero';
 import { ListingDescription } from '@/components/listing/listing-description';
@@ -110,7 +110,9 @@ export async function generateMetadata({
       }
     : null;
 
-  return {
+  // pageMetadata fills in the rest of the share tags (the Twitter card copies
+  // these Open Graph values, image alt and size included, and adds the X account).
+  return pageMetadata(url, {
     title,
     description,
     alternates: { canonical: url },
@@ -121,8 +123,6 @@ export async function generateMetadata({
       'max-image-preview': 'large',
       'max-video-preview': -1,
     },
-    // Page-level openGraph replaces the layout's rather than merging, so the
-    // site name is repeated here.
     openGraph: {
       type: 'website',
       title,
@@ -133,20 +133,17 @@ export async function generateMetadata({
       // No listing photo: fall back to the site-wide share image.
       images: [ogImage ?? SHARE_IMAGE],
     },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [ogImage?.url ?? SHARE_IMAGE.url],
-    },
-  };
+  });
 }
 
 export default async function ListingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const listing = await getListing(slug);
   // A retired slug may have a stored redirect; otherwise this renders the 404.
-  if (!listing) return redirectOrNotFound(`/listing/${encodeURIComponent(slug)}`);
+  if (!listing) {
+    await redirectToLowercase('/listing', slug, getListing);
+    return redirectOrNotFound(`/listing/${encodeURIComponent(slug)}`);
+  }
 
   const [
     { categories, cities, category, subcategory, city },

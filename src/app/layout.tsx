@@ -8,6 +8,7 @@ import { WhatsAppButton } from '@/components/whatsapp-button';
 import { WHATSAPP_NUMBER } from '@/lib/whatsapp';
 import { getMenu, getSettings, settingText } from '@/lib/queries';
 import { SITE_URL } from '@/lib/supabase';
+import { SHARE_IMAGE, xHandle } from '@/lib/seo';
 import { jsonLdHtml } from '@/lib/json-ld';
 import { serviceNavItems } from '@/lib/service-pages';
 import { getPageContent } from '@/lib/content/get';
@@ -43,12 +44,22 @@ export async function generateMetadata(): Promise<Metadata> {
   const brand = settingText(s, 'brand.name', 'RankYouSite');
   const title = settingText(s, 'seo.default_title', brand);
   const description = settingText(s, 'seo.default_description', '');
+  // The X account from Settings, for pages that set no twitter of their own
+  // (pages that do get it from pageMetadata in src/lib/seo.ts).
+  const handle = xHandle(settingText(s, 'social.x'));
   return {
     metadataBase: safeUrl(SITE_URL),
     title: { default: title, template: `%s | ${brand}` },
     description,
+    // No images here: the root opengraph-image file fills og:image.
     openGraph: { title, description, siteName: brand, type: 'website', url: SITE_URL },
-    twitter: { card: 'summary_large_image', title, description },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [SHARE_IMAGE],
+      ...(handle ? { site: handle, creator: handle } : {}),
+    },
   };
 }
 

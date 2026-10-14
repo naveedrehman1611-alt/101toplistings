@@ -54,7 +54,7 @@ import type {
  * and one blog read. Everything but the search RPC is a tag-cached GET.
  */
 
-const ADD_LISTING_HREF = '/dashboard/listings/new';
+const ADD_LISTING_HREF = '/add-business';
 const MAX_SEARCH_OPTIONS = 500;
 
 type Lookups = {

@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { LEGACY_REDIRECTS } from './src/lib/legacy-redirects';
 
 // Listing and library images are served from the public Supabase Storage bucket
 // (migration 0015). next/image only optimises remote images whose host is listed
@@ -43,7 +44,31 @@ if (process.env.VERCEL_ENV === 'production' && siteIsLocal) {
   );
 }
 
+// Security headers on every response. The CSP is limited to directives that
+// cannot break the app: a script-src allowlist would need a per-request nonce
+// for Next's inline scripts, which makes every page dynamic and gives up ISR.
+// object-src and base-uri still close the plugin and <base> injection routes
+// for XSS, and frame-ancestors (with X-Frame-Options for older browsers) stops
+// other sites framing the pages.
+const securityHeaders = [
+  {
+    key: 'Content-Security-Policy',
+    value: "base-uri 'self'; object-src 'none'; frame-ancestors 'self'; upgrade-insecure-requests",
+  },
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+];
+
 const nextConfig: NextConfig = {
+  // Next streams generateMetadata into <body> for any user agent missing from
+  // its bot list, so SEO crawlers that are not on it (site auditors, smaller
+  // search engines) saw no <title>, and canonical and robots tags outside
+  // <head>. Matching every user agent keeps metadata in <head> for all.
+  htmlLimitedBots: /.*/,
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }];
+  },
   images: {
     // Uploads get a fresh, unguessable object name and are never overwritten
     // (media-upload.ts), so an optimised variant can be cached for a month
@@ -82,49 +107,9 @@ const nextConfig: NextConfig = {
             },
           ]
         : []),
-      { source: '/listing-category/:slug', destination: '/category/:slug', permanent: true },
-      { source: '/listing-location/:slug', destination: '/city/:slug', permanent: true },
-      { source: '/listing-top-filter', destination: '/business-directory', permanent: true },
-      // The SEO strategy's URL structure: the old paths keep working (query
-      // strings are carried over, so filtered /listings links still land).
-      { source: '/listings', destination: '/business-directory', permanent: true },
-      { source: '/categories', destination: '/business-categories', permanent: true },
-      { source: '/services', destination: '/seo-services', permanent: true },
-      { source: '/submission', destination: '/dashboard/listings/new', permanent: true },
-      { source: '/about-us', destination: '/about', permanent: true },
-      { source: '/contact-us', destination: '/contact', permanent: true },
-      // Service pages merged into the page with the same search intent, and one
-      // slug renamed; the old URLs are no longer generated (dynamicParams=false).
-      {
-        source: '/seo-services/global-seo',
-        destination: '/seo-services/international-seo',
-        permanent: true,
-      },
-      {
-        source: '/seo-services/multilingual-seo',
-        destination: '/seo-services/international-seo',
-        permanent: true,
-      },
-      {
-        source: '/seo-services/seo-reseller',
-        destination: '/seo-services/white-label-seo',
-        permanent: true,
-      },
-      {
-        source: '/seo-services/bespoke-seo',
-        destination: '/seo-services/custom-seo',
-        permanent: true,
-      },
-      {
-        source: '/seo-services/seo-for-online-stores',
-        destination: '/seo-services/ecommerce-seo',
-        permanent: true,
-      },
-      {
-        source: '/seo-services/nationwide-seo',
-        destination: '/seo-services/multi-location-seo',
-        permanent: true,
-      },
+      // Old public URLs (WordPress paths, renamed and merged pages). The same
+      // table rewrites stale stored links at read time, so it lives in one place.
+      ...LEGACY_REDIRECTS.map((r) => ({ ...r, permanent: true })),
     ];
   },
   experimental: {

@@ -9,6 +9,7 @@ import { getPageContent } from '@/lib/content/get';
 import type { SectionValues } from '@/lib/content/schema';
 import type { CONTACT_PAGE } from '@/lib/content/pages/company';
 import { HighlightedHeading } from '@/components/company/highlighted';
+import { servicePage } from '@/lib/service-pages';
 
 const TITLE = 'Contact Us | SEO Services & Business Listings';
 const DESCRIPTION =
@@ -27,7 +28,7 @@ type Sections = (typeof CONTACT_PAGE)['sections'];
 type Content = { [K in keyof Sections]: SectionValues<Sections[K]> };
 
 /**
- * ?subject=SEO%20services (the home hero's service links) preselects that
+ * ?subject=seo%20services (the home hero's service links) preselects that
  * subject. Matched case-insensitively against the form's subjects (stored
  * as-is in form_submissions.payload.subject, which the admin inbox shows);
  * anything else keeps the "Select a subject" placeholder.
@@ -38,12 +39,15 @@ function presetSubject(param: string | string[] | undefined, subjects: string[])
 }
 
 /**
- * ?service=Plumber%20SEO (the service pages' quote links) prefills the message
+ * ?service=plumber-seo (the service pages' quote links) prefills the message
  * with "I'm interested in Plumber SEO." Trimmed, capped at 100 characters, and
  * used only as a textarea default value, which React escapes.
  */
 function presetMessage(param: string | string[] | undefined): string {
-  const name = (Array.isArray(param) ? param[0] : param)?.trim().slice(0, 100).trim();
+  const value = (Array.isArray(param) ? param[0] : param)?.trim().slice(0, 100).trim();
+  // Service pages pass their slug (quoteHref), which keeps the URL lowercase;
+  // older links passed the service name itself, so anything else is used as is.
+  const name = value ? (servicePage(value)?.name ?? value) : '';
   return name ? `I'm interested in ${name}.` : '';
 }
 

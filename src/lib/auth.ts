@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from './supabase-server';
+import { signInHref } from './legacy-redirects';
 
 /**
  * Data Access Layer for authorisation.
@@ -91,6 +92,6 @@ export async function requireRole(required: Role): Promise<CurrentUser> {
 /** Any signed-in, non-suspended user. Sends everyone else to sign in first. */
 export async function requireUser(next: string): Promise<CurrentUser> {
   const user = await getCurrentUser();
-  if (!user) redirect(`/login?next=${encodeURIComponent(next)}`);
+  if (!user) redirect(signInHref(next));
   return user;
 }

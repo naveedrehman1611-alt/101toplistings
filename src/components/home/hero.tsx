@@ -1,7 +1,9 @@
+import type { ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Icon, type IconName } from '@/components/icon';
 import type { Category, City } from '@/lib/queries';
+import { MAX_FLAT_OPTIONS, byInitial, categoryTree } from '@/lib/select-groups';
 import type { SectionValues } from '@/lib/content/schema';
 import type { HOME_PAGE } from '@/lib/content/pages/home';
 import { lines } from '@/lib/content/schema';
@@ -38,9 +40,50 @@ const CONTROL =
 
 // Native select, restyled: the chevron is drawn over its right padding, and the
 // text is grey while the "All …" option is chosen.
-const SELECT = `${CONTROL} cursor-pointer appearance-none truncate pr-7 has-[option[value='']:checked]:text-[#4b5563] [&_option]:text-on-surface`;
+const SELECT = `${CONTROL} cursor-pointer appearance-none truncate pr-7 has-[option[value='']:checked]:text-[#4b5563] [&_optgroup]:text-on-surface [&_option]:text-on-surface`;
 
 type Option = { slug: string; name: string };
+type CategoryOption = Pick<Category, 'id' | 'parent_id' | 'slug' | 'name'>;
+
+/** One option per slug: the form submits slugs, as /search expects. */
+function option(o: Option) {
+  return (
+    <option key={o.slug} value={o.slug}>
+      {o.name}
+    </option>
+  );
+}
+
+/**
+ * The category options in <optgroup>s, as on the directory filters
+ * (src/components/listing-filters.tsx): flat, the full tree is far past the 60
+ * children a <select> may have before an audit flags excessive DOM width. A
+ * parent with subcategories heads its own group and stays selectable as its
+ * group's first option (its results include the subcategories).
+ */
+function categoryOptions(categories: CategoryOption[]) {
+  return categoryTree(categories).map(({ root, children }) =>
+    children.length ? (
+      <optgroup key={root.slug} label={root.name}>
+        {option(root)}
+        {children.map(option)}
+      </optgroup>
+    ) : (
+      option(root)
+    ),
+  );
+}
+
+/** The city options, grouped by first letter once the list is too long to leave flat. */
+function cityOptions(cities: Option[]) {
+  return cities.length > MAX_FLAT_OPTIONS
+    ? byInitial(cities).map((group) => (
+        <optgroup key={group.label} label={group.label}>
+          {group.items.map(option)}
+        </optgroup>
+      ))
+    : cities.map(option);
+}
 
 function FilterSelect({
   id,
@@ -48,7 +91,7 @@ function FilterSelect({
   label,
   icon,
   allLabel,
-  options,
+  children,
   className,
 }: {
   id: string;
@@ -56,7 +99,8 @@ function FilterSelect({
   label: string;
   icon: IconName;
   allLabel: string;
-  options: Option[];
+  /** The <option>s (and <optgroup>s) after the "All …" option. */
+  children: ReactNode;
   className: string;
 }) {
   return (
@@ -67,11 +111,7 @@ function FilterSelect({
       </label>
       <select id={id} name={name} defaultValue="" className={SELECT}>
         <option value="">{allLabel}</option>
-        {options.map((o) => (
-          <option key={o.slug} value={o.slug}>
-            {o.name}
-          </option>
-        ))}
+        {children}
       </select>
       <Icon
         name="expand_more"
@@ -88,7 +128,7 @@ export function Hero({
   cities,
 }: {
   content: HeroContent;
-  categories: Pick<Category, 'slug' | 'name'>[];
+  categories: CategoryOption[];
   cities: Pick<City, 'slug' | 'name'>[];
 }) {
   // The badge wraps at " + " on narrow phones, as the original markup did.
@@ -107,11 +147,17 @@ export function Hero({
           className="absolute top-0 right-[calc(100%-60px)] hidden h-full w-[440px] lg:block"
           style={{ backgroundImage: SKYLINE_FADE }}
         />
+        {/* The largest element in the first viewport, so the likely LCP element,
+            on phones as well as desktop: fetched eagerly at high priority. React
+            hoists a matching fetchpriority="high" preload into <head> for an eager
+            <img>, which is why the Next 16 docs prefer this pair to `preload`,
+            whose <link> carries no fetchpriority and starts at low image priority. */}
         <Image
           src={c.photo.src}
           alt={c.photo.alt}
           fill
-          preload
+          loading="eager"
+          fetchPriority="high"
           sizes="(min-width: 1024px) 563px, 100vw"
           className="object-cover object-right-top lg:[mask-image:linear-gradient(to_right,transparent,black_60px)]"
         />
@@ -191,18 +237,20 @@ export function Hero({
             label="Category"
             icon="grid_view"
             allLabel={c.category_all}
-            options={categories}
             className="lg:flex-1"
-          />
+          >
+            {categoryOptions(categories)}
+          </FilterSelect>
           <FilterSelect
             id="hero-city"
             name="city"
             label="City"
             icon="location_on"
             allLabel={c.city_all}
-            options={cities}
             className="lg:flex-[1.2]"
-          />
+          >
+            {cityOptions(cities)}
+          </FilterSelect>
           <button
             type="submit"
             className="bg-hero-green hover:bg-hero-green-hover focus-visible:ring-hero-green h-12 w-full shrink-0 rounded-lg text-base font-semibold text-white transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden lg:w-[188px]"

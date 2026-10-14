@@ -38,11 +38,12 @@ export function CityGrid({ section }: { section: CityGridVM }) {
                 href={city.href}
                 className="group bg-navy-800 relative block h-full overflow-hidden rounded-lg"
               >
-                {/* Decorative: the city name below is the link text. */}
+                {/* Inside the link, so it carries alt text (audits flag an anchored
+                    image with alt=""): the image's own, or else the city name. */}
                 {city.image ? (
                   <Image
                     src={city.image.url}
-                    alt=""
+                    alt={city.image.alt || city.name}
                     fill
                     sizes={sizes}
                     className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-105 motion-safe:group-focus-visible:scale-105"

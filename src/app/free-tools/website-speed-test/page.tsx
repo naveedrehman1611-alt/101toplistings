@@ -2,11 +2,13 @@ import { ToolPage, toolMetadata } from '@/components/tools/tool-page';
 import { getPageContent } from '@/lib/content/get';
 import { SpeedTest } from './speed-test';
 
-export const metadata = toolMetadata(
-  'website-speed-test',
-  'Free Website Speed Test — Core Web Vitals & Lighthouse',
-  'Test any page’s speed on mobile and desktop. Get Lighthouse scores, Core Web Vitals (LCP, INP, CLS), real-user data and a prioritised list of fixes. Free.',
-);
+export function generateMetadata() {
+  return toolMetadata(
+    'website-speed-test',
+    'Free Website Speed Test — Core Web Vitals & Lighthouse',
+    'Test any page’s speed on mobile and desktop. Get Lighthouse scores, Core Web Vitals (LCP, INP, CLS), real-user data and a prioritised list of fixes. Free.',
+  );
+}
 
 // Copy: Admin → Content → "Free tool: Website Speed Test" (src/lib/content/pages/tools.ts).
 export default async function Page() {

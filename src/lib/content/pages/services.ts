@@ -22,7 +22,7 @@ import {
 // /seo-services hub
 // ---------------------------------------------------------------------------
 
-const QUOTE_HREF = '/contact?subject=SEO%20services';
+const QUOTE_HREF = '/contact?subject=seo%20services';
 
 function hubDefault(id: HubCategoryId) {
   const c = HUB_CATEGORIES.find((h) => h.id === id);

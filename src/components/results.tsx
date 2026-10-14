@@ -89,8 +89,8 @@ export function Results({
             <Link
               key={key}
               href={buildHref(basePath, { ...params, q: query, sort: sortParam(key) })}
-              // Re-sorted copies of the same page (canonical to it, and
-              // noindex): crawlers need not follow every order of every page.
+              // Re-sorted copies of the same page (canonical to it, see
+              // resultsPageSeo): crawlers need not follow every order of every page.
               rel={key === defaultSort ? undefined : 'nofollow'}
               className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
                 sort === key

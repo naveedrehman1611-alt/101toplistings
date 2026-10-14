@@ -3,10 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@/components/icon';
 import { SiteLogo } from '@/components/site-logo';
-import { drawer } from '@/lib/motion';
+import { usePresence } from '@/lib/motion';
 import { useSignedIn } from '@/lib/use-signed-in';
 import { TOOLS_BASE, toolHref, toolsByCategory, type FreeTool } from '@/lib/free-tools';
 import { NewPill, SoonPill, ToolsMegaMenu } from '@/components/tools/tools-mega-menu';
@@ -64,6 +63,8 @@ export function Header({
   // null while unknown: neither the login link nor the account icon shows yet.
   const signedIn = useSignedIn();
   const [open, setOpen] = useState(false);
+  // Kept mounted through the 300ms fade out; the panel slides out in 180ms.
+  const drawer = usePresence(open, 300);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -324,98 +325,93 @@ export function Header({
 
       {/* Outside <header> on purpose: its backdrop-filter would make it the
           containing block of this fixed overlay, clipping it to the bar. */}
-      <AnimatePresence>
-        {open ? (
-          <motion.div
-            className="fixed inset-0 z-50 lg:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+      {drawer.mounted ? (
+        <div
+          className={`fixed inset-0 z-50 transition-opacity duration-300 ease-[cubic-bezier(0.25,0.1,0.35,1)] lg:hidden ${
+            drawer.shown ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <button
+            type="button"
+            aria-label="Close menu"
+            tabIndex={-1}
+            className="bg-on-background/50 absolute inset-0 backdrop-blur-xs"
+            onClick={close}
+          />
+          <nav
+            aria-label="Mobile"
+            className={`bg-surface-card absolute top-0 right-0 flex h-full w-80 max-w-[85vw] flex-col overflow-y-auto p-6 shadow-2xl transition-transform ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              drawer.shown ? 'translate-x-0 duration-[320ms]' : 'translate-x-full duration-[180ms]'
+            }`}
           >
-            <button
-              type="button"
-              aria-label="Close menu"
-              tabIndex={-1}
-              className="bg-on-background/50 absolute inset-0 backdrop-blur-xs"
-              onClick={close}
-            />
-            <motion.nav
-              aria-label="Mobile"
-              variants={drawer}
-              initial="hidden"
-              animate="show"
-              exit="exit"
-              className="bg-surface-card absolute top-0 right-0 flex h-full w-80 max-w-[85vw] flex-col overflow-y-auto p-6 shadow-2xl"
-            >
-              <div className="mb-6 flex items-center justify-between gap-4">
-                <SiteLogo image={c.logo} className="h-9 w-auto min-w-0" />
-                <button
-                  ref={closeButton}
-                  type="button"
-                  onClick={close}
-                  aria-label="Close menu"
-                  className={`text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface grid size-10 shrink-0 place-items-center rounded-lg transition-colors ${focusRing}`}
-                >
-                  <Icon name="close" />
-                </button>
-              </div>
+            <div className="mb-6 flex items-center justify-between gap-4">
+              <SiteLogo image={c.logo} className="h-9 w-auto min-w-0" />
+              <button
+                ref={closeButton}
+                type="button"
+                onClick={close}
+                aria-label="Close menu"
+                className={`text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface grid size-10 shrink-0 place-items-center rounded-lg transition-colors ${focusRing}`}
+              >
+                <Icon name="close" />
+              </button>
+            </div>
 
-              <ul className="flex flex-col gap-1">
-                {drawerItems.map((item) => {
-                  if (item === drawerServicesLink) return servicesSection(item.label);
-                  if (item === drawerToolsLink) return toolsSection(item.label);
-                  const active = isActive(pathname, item.url);
-                  return (
-                    <li key={`${item.url}|${item.label}`}>
-                      <Link
-                        href={item.url}
-                        onClick={close}
-                        aria-current={active ? 'page' : undefined}
-                        className={`font-label-md text-label-md block rounded-lg px-3 py-3 transition-colors ${focusRing} ${
-                          active
-                            ? 'bg-surface-container-low text-primary-container font-semibold'
-                            : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-                {drawerServicesLink ? null : servicesSection()}
-                {drawerToolsLink ? null : toolsSection()}
-              </ul>
+            <ul className="flex flex-col gap-1">
+              {drawerItems.map((item) => {
+                if (item === drawerServicesLink) return servicesSection(item.label);
+                if (item === drawerToolsLink) return toolsSection(item.label);
+                const active = isActive(pathname, item.url);
+                return (
+                  <li key={`${item.url}|${item.label}`}>
+                    <Link
+                      href={item.url}
+                      onClick={close}
+                      aria-current={active ? 'page' : undefined}
+                      className={`font-label-md text-label-md block rounded-lg px-3 py-3 transition-colors ${focusRing} ${
+                        active
+                          ? 'bg-surface-container-low text-primary-container font-semibold'
+                          : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+              {drawerServicesLink ? null : servicesSection()}
+              {drawerToolsLink ? null : toolsSection()}
+            </ul>
 
-              <div className="border-border-subtle mt-6 flex flex-col gap-3 border-t pt-6">
-                {signedIn === null ? null : (
-                  <Link
-                    href={signedIn ? '/dashboard' : c.login.href}
-                    onClick={close}
-                    className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low inline-flex h-11 items-center justify-center gap-2 rounded-lg border transition-colors ${focusRing}`}
-                  >
-                    {signedIn ? (
-                      <>
-                        <Icon name="person" size={18} />
-                        {c.account_label}
-                      </>
-                    ) : (
-                      c.mobile_login
-                    )}
-                  </Link>
-                )}
+            <div className="border-border-subtle mt-6 flex flex-col gap-3 border-t pt-6">
+              {signedIn === null ? null : (
                 <Link
-                  href={c.add_listing.href}
+                  href={signedIn ? '/dashboard' : c.login.href}
                   onClick={close}
-                  className={`bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary inline-flex h-11 items-center justify-center gap-2 rounded-lg shadow-xs transition-all hover:shadow-sm ${focusRing}`}
+                  className={`border-border-subtle text-on-surface font-label-md text-label-md hover:bg-surface-container-low inline-flex h-11 items-center justify-center gap-2 rounded-lg border transition-colors ${focusRing}`}
                 >
-                  <Icon name="add_circle" size={18} />
-                  {c.add_listing.label}
+                  {signedIn ? (
+                    <>
+                      <Icon name="person" size={18} />
+                      {c.account_label}
+                    </>
+                  ) : (
+                    c.mobile_login
+                  )}
                 </Link>
-              </div>
-            </motion.nav>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+              )}
+              <Link
+                href={c.add_listing.href}
+                onClick={close}
+                className={`bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary inline-flex h-11 items-center justify-center gap-2 rounded-lg shadow-xs transition-all hover:shadow-sm ${focusRing}`}
+              >
+                <Icon name="add_circle" size={18} />
+                {c.add_listing.label}
+              </Link>
+            </div>
+          </nav>
+        </div>
+      ) : null}
     </>
   );
 }

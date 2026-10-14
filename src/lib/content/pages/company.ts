@@ -18,7 +18,7 @@ import {
  * fields, so an admin never has to type markup.
  */
 
-const QUOTE_HREF = '/contact?subject=SEO%20services';
+const QUOTE_HREF = '/contact?subject=seo%20services';
 
 const MARKDOWN_HINT = 'Use **bold**, *italic* and [link text](/path) for emphasis and links.';
 const PARAGRAPHS_HINT = 'Leave a blank line between paragraphs.';
@@ -368,7 +368,7 @@ export const ABOUT_PAGE = definePage({
         primary_icon: icon('Dark button icon', 'fact_check'),
         quote: link(
           'White button',
-          { label: 'Request a Quote', href: '/contact?subject=SEO%20services' },
+          { label: 'Request a Quote', href: '/contact?subject=seo%20services' },
           'Leave the text blank to hide the button.',
         ),
         quote_icon: icon('White button icon', 'mail'),
@@ -419,7 +419,7 @@ export const CONTACT_PAGE = definePage({
         }),
         cta_link: link('Bottom link', {
           label: 'Add your listing',
-          href: '/dashboard/listings/new',
+          href: '/add-business',
         }),
       },
     }),
@@ -441,7 +441,7 @@ export const CONTACT_PAGE = definePage({
               question: 'How do I list my business?',
               answer:
                 "It's free and takes just a couple of minutes. Fill in your details and submit — every listing is reviewed before it goes live.",
-              link: { label: 'Add your listing', href: '/dashboard/listings/new' },
+              link: { label: 'Add your listing', href: '/add-business' },
             },
             {
               question: 'Is it free to use?',
@@ -453,7 +453,7 @@ export const CONTACT_PAGE = definePage({
               question: 'How do I edit my listing?',
               answer:
                 'Sign in and open My listings from your dashboard, then choose the listing you want to update.',
-              link: { label: 'Go to my listings', href: '/dashboard' },
+              link: { label: 'Go to my listings', href: '/login?next=/dashboard' },
             },
             {
               question: 'What areas do you cover?',
@@ -478,7 +478,7 @@ export const CONTACT_PAGE = definePage({
         subjects: list('Subjects', {
           noun: 'subject',
           max: 20,
-          hint: 'Saved with each message and shown in the inbox. Links such as /contact?subject=SEO%20services preselect the subject with that name.',
+          hint: 'Saved with each message and shown in the inbox. Links such as /contact?subject=seo%20services preselect the subject with that name.',
           item: { subject: text('Subject', '', { max: 80 }) },
           default: [
             { subject: 'General question' },
@@ -561,7 +561,7 @@ export const PRICING_PAGE = definePage({
               body: 'A standard business listing in the directory, reviewed before it goes live.',
               points:
                 'Your own listing page\nCategory and city placement\nEdit your details any time',
-              primary: { label: 'Create listing', href: '/dashboard/listings/new' },
+              primary: { label: 'Create listing', href: '/register?next=/dashboard/listings/new' },
               secondary: { label: '', href: '' },
             },
             {
@@ -572,7 +572,7 @@ export const PRICING_PAGE = definePage({
               points: 'Shown ahead of standard listings\nListed on the featured businesses page',
               primary: {
                 label: 'Request a quote',
-                href: '/contact?subject=Partnership%20or%20advertising',
+                href: '/contact?subject=partnership%20or%20advertising',
               },
               secondary: { label: '', href: '' },
             },
@@ -647,7 +647,10 @@ export const ADD_BUSINESS_PAGE = definePage({
           { max: 800 },
         ),
         primary_icon: icon('Main button icon', 'add_business'),
-        primary: link('Main button', { label: 'Create listing', href: '/dashboard/listings/new' }),
+        primary: link('Main button', {
+          label: 'Create listing',
+          href: '/register?next=/dashboard/listings/new',
+        }),
         secondary: link('Second button', {
           label: 'Claim an existing listing',
           href: '/claim-business',

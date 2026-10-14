@@ -56,7 +56,7 @@ export type ServicePage = {
 /** areaServed for pages that set none: the services are delivered remotely. */
 export const DEFAULT_AREA_SERVED = 'Worldwide';
 
-const SEO_QUOTE = '/contact?subject=SEO%20services';
+const SEO_QUOTE = '/contact?subject=seo%20services';
 const SEO_GUIDES = { label: 'SEO guides and how-tos', href: '/blog/seo' };
 const MARKETING_GUIDES = { label: 'Digital marketing guides', href: '/blog/digital-marketing' };
 
@@ -496,7 +496,7 @@ export const MENU_SERVICE_PAGES: ServicePage[] = [
       },
     ],
     ctaLabel: 'Get Link Building Strategy',
-    ctaHref: '/contact?subject=Link%20building',
+    ctaHref: '/contact?subject=link%20building',
     related: ['guest-posting', 'off-page-seo', 'content-marketing'],
     guides: [SEO_GUIDES],
   },
@@ -581,7 +581,7 @@ export const MENU_SERVICE_PAGES: ServicePage[] = [
       },
     ],
     ctaLabel: 'Request Outreach Plan',
-    ctaHref: '/contact?subject=Guest%20posting',
+    ctaHref: '/contact?subject=guest%20posting',
     related: ['link-building', 'off-page-seo', 'content-marketing'],
     guides: [SEO_GUIDES],
   },
@@ -755,7 +755,7 @@ export const MENU_SERVICE_PAGES: ServicePage[] = [
       },
     ],
     ctaLabel: 'Get Marketing Strategy',
-    ctaHref: '/contact?subject=Digital%20marketing',
+    ctaHref: '/contact?subject=digital%20marketing',
     related: ['local-seo', 'content-marketing', 'link-building'],
     guides: [MARKETING_GUIDES, SEO_GUIDES, { label: 'Free SEO tools', href: '/free-tools' }],
   },
@@ -792,7 +792,11 @@ export function serviceNavItems(): ServiceNavItem[] {
   }));
 }
 
-/** The contact form with the SEO services subject and this service named in the message. */
-export function quoteHref(name: string): string {
-  return `/contact?subject=SEO%20services&service=${encodeURIComponent(name)}`;
+/**
+ * The contact form with the SEO services subject and this service named in the
+ * message. The service goes by its slug, so the URL stays lowercase; the
+ * contact page turns it back into the service's name.
+ */
+export function quoteHref(slug: string): string {
+  return `/contact?subject=seo%20services&service=${encodeURIComponent(slug)}`;
 }

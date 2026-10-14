@@ -35,7 +35,7 @@ type Sections = (typeof ABOUT_PAGE)['sections'];
 type Content = { [K in keyof Sections]: SectionValues<Sections[K]> };
 
 /** The green band's quote button; the band's other copy is shared with the SEO pages. */
-const QUOTE_HREF = '/contact?subject=SEO%20services';
+const QUOTE_HREF = '/contact?subject=seo%20services';
 
 const button =
   'font-display inline-flex items-center justify-center gap-1.5 rounded-[7px] px-6 py-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2';

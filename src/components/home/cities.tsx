@@ -47,46 +47,109 @@ const ALL_TILES_PER_MARKET = 2;
 /**
  * A 960px-wide thumbnail of a Wikimedia Commons photo. `dir` is the hash path
  * Commons files the original under (the first one and two hex digits of the
- * MD5 of the file name), so the URL needs no lookup at request time.
+ * MD5 of the file name), so the URL needs no lookup at request time. `alt`
+ * says what the photo shows.
  */
-function commons(dir: string, file: string): string {
-  return `https://upload.wikimedia.org/wikipedia/commons/thumb/${dir}/${file}/960px-${file}`;
+function commons(dir: string, file: string, alt: string): CityPhoto {
+  return {
+    src: `https://upload.wikimedia.org/wikipedia/commons/thumb/${dir}/${file}/960px-${file}`,
+    alt,
+  };
 }
 
+type CityPhoto = { src: string; alt: string };
+
 /** A real photo of each city (a landmark or its skyline), keyed by city slug. */
-const IMAGES: Record<string, string> = {
-  lahore: commons('3/32', 'Badshahi_Masjid,_the_Royal_Mosque_in_Lahore,_Pakistan.jpg'),
-  karachi: commons('8/86', 'Mazar-e-Quaid_Karachi.jpg'),
-  multan: commons('8/82', 'Tomb_of_Shah_Rukn-e-Alam,_Multan,_Pakistan_2016.jpg'),
-  islamabad: commons('f/fe', 'Faisal_Mosque_islamabad_11.jpg'),
-  rawalpindi: commons('6/61', 'Gulshan_Dadn_Khan_Maseet,_Rawalpindi.JPG'),
-  faisalabad: commons('f/f1', 'Clock_Tower_Faisalabad_by_Usman_Nadeem.jpg'),
-  london: commons('8/86', 'City_of_London,_seen_from_Tower_Bridge.jpg'),
-  manchester: commons('0/0d', 'Manchester_City_Skyline.jpg'),
-  birmingham: commons('5/5c', 'Library_of_Birmingham_(32958941706).jpg'),
-  edinburgh: commons('f/fd', 'Edinburgh_Castle_From_Princes_Street_Garden_001.jpg'),
-  glasgow: commons('c/cf', 'Glasgow,_George_Square_mit_City_Chambers_(38584813792).jpg'),
-  'new-york': commons('d/da', 'Lower_Manhattan_Skyline_September_2021.jpg'),
-  'los-angeles': commons('8/88', 'Los_Angeles_Skyline.jpg'),
-  chicago: commons('7/70', 'Chicago_Skyline_and_Lake_Michigan.JPG'),
-  miami: commons('d/d8', 'Downtown_Miami_skyline_May_2011.jpg'),
-  houston: commons('e/e2', 'Houston,_Texas_Skyline_2017.jpg'),
-  dubai: commons('1/10', 'Dubai_Skyline_2016.jpg'),
-  'abu-dhabi': commons('9/9c', 'Abu_dhabi_skylines_2014.jpg'),
-  sharjah: commons('0/08', 'Sharjah_city_skyline.jpg'),
-  ajman: commons('0/0c', 'Ajman_Fort_Watchtower_and_Barjeel.jpg'),
-  'ras-al-khaimah': commons('9/9f', 'Cloudy_evening_in_RAK_city.jpg'),
-  paris: commons('a/af', 'Tour_eiffel_at_sunrise_from_the_trocadero.jpg'),
-  berlin: commons('3/39', 'Brandenburg_Gate_-_Brandenburger_Tor_-_Berlin_-_Germany_-_01.jpg'),
-  madrid: commons('c/c5', 'Madrid_Spain_Metropolis-Building-01.jpg'),
-  rome: commons('5/53', 'Colosseum_exterior_at_night,_Rome,_Italy_(Ank_Kumar)_01.jpg'),
+const IMAGES: Record<string, CityPhoto> = {
+  lahore: commons(
+    '3/32',
+    'Badshahi_Masjid,_the_Royal_Mosque_in_Lahore,_Pakistan.jpg',
+    'Badshahi Mosque, Lahore',
+  ),
+  karachi: commons('8/86', 'Mazar-e-Quaid_Karachi.jpg', 'Mazar-e-Quaid, Karachi'),
+  multan: commons(
+    '8/82',
+    'Tomb_of_Shah_Rukn-e-Alam,_Multan,_Pakistan_2016.jpg',
+    'Tomb of Shah Rukn-e-Alam, Multan',
+  ),
+  islamabad: commons('f/fe', 'Faisal_Mosque_islamabad_11.jpg', 'Faisal Mosque, Islamabad'),
+  rawalpindi: commons('6/61', 'Gulshan_Dadn_Khan_Maseet,_Rawalpindi.JPG', 'A mosque in Rawalpindi'),
+  faisalabad: commons(
+    'f/f1',
+    'Clock_Tower_Faisalabad_by_Usman_Nadeem.jpg',
+    'Clock Tower, Faisalabad',
+  ),
+  london: commons(
+    '8/86',
+    'City_of_London,_seen_from_Tower_Bridge.jpg',
+    'The City of London seen from Tower Bridge',
+  ),
+  manchester: commons('0/0d', 'Manchester_City_Skyline.jpg', 'Manchester city skyline'),
+  birmingham: commons('5/5c', 'Library_of_Birmingham_(32958941706).jpg', 'Library of Birmingham'),
+  edinburgh: commons(
+    'f/fd',
+    'Edinburgh_Castle_From_Princes_Street_Garden_001.jpg',
+    'Edinburgh Castle from Princes Street Gardens',
+  ),
+  glasgow: commons(
+    'c/cf',
+    'Glasgow,_George_Square_mit_City_Chambers_(38584813792).jpg',
+    'George Square and the City Chambers, Glasgow',
+  ),
+  'new-york': commons(
+    'd/da',
+    'Lower_Manhattan_Skyline_September_2021.jpg',
+    'Lower Manhattan skyline, New York',
+  ),
+  'los-angeles': commons('8/88', 'Los_Angeles_Skyline.jpg', 'Los Angeles skyline'),
+  chicago: commons(
+    '7/70',
+    'Chicago_Skyline_and_Lake_Michigan.JPG',
+    'Chicago skyline and Lake Michigan',
+  ),
+  miami: commons('d/d8', 'Downtown_Miami_skyline_May_2011.jpg', 'Downtown Miami skyline'),
+  houston: commons('e/e2', 'Houston,_Texas_Skyline_2017.jpg', 'Houston skyline'),
+  dubai: commons('1/10', 'Dubai_Skyline_2016.jpg', 'Dubai skyline'),
+  'abu-dhabi': commons('9/9c', 'Abu_dhabi_skylines_2014.jpg', 'Abu Dhabi skyline'),
+  sharjah: commons('0/08', 'Sharjah_city_skyline.jpg', 'Sharjah city skyline'),
+  ajman: commons('0/0c', 'Ajman_Fort_Watchtower_and_Barjeel.jpg', 'Ajman Fort watchtower'),
+  'ras-al-khaimah': commons(
+    '9/9f',
+    'Cloudy_evening_in_RAK_city.jpg',
+    'Ras Al Khaimah city on a cloudy evening',
+  ),
+  paris: commons(
+    'a/af',
+    'Tour_eiffel_at_sunrise_from_the_trocadero.jpg',
+    'The Eiffel Tower at sunrise from the Trocadéro, Paris',
+  ),
+  berlin: commons(
+    '3/39',
+    'Brandenburg_Gate_-_Brandenburger_Tor_-_Berlin_-_Germany_-_01.jpg',
+    'Brandenburg Gate, Berlin',
+  ),
+  madrid: commons('c/c5', 'Madrid_Spain_Metropolis-Building-01.jpg', 'Metropolis Building, Madrid'),
+  rome: commons(
+    '5/53',
+    'Colosseum_exterior_at_night,_Rome,_Italy_(Ank_Kumar)_01.jpg',
+    'The Colosseum at night, Rome',
+  ),
   amsterdam: commons(
     'e/ef',
     'Colorful_canal_houses_at_golden_hour_in_Damrak_avenue_Amsterdam_the_Netherlands.jpg',
+    'Canal houses on the Damrak at golden hour, Amsterdam',
   ),
-  barcelona: commons('5/5c', 'Sagrada_Familia,_Barcelona_(P1170676).jpg'),
-  milan: commons('8/89', 'Cathedrale_duomo,_Milan.JPG'),
-  munich: commons('6/6e', 'Neues_Rathaus_Marienplatz_Munich.jpg'),
+  barcelona: commons(
+    '5/5c',
+    'Sagrada_Familia,_Barcelona_(P1170676).jpg',
+    'Sagrada Família, Barcelona',
+  ),
+  milan: commons('8/89', 'Cathedrale_duomo,_Milan.JPG', 'Milan Cathedral'),
+  munich: commons(
+    '6/6e',
+    'Neues_Rathaus_Marienplatz_Munich.jpg',
+    'Neues Rathaus on Marienplatz, Munich',
+  ),
 };
 
 /** Tile icons, cycled by position so neighbouring tiles differ. */
@@ -141,15 +204,21 @@ function CityTile({
         <Icon name={ICONS[index % ICONS.length]} size={160} />
       </div>
       {image && (
-        // Decorative (the city name is the link text). `unoptimized` serves the
-        // Commons thumbnail as-is, so its host needs no images.remotePatterns
-        // entry and the image optimiser never fetches it.
+        // The photo sits inside the link, so it carries alt text (what it shows)
+        // rather than alt="", which audits flag on an anchored image. `unoptimized`
+        // serves the Commons thumbnail as-is, so its host needs no
+        // images.remotePatterns entry and the image optimiser never fetches it.
+        // width/height put explicit dimensions on the <img>: the 960px thumbnail
+        // in the tile's 4:5 box. CSS sizes it to cover the tile, as `fill` did,
+        // and it loads lazily (next/image's default) since the section is far
+        // below the fold.
         <Image
-          src={image}
-          alt=""
-          fill
+          src={image.src}
+          alt={image.alt}
+          width={960}
+          height={1200}
           unoptimized
-          className="object-cover opacity-80 transition-transform duration-700 group-hover:scale-110"
+          className="absolute inset-0 size-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-110"
         />
       )}
       <div aria-hidden className="bg-hero-navy/60 absolute inset-0" />

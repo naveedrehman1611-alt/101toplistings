@@ -51,7 +51,7 @@ const header = defineSection({
     account_label: text('Phone menu, account button (signed in)', 'Your Account', { max: 40 }),
     add_listing: link('Add Listing button', {
       label: 'Add Listing',
-      href: '/dashboard/listings/new',
+      href: '/add-business',
     }),
     mobile_tools_label: text('Phone menu, free tools heading', 'Free SEO Tools', {
       max: 40,

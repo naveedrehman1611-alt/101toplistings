@@ -7,6 +7,7 @@ import { SITE_URL } from '@/lib/supabase';
 import { Breadcrumbs } from '@/components/ui';
 import { GoogleSignIn } from '@/components/google-sign-in';
 import { getPageContent } from '@/lib/content/get';
+import { nextParam } from '@/lib/legacy-redirects';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,7 +60,7 @@ async function register(formData: FormData) {
 /** Carries ?next= over to the sign-in page, so the visitor still lands where they were going. */
 function withNext(href: string, next: string | undefined): string {
   if (!next) return href;
-  return `${href}${href.includes('?') ? '&' : '?'}next=${encodeURIComponent(next)}`;
+  return `${href}${href.includes('?') ? '&' : '?'}next=${nextParam(next)}`;
 }
 
 export default async function RegisterPage({

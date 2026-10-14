@@ -4,7 +4,7 @@ import { Icon } from '@/components/icon';
 import { JsonLd, breadcrumbSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
 import { SITE_URL } from '@/lib/supabase';
-import { SHARE_IMAGE } from '@/lib/seo';
+import { pageMetadata } from '@/lib/seo';
 import { getPageContent } from '@/lib/content/get';
 import { categoryField } from '@/lib/content/pages/tools';
 import { toolsWithCopy, type HubContent } from '@/components/tools/tool-page';
@@ -14,20 +14,16 @@ const TITLE = 'Free SEO Tools — No Signup';
 const DESCRIPTION =
   'Free SEO tools that run in your browser: speed and mobile tests, keyword density, meta tag and SERP preview, schema, robots.txt and slug generators. No signup.';
 
-// Static on purpose: seoMetadata() would add a Supabase read to this page's metadata.
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: TOOLS_BASE },
-  openGraph: {
+// Not seoMetadata(), which would add a seo_meta read to this page's metadata;
+// pageMetadata() only adds the cached Settings read the root layout already makes.
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata(TOOLS_BASE, {
     title: TITLE,
     description: DESCRIPTION,
-    url: TOOLS_BASE,
-    type: 'website',
-    images: [SHARE_IMAGE],
-  },
-  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
-};
+    openGraph: { title: TITLE, description: DESCRIPTION },
+    twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
+  });
+}
 
 function ToolCard({ tool, labels }: { tool: ShownTool; labels: HubContent['tools'] }) {
   const live = tool.status === 'live';

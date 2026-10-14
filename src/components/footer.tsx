@@ -210,14 +210,19 @@ export function Footer({
               ) : null}
             </ul>
 
+            {/* Plain server-rendered <a href> links (crawlable, no JS), on every
+                page including the home page. rel="me" marks them as the site's
+                own profiles, matching the Organization sameAs in the layout. The
+                URLs come from Admin → Settings → Social links; an empty one
+                hides its icon, and with none set the list is left out. */}
             {social.length > 0 ? (
-              <ul className="mt-8 flex flex-wrap gap-3">
+              <ul aria-label={`${brand} on social media`} className="mt-8 flex flex-wrap gap-3">
                 {social.map((s) => (
                   <li key={s.network}>
                     <a
                       href={s.href}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel="me noopener noreferrer"
                       aria-label={`${brand} on ${SOCIAL_LABELS[s.network]}`}
                       className="hover:border-brand-400 hover:text-brand-400 focus-visible:outline-brand-400 grid size-11 place-items-center rounded-lg border border-white/15 bg-white/5 text-slate-200 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
                     >

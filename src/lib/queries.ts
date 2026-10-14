@@ -4,6 +4,7 @@ import { READ_REVALIDATE_SECONDS, SEARCH_TAG, supabase } from './supabase';
 import { mediaUrl, type MediaItem } from './media';
 import { isMissingColumnError } from './review-criteria';
 import { maskPhone } from './phone';
+import { canonicalHref } from './legacy-redirects';
 
 /**
  * Every read below used to end in `data ?? []`, which makes a failed request
@@ -116,7 +117,12 @@ export const getMenu = cache(async function getMenu(
     .order('sort_order');
   if (name) q = q.eq('menus.name', name);
   const rows = await readList('menu_items.select', q);
-  return rows.map(({ label, url, sort_order }) => ({ label, url, sort_order })) as MenuItem[];
+  // Stored links can predate a route change; render the final URL, not a redirect.
+  return rows.map(({ label, url, sort_order }) => ({
+    label,
+    url: canonicalHref(url as string),
+    sort_order,
+  })) as MenuItem[];
 });
 
 export const getPageSections = cache(async function getPageSections(
@@ -138,7 +144,7 @@ export const getPageSections = cache(async function getPageSections(
   return rows.map((row) => {
     const { pages, ...section } = row as PageSection & { pages: unknown };
     void pages;
-    return section;
+    return { ...section, cta_url: section.cta_url && canonicalHref(section.cta_url) };
   }) as PageSection[];
 });
 

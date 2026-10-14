@@ -10,11 +10,10 @@ import {
 } from '@/lib/queries';
 import { Results, parsePage, parseSort } from '@/components/results';
 import { ListingFilters } from '@/components/listing-filters';
-import { SITE_URL } from '@/lib/supabase';
-import { MIN_CATEGORY_LISTINGS_TO_INDEX, SHARE_IMAGE, resultsPageSeo } from '@/lib/seo';
+import { MIN_CATEGORY_LISTINGS_TO_INDEX, pageMetadata, resultsPageSeo } from '@/lib/seo';
 import { JsonLd, breadcrumbSchema, itemListSchema } from '@/components/json-ld';
 import { PageHero } from '@/components/page-hero';
-import { redirectOrNotFound } from '@/lib/redirects';
+import { redirectOrNotFound, redirectToLowercase } from '@/lib/redirects';
 import { getPageContent } from '@/lib/content/get';
 import { fill } from '@/components/browse/fill';
 
@@ -40,24 +39,20 @@ export async function generateMetadata({
   const description = cat.description ?? `Browse ${cat.name.toLowerCase()} businesses.`;
   // A failed count leaves the page indexable rather than noindex it on a blip.
   const count = (await getCategoryListingCounts([cat.id])).get(cat.id);
-  const variant = Boolean(sp.sort || sp.q?.trim() || sp.city);
-  return {
+  // ?sort= alone is the same listings reordered (canonical to the plain page);
+  // a search or city filter is a different subset (noindex).
+  const filtered = Boolean(sp.q?.trim() || sp.city);
+  const path = `/category/${cat.slug}`;
+  return pageMetadata(path, {
     title,
     description,
     ...resultsPageSeo(
-      `/category/${cat.slug}`,
+      path,
       parsePage(sp.page),
-      variant,
+      filtered,
       count !== undefined && count < MIN_CATEGORY_LISTINGS_TO_INDEX,
     ),
-    openGraph: {
-      title,
-      description,
-      url: `${SITE_URL}/category/${cat.slug}`,
-      images: [SHARE_IMAGE],
-    },
-    twitter: { card: 'summary_large_image', title, description, images: [SHARE_IMAGE] },
-  };
+  });
 }
 
 export default async function CategoryPage({
@@ -70,7 +65,10 @@ export default async function CategoryPage({
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const cat = await getCategoryBySlug(slug);
   // A retired slug may have a stored redirect; otherwise this renders the 404.
-  if (!cat) return redirectOrNotFound(`/category/${encodeURIComponent(slug)}`);
+  if (!cat) {
+    await redirectToLowercase('/category', slug, getCategoryBySlug, sp);
+    return redirectOrNotFound(`/category/${encodeURIComponent(slug)}`);
+  }
 
   const page = parsePage(sp.page);
   const sort = parseSort(sp.sort);

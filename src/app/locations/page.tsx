@@ -9,6 +9,13 @@ import { PageHero } from '@/components/page-hero';
 import { MIN_CITY_LISTINGS_TO_INDEX, seoMetadata } from '@/lib/seo';
 import { getPageContent } from '@/lib/content/get';
 import { fill } from '@/components/browse/fill';
+import { chunk } from '@/lib/chunk';
+
+/**
+ * Cities per <ul>: Pakistan alone has 60+, past the 60 children an audit flags.
+ * 48 fills whole rows of the 1-, 2- and 4-column grid, so the lists read as one.
+ */
+const CITIES_PER_LIST = 48;
 
 export const revalidate = 600;
 
@@ -102,33 +109,38 @@ export default async function LocationsPage() {
               >
                 {fill(countries.heading, { country: g.country.name })}
               </h2>
-              <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {g.cities.map((c) => {
-                  const n = counts.get(c.id);
-                  const indexed = (n ?? 0) >= MIN_CITY_LISTINGS_TO_INDEX;
-                  return (
-                    <li key={c.id}>
-                      <Link
-                        href={`/city/${c.slug}`}
-                        className={
-                          indexed
-                            ? 'surface-card hover:border-primary-container flex items-center justify-between gap-3 p-4 font-semibold transition-colors'
-                            : 'hover:border-primary-container flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] px-4 py-3 text-sm text-[var(--text-muted)] transition-colors'
-                        }
-                      >
-                        <span>{c.name}</span>
-                        {n !== undefined ? (
-                          <span className="text-sm font-normal text-[var(--text-muted)]">
-                            {fill(n === 1 ? countries.listing_one : countries.listing_many, {
-                              count: n,
-                            })}
-                          </span>
-                        ) : null}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+              {chunk(g.cities, CITIES_PER_LIST).map((run, i) => (
+                <ul
+                  key={i}
+                  className={`${i === 0 ? 'mt-6' : 'mt-3'} grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4`}
+                >
+                  {run.map((c) => {
+                    const n = counts.get(c.id);
+                    const indexed = (n ?? 0) >= MIN_CITY_LISTINGS_TO_INDEX;
+                    return (
+                      <li key={c.id}>
+                        <Link
+                          href={`/city/${c.slug}`}
+                          className={
+                            indexed
+                              ? 'surface-card hover:border-primary-container flex items-center justify-between gap-3 p-4 font-semibold transition-colors'
+                              : 'hover:border-primary-container flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] px-4 py-3 text-sm text-[var(--text-muted)] transition-colors'
+                          }
+                        >
+                          <span>{c.name}</span>
+                          {n !== undefined ? (
+                            <span className="text-sm font-normal text-[var(--text-muted)]">
+                              {fill(n === 1 ? countries.listing_one : countries.listing_many, {
+                                count: n,
+                              })}
+                            </span>
+                          ) : null}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ))}
             </section>
           ))
         )}

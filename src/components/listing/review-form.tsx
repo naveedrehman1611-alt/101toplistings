@@ -7,6 +7,7 @@ import type { ReviewFormState } from '@/lib/review-actions';
 import { REVIEW_CRITERIA } from '@/lib/review-criteria';
 import { fillNodes } from '@/components/browse/fill';
 import type { ListingContent } from '@/lib/content/pages/directory';
+import { nextParam } from '@/lib/legacy-redirects';
 
 const INITIAL_STATE: ReviewFormState = { status: 'idle', message: '' };
 
@@ -50,7 +51,7 @@ export function ReviewForm({
   }
 
   const fields = state.fields ?? {};
-  const back = encodeURIComponent(`/listing/${slug}#reviews`);
+  const back = nextParam(`/listing/${slug}#reviews`);
 
   return (
     <form action={formAction} className="space-y-5">
