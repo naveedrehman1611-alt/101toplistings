@@ -23,6 +23,10 @@
 --    must match the encoded request path exactly.
 --
 -- Safe to re-run: every statement only touches rows that still need it.
+--
+-- Each step is one self-contained statement (no temp tables, no session-only
+-- functions), so it gives the same result whether the script runs as one
+-- transaction or the Supabase SQL Editor commits statement by statement.
 
 begin;
 
@@ -31,7 +35,7 @@ begin;
 -- ---------------------------------------------------------------------------
 
 -- Mirrors LEGACY_REDIRECTS in src/lib/legacy-redirects.ts (and next.config.ts).
-create or replace function pg_temp.final_url(u text) returns text
+create or replace function public.m0028_final_url(u text) returns text
 language plpgsql immutable as $$
 declare
   path text;
@@ -69,80 +73,113 @@ end;
 $$;
 
 update menu_items
-   set url = pg_temp.final_url(url)
+   set url = public.m0028_final_url(url)
  where not is_external
-   and url is distinct from pg_temp.final_url(url);
+   and url is distinct from public.m0028_final_url(url);
 
 update page_sections
-   set cta_url = pg_temp.final_url(cta_url), updated_at = now()
- where cta_url is distinct from pg_temp.final_url(cta_url);
+   set cta_url = public.m0028_final_url(cta_url), updated_at = now()
+ where cta_url is distinct from public.m0028_final_url(cta_url);
 
 update section_items
-   set url = pg_temp.final_url(url)
- where url is distinct from pg_temp.final_url(url);
+   set url = public.m0028_final_url(url)
+ where url is distinct from public.m0028_final_url(url);
 
 update settings
-   set value = to_jsonb(pg_temp.final_url(value #>> '{}'))
+   set value = to_jsonb(public.m0028_final_url(value #>> '{}'))
  where key in ('header.cta_url', 'header.login_url', 'header.register_url')
    and jsonb_typeof(value) = 'string'
-   and value #>> '{}' is distinct from pg_temp.final_url(value #>> '{}');
+   and value #>> '{}' is distinct from public.m0028_final_url(value #>> '{}');
 
-drop function pg_temp.final_url(text);
+drop function public.m0028_final_url(text);
 
 -- ---------------------------------------------------------------------------
 -- 2. Lowercase public slugs, with a 301 from each old path
 -- ---------------------------------------------------------------------------
+-- One statement per table. Every part of a statement reads the same snapshot,
+-- so `r` (the rows to rename, taken before any change) drives the rename, the
+-- repointing of stored redirects and menu links at the old path, and the new
+-- 301 from the old path. For cities the clash check covers every location
+-- level (location_slugs), matching the assert_location_slug_unique trigger.
 
-create temp table slug_renames (
-  prefix   text not null,
-  id       uuid not null,
-  old_slug text not null,
-  new_slug text not null
-) on commit drop;
-
-insert into slug_renames
-select '/listing/', t.id, t.slug, lower(t.slug)
-  from listings t
- where t.slug ~ '[A-Z]' and t.slug ~ '^[A-Za-z0-9._~-]+$'
-   and not exists (select 1 from listings o where o.id <> t.id and lower(o.slug) = lower(t.slug));
-
-insert into slug_renames
-select '/category/', t.id, t.slug, lower(t.slug)
-  from categories t
- where t.slug ~ '[A-Z]' and t.slug ~ '^[A-Za-z0-9._~-]+$'
-   and not exists (select 1 from categories o where o.id <> t.id and lower(o.slug) = lower(t.slug));
-
--- location_slugs covers countries, regions, cities and areas, cities included.
-insert into slug_renames
-select '/city/', t.id, t.slug, lower(t.slug)
-  from cities t
- where t.slug ~ '[A-Z]' and t.slug ~ '^[A-Za-z0-9._~-]+$'
-   and not exists (select 1 from location_slugs o where o.id <> t.id and lower(o.slug) = lower(t.slug));
-
-insert into slug_renames
-select '/blog/', t.id, t.slug, lower(t.slug)
-  from blog_posts t
- where t.slug ~ '[A-Z]' and t.slug ~ '^[A-Za-z0-9._~-]+$'
-   and not exists (select 1 from blog_posts o where o.id <> t.id and lower(o.slug) = lower(t.slug));
-
-update listings t set slug = r.new_slug
-  from slug_renames r where r.prefix = '/listing/' and r.id = t.id;
-update categories t set slug = r.new_slug
-  from slug_renames r where r.prefix = '/category/' and r.id = t.id;
-update cities t set slug = r.new_slug
-  from slug_renames r where r.prefix = '/city/' and r.id = t.id;
-update blog_posts t set slug = r.new_slug
-  from slug_renames r where r.prefix = '/blog/' and r.id = t.id;
-
--- Stored redirects and menu links that pointed at an old path skip the hop.
-update redirects d set destination = r.prefix || r.new_slug
-  from slug_renames r where d.destination = r.prefix || r.old_slug;
-update menu_items m set url = r.prefix || r.new_slug
-  from slug_renames r where m.url = r.prefix || r.old_slug;
-
+with r as (
+  select t.id, lower(t.slug) as new_slug,
+         '/listing/' || t.slug as old_path, '/listing/' || lower(t.slug) as new_path
+    from listings t
+   where t.slug ~ '[A-Z]' and t.slug ~ '^[A-Za-z0-9._~-]+$'
+     and not exists (select 1 from listings o where o.id <> t.id and lower(o.slug) = lower(t.slug))
+),
+renamed as (
+  update listings t set slug = r.new_slug from r where t.id = r.id
+),
+repointed as (
+  update redirects d set destination = r.new_path from r where d.destination = r.old_path
+),
+menus as (
+  update menu_items m set url = r.new_path from r where m.url = r.old_path
+)
 insert into redirects (source, destination, status_code)
-select r.prefix || r.old_slug, r.prefix || r.new_slug, 301
-  from slug_renames r
+select old_path, new_path, 301 from r
+on conflict (source) do nothing;
+
+with r as (
+  select t.id, lower(t.slug) as new_slug,
+         '/category/' || t.slug as old_path, '/category/' || lower(t.slug) as new_path
+    from categories t
+   where t.slug ~ '[A-Z]' and t.slug ~ '^[A-Za-z0-9._~-]+$'
+     and not exists (select 1 from categories o where o.id <> t.id and lower(o.slug) = lower(t.slug))
+),
+renamed as (
+  update categories t set slug = r.new_slug from r where t.id = r.id
+),
+repointed as (
+  update redirects d set destination = r.new_path from r where d.destination = r.old_path
+),
+menus as (
+  update menu_items m set url = r.new_path from r where m.url = r.old_path
+)
+insert into redirects (source, destination, status_code)
+select old_path, new_path, 301 from r
+on conflict (source) do nothing;
+
+with r as (
+  select t.id, lower(t.slug) as new_slug,
+         '/city/' || t.slug as old_path, '/city/' || lower(t.slug) as new_path
+    from cities t
+   where t.slug ~ '[A-Z]' and t.slug ~ '^[A-Za-z0-9._~-]+$'
+     and not exists (select 1 from location_slugs o where o.id <> t.id and lower(o.slug) = lower(t.slug))
+),
+renamed as (
+  update cities t set slug = r.new_slug from r where t.id = r.id
+),
+repointed as (
+  update redirects d set destination = r.new_path from r where d.destination = r.old_path
+),
+menus as (
+  update menu_items m set url = r.new_path from r where m.url = r.old_path
+)
+insert into redirects (source, destination, status_code)
+select old_path, new_path, 301 from r
+on conflict (source) do nothing;
+
+with r as (
+  select t.id, lower(t.slug) as new_slug,
+         '/blog/' || t.slug as old_path, '/blog/' || lower(t.slug) as new_path
+    from blog_posts t
+   where t.slug ~ '[A-Z]' and t.slug ~ '^[A-Za-z0-9._~-]+$'
+     and not exists (select 1 from blog_posts o where o.id <> t.id and lower(o.slug) = lower(t.slug))
+),
+renamed as (
+  update blog_posts t set slug = r.new_slug from r where t.id = r.id
+),
+repointed as (
+  update redirects d set destination = r.new_path from r where d.destination = r.old_path
+),
+menus as (
+  update menu_items m set url = r.new_path from r where m.url = r.old_path
+)
+insert into redirects (source, destination, status_code)
+select old_path, new_path, 301 from r
 on conflict (source) do nothing;
 
 commit;
