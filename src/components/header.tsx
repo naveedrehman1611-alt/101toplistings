@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@/components/icon';
 import { SiteLogo } from '@/components/site-logo';
@@ -14,9 +14,6 @@ import { SERVICES_BASE, ServicesMegaMenu, isServicePath } from '@/components/ser
 import type { MenuItem } from '@/lib/queries';
 import type { ServiceNavItem } from '@/lib/service-pages';
 import type { SiteContent } from '@/lib/content/pages/global';
-
-/** The website development page (src/lib/services/website-development.ts), linked after the Services menu. */
-const WEB_DEV_PATH = '/website-development';
 
 const focusRing =
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-container';
@@ -44,11 +41,6 @@ function isServicesLink(item: MenuItem): boolean {
 /** Likewise, an admin link to the tools hub becomes the Free SEO Tools menu. */
 function isToolsLink(item: MenuItem): boolean {
   return item.url.replace(/\/+$/, '') === TOOLS_BASE;
-}
-
-/** An admin link to the website development page, which then replaces the built-in one. */
-function isWebDevLink(item: MenuItem): boolean {
-  return item.url.replace(/\/+$/, '') === WEB_DEV_PATH;
 }
 
 export function Header({
@@ -107,43 +99,6 @@ export function Header({
   );
   const drawerServicesLink = drawerItems.find(isServicesLink);
   const drawerToolsLink = drawerItems.find(isToolsLink);
-
-  // A Website Development link follows the Services menu (and the drawer's
-  // services section), unless the admin's menu already links to the page, in
-  // which case their link stays wherever they put it.
-  const webDevActive = isActive(pathname, WEB_DEV_PATH);
-  const webDevLink = primary.some(isWebDevLink) ? null : (
-    <Link
-      key="website-development"
-      href={WEB_DEV_PATH}
-      aria-current={webDevActive ? 'page' : undefined}
-      className={`rounded-sm whitespace-nowrap transition-colors ${focusRing} ${
-        webDevActive
-          ? 'text-primary-container font-semibold'
-          : 'font-label-md text-label-md text-on-surface-variant hover:text-on-surface'
-      }`}
-    >
-      {/* Shortened from lg to xl, where the bar is tightest, like the Services and tools menus. */}
-      <span className="xl:hidden">Web Dev</span>
-      <span className="hidden xl:inline">Web Development</span>
-    </Link>
-  );
-  const webDevDrawerItem = drawerItems.some(isWebDevLink) ? null : (
-    <li key="mobile-website-development">
-      <Link
-        href={WEB_DEV_PATH}
-        onClick={close}
-        aria-current={webDevActive ? 'page' : undefined}
-        className={`font-label-md text-label-md block rounded-lg px-3 py-3 transition-colors ${focusRing} ${
-          webDevActive
-            ? 'bg-surface-container-low text-primary-container font-semibold'
-            : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
-        }`}
-      >
-        Website Development
-      </Link>
-    </li>
-  );
 
   // Drawer sections for the services and tools hubs, under the admin's label
   // when they replace a menu link.
@@ -275,21 +230,18 @@ export function Header({
               <SiteLogo image={c.logo} eager className="h-9 w-auto sm:h-11 lg:h-10 xl:h-11" />
             </Link>
 
-            {/* gap-3 until xl and gap-5 from xl: with the services and tools triggers and the
-                Web Development link, anything wider squeezes the logo once the admin adds a
-                fifth or sixth menu link. */}
-            <nav aria-label="Primary" className="hidden items-center gap-3 lg:flex xl:gap-5">
+            {/* gap-4 until xl and gap-6 from xl: with the services and tools triggers, anything
+                wider squeezes the logo once the admin adds a fifth or sixth menu link. */}
+            <nav aria-label="Primary" className="hidden items-center gap-4 lg:flex xl:gap-6">
               {primary.map((item) => {
                 if (item === servicesLink) {
                   return (
-                    <Fragment key={`${item.url}|${item.label}`}>
-                      <ServicesMegaMenu
-                        services={services}
-                        content={servicesMenu}
-                        label={item.label}
-                      />
-                      {webDevLink}
-                    </Fragment>
+                    <ServicesMegaMenu
+                      key={`${item.url}|${item.label}`}
+                      services={services}
+                      content={servicesMenu}
+                      label={item.label}
+                    />
                   );
                 }
                 if (item === toolsLink) {
@@ -318,10 +270,7 @@ export function Header({
                 );
               })}
               {servicesLink ? null : (
-                <>
-                  <ServicesMegaMenu services={services} content={servicesMenu} />
-                  {webDevLink}
-                </>
+                <ServicesMegaMenu services={services} content={servicesMenu} />
               )}
               {toolsLink ? null : <ToolsMegaMenu tools={tools} />}
             </nav>
@@ -413,14 +362,7 @@ export function Header({
 
               <ul className="flex flex-col gap-1">
                 {drawerItems.map((item) => {
-                  if (item === drawerServicesLink) {
-                    return (
-                      <Fragment key={`${item.url}|${item.label}`}>
-                        {servicesSection(item.label)}
-                        {webDevDrawerItem}
-                      </Fragment>
-                    );
-                  }
+                  if (item === drawerServicesLink) return servicesSection(item.label);
                   if (item === drawerToolsLink) return toolsSection(item.label);
                   const active = isActive(pathname, item.url);
                   return (
@@ -440,12 +382,7 @@ export function Header({
                     </li>
                   );
                 })}
-                {drawerServicesLink ? null : (
-                  <>
-                    {servicesSection()}
-                    {webDevDrawerItem}
-                  </>
-                )}
+                {drawerServicesLink ? null : servicesSection()}
                 {drawerToolsLink ? null : toolsSection()}
               </ul>
 

@@ -2,9 +2,8 @@ import type { ServicePage } from '@/lib/service-pages';
 
 /**
  * /website-development: a standalone page like /digital-marketing, but not an
- * SEO service, so it sits outside the /seo-services hub sections (hub: null)
- * and the header's Services menu (category: null). The header links to it on
- * its own, next to the Services menu.
+ * SEO service, so it sits outside the /seo-services hub sections (hub: null).
+ * It has its own "Web Development" column in the header's Services menu.
  */
 export const WEBSITE_DEVELOPMENT_PAGE: ServicePage = {
   slug: 'website-development',
@@ -17,7 +16,7 @@ export const WEBSITE_DEVELOPMENT_PAGE: ServicePage = {
   intro:
     'Website development is the work of planning, designing and building the site your business runs on, from a handful of service pages to a full online store. As an SEO agency, we build websites that load quickly, work well on phones and are structured for search from the start, so you are not paying to rebuild them once marketing begins.',
   icon: 'data_object',
-  category: null,
+  category: 'web',
   hub: null,
   tag: 'Design & Build',
   includes: [

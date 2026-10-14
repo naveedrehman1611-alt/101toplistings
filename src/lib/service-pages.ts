@@ -15,7 +15,7 @@ import { WEBSITE_DEVELOPMENT_PAGE } from '@/lib/services/website-development';
  * header's Services menu, the OfferCatalog JSON-LD and the sitemap.
  */
 
-export type ServiceCategoryId = 'seo' | 'links' | 'marketing';
+export type ServiceCategoryId = 'seo' | 'links' | 'marketing' | 'web';
 
 /** Section on the /seo-services hub. */
 export type HubCategoryId =
@@ -35,8 +35,8 @@ export type ServicePage = {
   /** Answer-first definition shown under the H1. */
   intro: string;
   icon: IconName;
-  /** Column in the header's Services menu; null for a page that is not an SEO service. */
-  category: ServiceCategoryId | null;
+  /** Column in the header's Services menu. */
+  category: ServiceCategoryId;
   /**
    * Section on the /seo-services hub; null keeps a page that is not an SEO service
    * (/website-development) off the hub, its counts and its OfferCatalog.
@@ -793,13 +793,15 @@ export function servicePage(slug: string): ServicePage | undefined {
 export type ServiceNavItem = Pick<ServicePage, 'slug' | 'path' | 'name' | 'icon' | 'category'>;
 
 export function serviceNavItems(): ServiceNavItem[] {
-  return MENU_SERVICE_PAGES.map(({ slug, path, name, icon, category }) => ({
-    slug,
-    path,
-    name,
-    icon,
-    category,
-  }));
+  return [...MENU_SERVICE_PAGES, WEBSITE_DEVELOPMENT_PAGE].map(
+    ({ slug, path, name, icon, category }) => ({
+      slug,
+      path,
+      name,
+      icon,
+      category,
+    }),
+  );
 }
 
 /** The contact form with the given subject (SEO services by default) and this service named in the message. */
