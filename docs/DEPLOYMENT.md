@@ -130,6 +130,10 @@ exists; it needs the same three `NEXT_PUBLIC_` variables before it can serve the
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | client + server | Anon/publishable key. Safe to expose — RLS is what protects the data. |
 | `SUPABASE_SERVICE_ROLE_KEY` | **server only** | Bypasses RLS entirely. Must never reach the client bundle, never be prefixed `NEXT_PUBLIC_`, and never be imported into a Client Component. |
 | `NEXT_PUBLIC_SITE_URL` | client + server | Canonical origin; used for canonicals, OG URLs, sitemap. |
+| `RESEND_API_KEY` | **server only** | Resend API key for listing emails (src/lib/notify.ts). Unset = no emails, nothing else breaks. |
+| `EMAIL_FROM` | **server only** | Sender, e.g. `RankYouSite <noreply@rankyousite.com>`, on a domain verified in Resend. Unset = Resend's test sender, which only delivers to the Resend account's own address. |
+| `ADMIN_NOTIFY_EMAIL` | **server only** | Who is emailed about new and resubmitted listings; commas for several. |
+| `SLACK_WEBHOOK_URL` | **server only** | Slack incoming webhook for the same alerts. Unset = no Slack messages. |
 
 Guard rule for review: any `SUPABASE_SERVICE_ROLE_KEY` reference must sit in a Server
 Component, Route Handler, or Server Action — enforced by inspection in Wave E, since a leak here

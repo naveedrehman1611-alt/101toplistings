@@ -2,7 +2,7 @@
 
 import { revalidatePath, updateTag } from 'next/cache';
 import { createClient } from './supabase-server';
-import { SEARCH_TAG, tableTag } from './supabase';
+import { tableTag } from './supabase';
 import { requireRole, type Role } from './auth';
 import { writeAudit } from './audit';
 import { FormError, errorMessage } from './form-data';
@@ -11,64 +11,6 @@ import { checkLink } from './link-rules';
 export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/**
- * Moderates a listing. The role check runs here as well as in RLS — a Server
- * Action is a public HTTP endpoint, so it must never assume the caller came
- * from the admin UI.
- */
-export async function setListingStatus(
-  listingId: string,
-  status: 'approved' | 'rejected' | 'suspended' | 'pending',
-): Promise<ActionResult> {
-  const user = await requireRole('moderator');
-  const supabase = await createClient();
-
-  const { data: before } = await supabase
-    .from('listings')
-    .select('id, name, status, published_at')
-    .eq('id', listingId)
-    .maybeSingle();
-
-  if (!before) return { ok: false, error: 'Listing not found.' };
-
-  const patch: Record<string, unknown> = { status, last_updated_by: user.id };
-  // Approving is what publishes a listing, so stamp published_at on the way in
-  // and leave it alone afterwards — re-approving must not reorder the feed.
-  if (status === 'approved' && !before.published_at) {
-    patch.published_at = new Date().toISOString();
-  }
-
-  const { data: after, error } = await supabase
-    .from('listings')
-    .update(patch)
-    .eq('id', listingId)
-    .select('id, name, status, published_at')
-    .maybeSingle();
-
-  if (error) return { ok: false, error: error.message };
-
-  await writeAudit(
-    user.id,
-    status === 'approved' ? 'approve' : 'update',
-    'listing',
-    listingId,
-    before,
-    after,
-  );
-
-  // The public pages are ISR-cached and the reads behind them sit in the Data
-  // Cache, so a moderation decision needs both cleared or it would not surface
-  // until the revalidate window elapsed.
-  updateTag(tableTag('public_listings'));
-  updateTag(SEARCH_TAG);
-  revalidatePath('/');
-  revalidatePath('/business-directory');
-  revalidatePath('/listing/[slug]', 'page');
-  revalidatePath('/admin/listings');
-
-  return { ok: true, message: `${before.name} is now ${status}.` };
-}
 
 /** Updates one settings row. Settings drive brand, contact and SEO defaults. */
 export async function updateSetting(key: string, value: string): Promise<ActionResult> {
