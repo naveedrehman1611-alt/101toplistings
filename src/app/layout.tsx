@@ -86,6 +86,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const telephone = settingText(settings, 'contact.phone').trim() || `+${WHATSAPP_NUMBER}`;
   // Only a real stored address: the footer's fallback city is not one.
   const address = settingText(settings, 'contact.address').trim();
+  // The site's default meta description also describes the brand entity.
+  const description = settingText(settings, 'seo.default_description').trim();
 
   // Site-wide Organization + WebSite schema. The logo is a square PNG (Google
   // wants at least 112px, in a raster format) so the brand can show in results;
@@ -98,6 +100,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         '@id': `${SITE_URL}/#organization`,
         name: brand,
         url: SITE_URL,
+        ...(description ? { description } : {}),
         logo: {
           '@type': 'ImageObject',
           url: `${SITE_URL}/logo-512.png`,
