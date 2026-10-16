@@ -7,13 +7,13 @@ signed in as you, so Claude in Chrome can do it:
 - Slack: create an Incoming Webhook so new-listing alerts post to a channel.
 - Resend: verify the domain `rankyousite.com` so emails go out from
   `noreply@rankyousite.com`, and create an API key.
-- Supabase: run migration 0029 (owner email lookup, live status, resubmission).
+- Supabase: check that migration 0029 ran (you already ran it in the SQL Editor).
 - Vercel: add the four environment variables, then merge and deploy.
 - An end-to-end test of the whole flow.
 
-**Order matters.** Run the migration before the code goes live: without it, an owner
-saving a rejected listing gets a permission error. Add the environment variables before
-the deploy, because Vercel only picks them up in a new deployment.
+**Order matters.** The migration is already run (Phase 1 only checks it). Add the
+environment variables before the deploy, because Vercel only picks them up in a new
+deployment.
 
 ## How to use
 
@@ -47,8 +47,8 @@ MY VALUES (use exactly these; never invent or guess any value):
 
 RULES
 - STOP AND ASK ME before anything that changes something: creating an app, channel,
-  domain, DNS record or API key, saving an environment variable, running SQL that
-  changes the database, opening or merging a pull request, redeploying. Read-only
+  domain, DNS record or API key, saving an environment variable, opening or merging a
+  pull request, redeploying. Never run SQL that changes the database. Read-only
   checks need no confirmation.
 - If a page asks you to sign in, stop and tell me. Never type passwords.
 - SECRETS: the Slack webhook URL and the Resend API key are secrets. Copy them only
@@ -60,93 +60,19 @@ RULES
 - Quote error messages exactly. If a step fails, record the exact error text, skip the
   step and carry on, unless the phase says to stop.
 
-PHASE 1 — Supabase: run migration 0029
+PHASE 1 — Supabase: verify migration 0029 (read-only; I already ran it)
 1. Open https://supabase.com/dashboard/project/SUPABASE_PROJECT/sql/new
-2. Ask me first, then paste this SQL exactly as written and click Run:
-
-   -- 0029 — listing notifications, live status and resubmission
-   --
-   -- 1. listing_owner_contacts(ids): the sign-in email of each listing's owner,
-   --    for the "approved" and "not approved" emails. Emails live in auth.users,
-   --    which the app cannot read, so this SECURITY DEFINER function reads them
-   --    and returns rows only to moderators and above: anyone else gets nothing.
-   --
-   -- 2. Realtime on listings, so an owner's dashboard updates the moment a
-   --    moderator approves or rejects their listing. Realtime applies the same
-   --    RLS as a normal read: an owner receives changes to their own rows, the
-   --    public only to approved rows, which they can already read.
-   --
-   -- 3. An owner may resubmit a rejected listing: the owner update policy now
-   --    allows status rejected -> pending, and nothing else. Owners still can
-   --    never approve, verify or feature their own listing.
-   --
-   -- Safe to re-run: every statement replaces or checks before it adds.
-   -- Runs as-is in the Supabase SQL Editor.
-
-   -- 1 -------------------------------------------------------------------------
-
-   create or replace function public.listing_owner_contacts(p_ids uuid[])
-   returns table (listing_id uuid, email text, display_name text)
-   language sql
-   stable
-   security definer
-   set search_path = ''
-   as $$
-     select l.id, u.email::text, p.display_name
-       from public.listings l
-       join auth.users u on u.id = l.owner_user_id
-       left join public.profiles p on p.id = l.owner_user_id
-      where l.id = any(p_ids)
-        and public.has_min_role('moderator'::public.user_role);
-   $$;
-
-   revoke execute on function public.listing_owner_contacts(uuid[]) from public, anon;
-   grant execute on function public.listing_owner_contacts(uuid[]) to authenticated;
-
-   -- 2 -------------------------------------------------------------------------
-
-   do $$
-   begin
-     if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
-        and not exists (
-          select 1 from pg_publication_tables
-           where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'listings'
-        ) then
-       alter publication supabase_realtime add table public.listings;
-     end if;
-   end $$;
-
-   -- 3 -------------------------------------------------------------------------
-
-   drop policy if exists listings_owner_update on listings;
-
-   create policy listings_owner_update on listings
-     for update
-     using (owner_user_id = auth.uid())
-     with check (
-       owner_user_id = auth.uid()
-       and (
-         status = (select l.status from listings l where l.id = listings.id)
-         or (
-           status = 'pending'
-           and (select l.status from listings l where l.id = listings.id) = 'rejected'
-         )
-       )
-       and verification = (select l.verification from listings l where l.id = listings.id)
-       and is_featured  = (select l.is_featured  from listings l where l.id = listings.id)
-     );
-
-3. Expect "Success. No rows returned". Record the exact message. If it is an error,
-   STOP the whole task and report it.
-4. In a new query tab, run this read-only check and record the three numbers:
+2. Type and run this read-only query, then record the three numbers:
    select
      (select count(*) from pg_proc where proname = 'listing_owner_contacts') as owner_fn,
      (select count(*) from pg_publication_tables
        where pubname = 'supabase_realtime' and tablename = 'listings') as realtime,
      (select count(*) from pg_policies
        where tablename = 'listings' and policyname = 'listings_owner_update') as owner_policy;
-   All three should be 1. If realtime is 0, run
-   "select pubname from pg_publication;" and record the result.
+3. All three should be 1. If owner_fn or owner_policy is 0, STOP the whole task and tell
+   me: the migration did not run. If only realtime is 0, run
+   "select pubname from pg_publication;", record the result and carry on (live status
+   updates will not work until it is fixed, everything else will).
 
 PHASE 2 — Slack: create the incoming webhook
 1. In Slack (SLACK_WORKSPACE), check whether SLACK_CHANNEL exists. If not, ask me, then
@@ -264,7 +190,7 @@ FINAL REPORT. Output exactly this, in markdown, nothing else:
 
 # Listing notifications setup report
 ## Phase 1: Migration
-Run result: ... · owner_fn / realtime / owner_policy: ... / ... / ...
+owner_fn / realtime / owner_policy: ... / ... / ...
 ## Phase 2: Slack
 App created: yes/no · Channel: ... · Webhook ends with: ....
 ## Phase 3: Resend
