@@ -3,19 +3,13 @@ import { createClient } from '@/lib/supabase-server';
 import { requireUser } from '@/lib/auth';
 import { removeFavourite } from '@/lib/favourite-actions';
 import { Notice } from '@/components/admin-ui';
+import { ListingStatusTracker } from '@/components/listing-status-tracker';
+import { LiveListingStatus } from '@/components/live-listing-status';
 
 export const metadata = { title: 'My listings' };
 
 /** A saved business; the listing is null once RLS hides it (no longer approved). */
 type SavedRow = { listing_id: string; listings: { slug: string; name: string } | null };
-
-const STATUS_TEXT: Record<string, string> = {
-  pending: 'Waiting for review',
-  approved: 'Live',
-  rejected: 'Not approved',
-  suspended: 'Suspended',
-  draft: 'Draft',
-};
 
 export default async function Dashboard({
   searchParams,
@@ -28,7 +22,7 @@ export default async function Dashboard({
   const [{ data }, favourites] = await Promise.all([
     supabase
       .from('listings')
-      .select('id, slug, name, status, rejection_note, created_at')
+      .select('id, slug, name, status, rejection_note, created_at, published_at')
       .eq('owner_user_id', user.id)
       .order('created_at', { ascending: false }),
     supabase
@@ -56,6 +50,11 @@ export default async function Dashboard({
         </Link>
       </div>
       <Notice ok={sp.ok} error={sp.error} />
+      {listings.length > 0 ? (
+        <div className="mt-3">
+          <LiveListingStatus userId={user.id} />
+        </div>
+      ) : null}
 
       {listings.length === 0 ? (
         <p className="mt-8 rounded-lg border border-dashed border-[var(--border)] p-8 text-center text-sm text-[var(--text-muted)]">
@@ -65,30 +64,31 @@ export default async function Dashboard({
       ) : (
         <ul className="mt-6 space-y-3">
           {listings.map((l) => (
-            <li
-              key={l.id}
-              className="surface-card flex flex-wrap items-center justify-between gap-3 p-4"
-            >
-              <div>
+            <li key={l.id} className="surface-card p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="font-medium">{l.name}</p>
-                <p className="text-sm text-[var(--text-muted)]">
-                  {STATUS_TEXT[l.status as string] ?? l.status}
-                  {l.status === 'rejected' && l.rejection_note ? ` — ${l.rejection_note}` : ''}
-                </p>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                {l.status === 'approved' ? (
-                  <Link href={`/listing/${l.slug}`} className="text-brand-700 hover:underline">
-                    View
+                <div className="flex items-center gap-3 text-sm">
+                  {l.status === 'approved' ? (
+                    <Link href={`/listing/${l.slug}`} className="text-brand-700 hover:underline">
+                      View
+                    </Link>
+                  ) : null}
+                  <Link
+                    href={`/dashboard/listings/${l.id}`}
+                    className="rounded-lg border border-[var(--border)] px-3 py-1.5"
+                  >
+                    Edit
                   </Link>
-                ) : null}
-                <Link
-                  href={`/dashboard/listings/${l.id}`}
-                  className="rounded-lg border border-[var(--border)] px-3 py-1.5"
-                >
-                  Edit
-                </Link>
+                </div>
               </div>
+              <ListingStatusTracker
+                id={l.id as string}
+                slug={l.slug as string}
+                status={l.status as string}
+                rejectionNote={l.rejection_note as string | null}
+                createdAt={l.created_at as string}
+                publishedAt={l.published_at as string | null}
+              />
             </li>
           ))}
         </ul>

@@ -56,7 +56,7 @@ export async function parseListingForm(fd: FormData, supabase: SupabaseClient) {
   };
 }
 
-function normaliseUrl(v: string | null): string | null {
+export function normaliseUrl(v: string | null): string | null {
   if (!v) return null;
   const withScheme = /^https?:\/\//i.test(v) ? v : `https://${v}`;
   try {

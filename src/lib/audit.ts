@@ -31,3 +31,24 @@ export async function writeAudit(
     after: after ?? null,
   });
 }
+
+/** writeAudit for a bulk change: one row per entity, written in one insert. */
+export async function writeAuditMany(
+  actorId: string,
+  action: AuditAction,
+  entityType: string,
+  entries: { id: string; before: unknown; after: unknown }[],
+) {
+  if (entries.length === 0) return;
+  const supabase = await createClient();
+  await supabase.from('audit_logs').insert(
+    entries.map((e) => ({
+      actor_id: actorId,
+      action,
+      entity_type: entityType,
+      entity_id: e.id,
+      before: e.before ?? null,
+      after: e.after ?? null,
+    })),
+  );
+}

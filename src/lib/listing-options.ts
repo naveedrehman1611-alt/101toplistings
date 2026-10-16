@@ -34,4 +34,4 @@ export async function getListingFormOptions() {
 }
 
 export const LISTING_EDIT_COLUMNS =
-  'id, name, slug, tagline, description, category_id, phone_primary, phone_secondary, email, website, address, postal_code, city_id, latitude, longitude, status, verification, is_featured, seo_title, seo_description, owner_user_id';
+  'id, name, slug, tagline, description, category_id, phone_primary, phone_secondary, email, website, address, postal_code, city_id, latitude, longitude, status, verification, is_featured, seo_title, seo_description, owner_user_id, rejection_note';

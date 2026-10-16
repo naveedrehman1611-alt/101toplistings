@@ -14,6 +14,7 @@ import {
   type Supabase,
 } from './listing-image-store';
 import { LISTING_IMAGE_MAX_BYTES, LOGO_FIELD, PHOTO_FIELDS } from './listing-image-limits';
+import { notifyListingDecisions, notifyListingSubmitted } from './listing-notifications';
 
 const STATUSES = ['approved', 'pending', 'draft', 'rejected', 'suspended'] as const;
 const VERIFICATIONS = ['unverified', 'pending', 'verified', 'rejected'] as const;
@@ -36,10 +37,17 @@ export async function saveListingAsStaff(fd: FormData) {
     const base = await parseListingForm(fd, supabase);
     const hours = parseHours(fd);
     const status = pick(text(fd, 'status', 20), STATUSES, 'status');
+    // The reason is emailed to the owner and shown on their dashboard, so it
+    // is kept only while the listing is rejected.
+    const rejectionNote = status === 'rejected' ? text(fd, 'rejection_note', 1000) : null;
+    if (status === 'rejected' && !rejectionNote) {
+      throw new FormError('Give a reason for rejecting. The owner sees it in their email.');
+    }
 
     const row = {
       ...base,
       status,
+      rejection_note: rejectionNote,
       verification: pick(text(fd, 'verification', 20), VERIFICATIONS, 'verification'),
       is_featured: bool(fd, 'is_featured'),
       seo_title: text(fd, 'seo_title', 200),
@@ -64,6 +72,10 @@ export async function saveListingAsStaff(fd: FormData) {
       );
       await writeHours(supabase, id, hours);
       await writeAudit(user.id, 'update', 'listing', id, before, after);
+      if (after && (status === 'approved' || status === 'rejected') && before.status !== status) {
+        await notifyListingDecisions(supabase, [after], status, rejectionNote);
+        return `Saved ${row.name}. The owner, if it has one, is being emailed.`;
+      }
       return `Saved ${row.name}.`;
     }
 
@@ -131,7 +143,14 @@ export async function submitOwnListing(fd: FormData) {
     if (!after) throw new FormError('The listing could not be saved.');
     await writeHours(supabase, after.id, hours);
     const failed = await storeNewListingImages(supabase, user.id, after, images);
-    return `Thanks — ${after.name} was submitted and will appear once it has been reviewed.${failed}`;
+    notifyListingSubmitted({
+      listingId: after.id,
+      name: after.name,
+      cityId: base.city_id,
+      categoryId: base.category_id,
+      submitter: { email: user.email, name: user.displayName },
+    });
+    return `Thanks — ${after.name} was submitted and is now under review. We will email you when it is approved.${failed}`;
   });
 }
 
@@ -226,21 +245,39 @@ export async function updateOwnListing(fd: FormData) {
     const supabase = await createClient();
     const { data: own } = await supabase
       .from('listings')
-      .select('id, owner_user_id')
+      .select('id, owner_user_id, status')
       .eq('id', id)
       .maybeSingle();
     if (!own || own.owner_user_id !== user.id) throw new FormError('Listing not found.');
 
     const base = await parseListingForm(fd, supabase);
     const hours = parseHours(fd);
+    // Saving a rejected listing resubmits it: it goes back into review, which
+    // the owner update policy allows (rejected -> pending only, migration 0029).
+    const resubmit = own.status === 'rejected';
     check(
       await supabase
         .from('listings')
-        .update({ ...base, last_updated_by: user.id })
+        .update({
+          ...base,
+          last_updated_by: user.id,
+          ...(resubmit ? { status: 'pending', rejection_note: null } : {}),
+        })
         .eq('id', id)
         .eq('owner_user_id', user.id),
     );
     await writeHours(supabase, id, hours);
+    if (resubmit) {
+      notifyListingSubmitted({
+        listingId: id,
+        name: base.name,
+        cityId: base.city_id,
+        categoryId: base.category_id,
+        submitter: { email: user.email, name: user.displayName },
+        resubmitted: true,
+      });
+      return `${base.name} was resubmitted and is under review again.`;
+    }
     return `Saved ${base.name}.`;
   });
 }
