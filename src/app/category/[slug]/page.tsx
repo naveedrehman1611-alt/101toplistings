@@ -16,6 +16,8 @@ import { PageHero } from '@/components/page-hero';
 import { redirectOrNotFound, redirectToLowercase } from '@/lib/redirects';
 import { getPageContent } from '@/lib/content/get';
 import { fill } from '@/components/browse/fill';
+import { InlineMarkdown } from '@/components/markdown';
+import { stripMarkdown } from '@/lib/markdown-links';
 
 export const revalidate = 600;
 const PER_PAGE = 12;
@@ -36,7 +38,9 @@ export async function generateMetadata({
   const cat = await getCategoryBySlug(slug);
   if (!cat) return { title: 'Not found' };
   const title = `${cat.name} businesses`;
-  const description = cat.description ?? `Browse ${cat.name.toLowerCase()} businesses.`;
+  // The description is inline markdown (links, emphasis); meta tags take plain text.
+  const description =
+    stripMarkdown(cat.description ?? '') || `Browse ${cat.name.toLowerCase()} businesses.`;
   // A failed count leaves the page indexable rather than noindex it on a blip.
   const count = (await getCategoryListingCounts([cat.id])).get(cat.id);
   // ?sort= alone is the same listings reordered (canonical to the plain page);
@@ -118,7 +122,17 @@ export default async function CategoryPage({
         trail={trail}
         eyebrow={hero.eyebrow}
         heading={cat.name}
-        subheading={cat.description}
+        subheading={
+          cat.description ? (
+            // Emphasis is styled for light surfaces; keep it legible on the navy hero.
+            <span className="[&_strong]:text-white">
+              <InlineMarkdown
+                text={cat.description}
+                linkClassName="text-hero-green-light underline decoration-hero-green-light/40 underline-offset-2 hover:decoration-hero-green-light"
+              />
+            </span>
+          ) : null
+        }
         stats={stats}
       >
         {children.length ? (

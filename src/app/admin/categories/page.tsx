@@ -2,15 +2,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { deleteCategory, saveCategory } from '@/lib/taxonomy-actions';
-import {
-  Check,
-  DangerButton,
-  Field,
-  Notice,
-  Select,
-  SubmitButton,
-  TextArea,
-} from '@/components/admin-ui';
+import { Check, DangerButton, Field, Notice, Select, SubmitButton } from '@/components/admin-ui';
+import { MarkdownEditor } from '@/components/admin/markdown-editor';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Categories' };
@@ -78,11 +71,16 @@ export default async function AdminCategories({
           defaultValue={editing?.sort_order ?? 0}
         />
         <div className="sm:col-span-2">
-          <TextArea
+          {/* Keyed so switching to another category resets the editor's text. */}
+          <MarkdownEditor
+            key={editing?.id ?? 'new'}
+            inline
             label="Description"
             name="description"
             defaultValue={editing?.description}
             rows={3}
+            maxLength={1000}
+            hint="Shown on the category page. Use the link button to point to other pages on the site."
           />
         </div>
         <Check

@@ -9,15 +9,8 @@ import {
   saveCountry,
   saveRegion,
 } from '@/lib/taxonomy-actions';
-import {
-  Check,
-  DangerButton,
-  Field,
-  Notice,
-  Select,
-  SubmitButton,
-  TextArea,
-} from '@/components/admin-ui';
+import { Check, DangerButton, Field, Notice, Select, SubmitButton } from '@/components/admin-ui';
+import { MarkdownEditor } from '@/components/admin/markdown-editor';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Locations' };
@@ -175,11 +168,16 @@ export default async function AdminLocations({
             />
             <CoordFields loc={editCity} />
             <div className="sm:col-span-2">
-              <TextArea
+              {/* Keyed so switching to another city resets the editor's text. */}
+              <MarkdownEditor
+                key={editCity?.id ?? 'new'}
+                inline
                 label="Intro text for the city page"
                 name="intro_copy"
                 defaultValue={editCity?.intro_copy}
                 rows={3}
+                maxLength={2000}
+                hint="Use the link button to point to categories, listings or other pages."
               />
             </div>
             <Check

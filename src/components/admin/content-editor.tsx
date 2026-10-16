@@ -3,7 +3,16 @@
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { ICON_NAMES, Icon, isIconName } from '@/components/icon';
-import type { Field, Fields, ListField, ScalarField, StoredImage } from '@/lib/content/schema';
+import {
+  TEXTAREA_MAX,
+  TEXT_MAX,
+  type Field,
+  type Fields,
+  type ListField,
+  type ScalarField,
+  type StoredImage,
+} from '@/lib/content/schema';
+import { MarkdownEditor } from './markdown-editor';
 import type { MediaOption } from './media-select';
 
 type Values = Record<string, unknown>;
@@ -98,14 +107,38 @@ function ScalarInput({
   field,
   value,
   media,
+  mountKey,
   onChange,
 }: {
   id: string;
   field: ScalarField;
   value: unknown;
   media: MediaOption[];
+  /**
+   * The markdown editor is uncontrolled: it reads `value` only when it mounts.
+   * Whatever replaces the value from outside (reset, reordering a list) must
+   * change this key so the editor remounts with the new text.
+   */
+  mountKey: string;
   onChange: (v: unknown) => void;
 }) {
+  if ((field.kind === 'text' || field.kind === 'textarea') && field.markdown) {
+    const text = value as string;
+    const single = field.kind === 'text';
+    return (
+      <MarkdownEditor
+        key={mountKey}
+        label={field.label}
+        hint={field.hint}
+        defaultValue={text}
+        inline={field.markdown === 'inline'}
+        maxLength={field.max ?? (single ? TEXT_MAX : TEXTAREA_MAX)}
+        rows={single ? 2 : Math.min(12, Math.max(4, text.split('\n').length + 1))}
+        // A text field is one line, so line breaks typed into the textarea become spaces.
+        onChange={(v) => onChange(single ? v.replace(/\s*\n\s*/g, ' ') : v)}
+      />
+    );
+  }
   switch (field.kind) {
     case 'text':
       return (
@@ -220,14 +253,24 @@ function ListInput({
   field,
   value,
   media,
+  mountKey,
   onChange,
 }: {
   id: string;
   field: ListField;
   value: Values[];
   media: MediaOption[];
+  mountKey: string;
   onChange: (v: Values[]) => void;
 }) {
+  // Items are keyed by index, so moving or deleting one shifts values under
+  // the uncontrolled markdown editors; bumping this remounts them with the
+  // new values. Adding goes on the end, a fresh index, so it needs no bump.
+  const [shuffles, setShuffles] = useState(0);
+  const restructure = (next: Values[]) => {
+    setShuffles((n) => n + 1);
+    onChange(next);
+  };
   const blank = (): Values => {
     const out: Values = {};
     for (const [k, sub] of Object.entries(field.item)) {
@@ -239,7 +282,7 @@ function ListInput({
     const next = [...value];
     const [item] = next.splice(from, 1);
     next.splice(to, 0, item);
-    onChange(next);
+    restructure(next);
   };
   return (
     <fieldset>
@@ -272,7 +315,7 @@ function ListInput({
                 <button
                   type="button"
                   className={`${smallBtn} text-error`}
-                  onClick={() => onChange(value.filter((_, j) => j !== i))}
+                  onClick={() => restructure(value.filter((_, j) => j !== i))}
                 >
                   Delete
                 </button>
@@ -286,6 +329,7 @@ function ListInput({
                   field={sub}
                   value={item[k]}
                   media={media}
+                  mountKey={`${mountKey}-${shuffles}-${i}`}
                   onChange={(v) =>
                     onChange(value.map((it, j) => (j === i ? { ...it, [k]: v } : it)))
                   }
@@ -346,6 +390,8 @@ export function ContentEditor({
   action: (fd: FormData) => Promise<void>;
 }) {
   const [values, setValues] = useState<Values>(initial);
+  // Bumped when every value is replaced at once, to remount uncontrolled editors.
+  const [resets, setResets] = useState(0);
   const set = (k: string, v: unknown) => setValues((prev) => ({ ...prev, [k]: v }));
 
   return (
@@ -366,6 +412,7 @@ export function ContentEditor({
               field={field}
               value={values[k] as Values[]}
               media={media}
+              mountKey={String(resets)}
               onChange={(v) => set(k, v)}
             />
           ) : (
@@ -375,6 +422,7 @@ export function ContentEditor({
               field={field}
               value={values[k]}
               media={media}
+              mountKey={String(resets)}
               onChange={(v) => set(k, v)}
             />
           ),
@@ -385,7 +433,10 @@ export function ContentEditor({
         <button
           type="button"
           className="h-10 rounded-lg border border-[var(--border)] px-4 text-sm hover:bg-[var(--surface-2)]"
-          onClick={() => setValues(defaults)}
+          onClick={() => {
+            setValues(defaults);
+            setResets((n) => n + 1);
+          }}
         >
           Fill in the original content
         </button>

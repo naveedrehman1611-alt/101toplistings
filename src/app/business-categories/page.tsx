@@ -89,7 +89,9 @@ export default async function CategoriesPage() {
                   </Link>
                 </h2>
                 {c.description ? (
-                  <p className="mt-1 text-sm text-[var(--text-muted)]">{c.description}</p>
+                  <p className="mt-1 text-sm text-[var(--text-muted)]">
+                    <InlineMarkdown text={c.description} />
+                  </p>
                 ) : null}
                 {kids.length ? (
                   <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-sm">

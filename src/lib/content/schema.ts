@@ -15,9 +15,26 @@ import { isIconName, type IconName } from '@/components/icon';
 
 type Base = { label: string; hint?: string };
 
-export type TextField = Base & { kind: 'text'; default: string; max?: number };
+/**
+ * Opt-in markdown toolbar in the admin editor (bold, italic, internal links…).
+ * Set it only on fields whose page renders them through <InlineMarkdown>
+ * ('inline') or <Markdown> ('rich'); everywhere else the text shows as typed.
+ */
+export type MarkdownMode = 'inline' | 'rich';
+
+export type TextField = Base & {
+  kind: 'text';
+  default: string;
+  max?: number;
+  markdown?: MarkdownMode;
+};
 /** Multi-line. Components split it into paragraphs on blank lines (see paragraphs()). */
-export type TextareaField = Base & { kind: 'textarea'; default: string; max?: number };
+export type TextareaField = Base & {
+  kind: 'textarea';
+  default: string;
+  max?: number;
+  markdown?: MarkdownMode;
+};
 export type LinkField = Base & { kind: 'link'; default: LinkValue };
 /** `default.src` is a path under /public, used until an image is chosen from Media. */
 export type ImageField = Base & { kind: 'image'; default: { src: string; alt: string } };
@@ -106,9 +123,10 @@ export function definePage<const S extends Record<string, SectionSpec>>(
 }
 
 // Field constructors, so page specs stay short and readable.
-export const text = (label: string, def: string, opts: { max?: number; hint?: string } = {}) =>
+type TextOpts = { max?: number; hint?: string; markdown?: MarkdownMode };
+export const text = (label: string, def: string, opts: TextOpts = {}) =>
   ({ kind: 'text', label, default: def, ...opts }) as const satisfies TextField;
-export const textarea = (label: string, def: string, opts: { max?: number; hint?: string } = {}) =>
+export const textarea = (label: string, def: string, opts: TextOpts = {}) =>
   ({ kind: 'textarea', label, default: def, ...opts }) as const satisfies TextareaField;
 export const link = (label: string, def: LinkValue, hint?: string) =>
   ({ kind: 'link', label, default: def, hint }) as const satisfies LinkField;

@@ -14,6 +14,8 @@ import { redirectOrNotFound, redirectToLowercase } from '@/lib/redirects';
 import { MIN_CITY_LISTINGS_TO_INDEX, pageMetadata, resultsPageSeo } from '@/lib/seo';
 import { getPageContent } from '@/lib/content/get';
 import { fill, fillNodes } from '@/components/browse/fill';
+import { InlineMarkdown } from '@/components/markdown';
+import { stripMarkdown } from '@/lib/markdown-links';
 
 export const revalidate = 600;
 const PER_PAGE = 12;
@@ -37,7 +39,9 @@ export async function generateMetadata({
   // noindex the page (the sitemap leaves such a city out for the same reason).
   const count = (await getCityListingCounts([city.id])).get(city.id);
   const title = `Businesses in ${city.name}`;
-  const description = city.intro_copy ?? `Local businesses listed in ${city.name}.`;
+  // The intro is inline markdown (links, emphasis); meta tags take plain text.
+  const description =
+    stripMarkdown(city.intro_copy ?? '') || `Local businesses listed in ${city.name}.`;
   // ?sort= alone is the same listings reordered (canonical to the plain page);
   // a search or category filter is a different subset (noindex).
   const filtered = Boolean(sp.q?.trim() || sp.category);
@@ -108,7 +112,17 @@ export default async function CityPage({
         heading={fillNodes(hero.heading, {
           city: <span className="text-hero-green-light">{city.name}</span>,
         })}
-        subheading={city.intro_copy}
+        subheading={
+          city.intro_copy ? (
+            // Emphasis is styled for light surfaces; keep it legible on the navy hero.
+            <span className="[&_strong]:text-white">
+              <InlineMarkdown
+                text={city.intro_copy}
+                linkClassName="text-hero-green-light underline decoration-hero-green-light/40 underline-offset-2 hover:decoration-hero-green-light"
+              />
+            </span>
+          ) : null
+        }
         stats={total > 0 ? [{ value: total, label: hero.stat_listings }] : undefined}
       />
       <div className="container-page py-10 md:py-12">
