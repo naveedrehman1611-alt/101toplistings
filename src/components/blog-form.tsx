@@ -1,4 +1,5 @@
 import { Check, Field, Select, SubmitButton, TextArea } from '@/components/admin-ui';
+import { MarkdownEditor } from '@/components/admin/markdown-editor';
 
 export type EditablePost = {
   id: string;
@@ -52,12 +53,13 @@ export function BlogForm({
         <TextArea label="Standfirst" name="standfirst" defaultValue={post?.standfirst} rows={2} />
       </div>
       <div className="sm:col-span-2">
-        <TextArea label="Body (markdown)" name="body" defaultValue={post?.body} rows={20} />
-        <p className="mt-1 text-xs text-[var(--text-muted)]">
-          Blank line between paragraphs. <code>## Heading</code>, <code>### Subheading</code>,{' '}
-          <code>**bold**</code>, <code>*italic*</code>, <code>[text](https://…)</code>, and lists
-          starting with <code>-</code> or <code>1.</code> Reading time is worked out on save.
-        </p>
+        <MarkdownEditor
+          label="Body"
+          name="body"
+          defaultValue={post?.body}
+          rows={20}
+          hint="Markdown: a blank line between paragraphs. Select words and press Link to point them at a page on this site, or use Link keyword to link a phrase wherever it appears. Reading time is worked out on save."
+        />
       </div>
       <div className="sm:col-span-2">
         <Field
