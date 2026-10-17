@@ -16,6 +16,9 @@ import { getPageContent } from '@/lib/content/get';
 import { paragraphs, type LinkValue, type SectionValues } from '@/lib/content/schema';
 import type { ABOUT_PAGE } from '@/lib/content/pages/company';
 import { seoMetadata } from '@/lib/seo';
+import { JsonLd } from '@/components/json-ld';
+import { founderPersonSchema } from '@/lib/founder';
+import { SITE_URL } from '@/lib/supabase';
 
 export const revalidate = 3600;
 
@@ -114,6 +117,20 @@ export default async function AboutPage() {
       {content.positioning.visible ? <Positioning c={content.positioning} stats={stats} /> : null}
       {content.story.visible || content.values.visible ? (
         <StoryAndValues story={content.story} values={content.values} />
+      ) : null}
+      {content.founder.visible && content.founder.name ? (
+        <>
+          <JsonLd
+            data={{
+              '@context': 'https://schema.org',
+              '@type': 'AboutPage',
+              url: `${SITE_URL}/about`,
+              about: { '@id': `${SITE_URL}/#organization` },
+              mainEntity: founderPersonSchema(content.founder),
+            }}
+          />
+          <Founder c={content.founder} />
+        </>
       ) : null}
       {content.why.visible ? <Why c={content.why} /> : null}
       {content.approach.visible ? <Approach c={content.approach} /> : null}
@@ -304,6 +321,70 @@ function Positioning({ c, stats }: { c: Content['positioning']; stats: Directory
 }
 
 /** Story with first-90-days timeline left, values list right. */
+/** The founder: initials avatar, name, role, experience badge, bio and profile link. */
+function Founder({ c }: { c: Content['founder'] }) {
+  const initials = c.name
+    .split(/\s+/)
+    .filter((w) => /^[A-Z]/.test(w))
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('');
+  const profile = /^https?:\/\//.test(c.profile_url.trim()) ? c.profile_url.trim() : '';
+  return (
+    <section aria-labelledby="about-founder" className="bg-ink-50 py-20 lg:py-[100px]">
+      <div className="container-page grid items-start gap-10 lg:grid-cols-[280px_1fr]">
+        <div className="border-border-subtle rounded-[16px] border bg-white p-8 text-center">
+          <span
+            aria-hidden="true"
+            className="bg-hero-navy font-display mx-auto grid size-28 place-items-center rounded-full text-3xl font-extrabold text-white"
+          >
+            {initials}
+          </span>
+          <p className="font-display text-on-surface mt-5 text-lg font-extrabold">{c.name}</p>
+          {c.role ? <p className="mt-1 text-sm text-[var(--text-muted)]">{c.role}</p> : null}
+          {c.experience ? (
+            <p className="bg-primary-container/10 text-primary-container mt-4 inline-flex rounded-full px-3 py-1 text-xs font-bold">
+              {c.experience}
+            </p>
+          ) : null}
+        </div>
+        <div>
+          {c.eyebrow ? (
+            <p className={eyebrowLight}>
+              <EyebrowRule />
+              {c.eyebrow}
+            </p>
+          ) : null}
+          <h2 id="about-founder" className={`${sectionTitle} mt-4`}>
+            {c.name}
+          </h2>
+          <div className="mt-5 space-y-4 text-[15px] leading-[1.8] text-[var(--text-muted)]">
+            {paragraphs(c.bio).map((p, i) => (
+              <p key={i}>
+                <InlineMarkdown
+                  text={p}
+                  linkClassName="text-primary-container font-semibold hover:underline"
+                />
+              </p>
+            ))}
+          </div>
+          {profile ? (
+            <a
+              href={profile}
+              target="_blank"
+              rel="noopener noreferrer me"
+              className={`${outlineButton} mt-8`}
+            >
+              <Icon name="north_east" size={18} />
+              View profile
+            </a>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function StoryAndValues({ story, values }: { story: Content['story']; values: Content['values'] }) {
   return (
     <section
