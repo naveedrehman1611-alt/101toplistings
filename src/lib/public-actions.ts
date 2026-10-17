@@ -13,7 +13,8 @@ import { REPORT_REASONS } from './report-reasons';
  * submissions are kept and flagged rather than dropped, so admin can see them.
  */
 export async function submitContact(fd: FormData) {
-  let dest = '/contact?sent=1';
+  // ?form=audit tells the "sent" page which form produced the lead (GA4 generate_lead).
+  let dest = text(fd, 'source', 20) === 'audit' ? '/contact?sent=1&form=audit' : '/contact?sent=1';
   try {
     const name = text(fd, 'name', 120);
     const email = text(fd, 'email', 200);

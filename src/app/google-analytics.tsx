@@ -1,4 +1,5 @@
 import Script from 'next/script';
+import { ContactClickTracking } from '@/components/analytics-events';
 
 /**
  * GA4. Loaded with `lazyOnload` (browser idle time, after the page's own
@@ -23,6 +24,7 @@ gtag('js', new Date());
 gtag('config', '${gaId}');`}
       </Script>
       <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="lazyOnload" />
+      <ContactClickTracking />
     </>
   );
 }

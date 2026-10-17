@@ -118,7 +118,8 @@ export async function deleteListing(fd: FormData) {
 
 export async function submitOwnListing(fd: FormData) {
   const user = await requireUser('/dashboard/listings/new');
-  await runAndReturn('/dashboard', async () => {
+  // ?submitted=1 lets the dashboard send GA4's listing_submitted once.
+  await runAndReturn('/dashboard?submitted=1', async () => {
     const supabase = await createClient();
     const base = await parseListingForm(fd, supabase);
     const hours = parseHours(fd);
