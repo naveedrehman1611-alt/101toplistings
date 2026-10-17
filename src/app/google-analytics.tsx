@@ -12,6 +12,8 @@ import Script from 'next/script';
 export default function GoogleAnalytics() {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
   if (!gaId) return null;
+  // Vercel preview deployments would otherwise count their visits as real traffic.
+  if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production') return null;
   return (
     <>
       <Script id="ga4-init" strategy="lazyOnload">
