@@ -326,6 +326,22 @@ export function ListingEditor({
               ))}
             </select>
           </FormField>
+          <FormField
+            label="Reason for rejecting"
+            htmlFor="l-reject"
+            full
+            help="Required when the status is Rejected. It is emailed to the owner and shown on their dashboard, and cleared when the listing is approved."
+          >
+            <textarea
+              id="l-reject"
+              name="rejection_note"
+              rows={2}
+              maxLength={1000}
+              defaultValue={l?.rejection_note ?? ''}
+              placeholder="e.g. Duplicate of an existing listing"
+              className={textareaCls}
+            />
+          </FormField>
           {l ? (
             <FormField
               label="Owner account"

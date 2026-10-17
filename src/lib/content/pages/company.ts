@@ -161,7 +161,7 @@ export const ABOUT_PAGE = definePage({
         body: textarea(
           'Story',
           '{brand} started as a business directory with one simple rule: list real businesses with details that actually help a customer decide. Reviewing listing after listing taught us exactly what makes a business visible in search, and what keeps it invisible.\n\nBusiness owners kept asking us the same question: *why can’t people find us?* So we turned that knowledge into a dedicated SEO service for companies in the UK, the USA and across Europe, from local trades to national e-commerce brands.\n\nToday every client gets the same structured process, the same [professional SEO services](/seo-services) and the same honest reporting, whatever their size or market.',
-          { max: 2500, hint: `${PARAGRAPHS_HINT} ${MARKDOWN_HINT}` },
+          { max: 2500, hint: `${PARAGRAPHS_HINT} ${MARKDOWN_HINT}`, markdown: 'inline' },
         ),
         timeline_heading: text('Timeline heading', 'What your first 90 days look like', {
           max: 100,
@@ -620,7 +620,7 @@ export const PRICING_PAGE = definePage({
         note: text(
           'Note under the cards',
           'Not sure where to start? See [featured businesses](/featured-businesses) or [contact us](/contact).',
-          { max: 300, hint: MARKDOWN_HINT },
+          { max: 300, hint: MARKDOWN_HINT, markdown: 'inline' },
         ),
       },
     }),
@@ -760,7 +760,7 @@ export const CLAIM_BUSINESS_PAGE = definePage({
         note: text(
           'Note under the search box',
           "Or browse the [business directory](/business-directory). Can't find it? [Add your business](/add-business) instead.",
-          { max: 300, hint: MARKDOWN_HINT },
+          { max: 300, hint: MARKDOWN_HINT, markdown: 'inline' },
         ),
       },
     }),
@@ -871,7 +871,11 @@ export const FEATURED_BUSINESSES_PAGE = definePage({
 
 const clauseItem = {
   heading: text('Heading', '', { max: 120 }),
-  body: textarea('Text', '', { max: 5000, hint: `${PARAGRAPHS_HINT} ${MARKDOWN_HINT}` }),
+  body: textarea('Text', '', {
+    max: 5000,
+    hint: `${PARAGRAPHS_HINT} ${MARKDOWN_HINT}`,
+    markdown: 'inline',
+  }),
 };
 
 export const PRIVACY_PAGE = definePage({

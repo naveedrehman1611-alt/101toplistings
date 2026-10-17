@@ -106,6 +106,9 @@ export function FormShell({
   const [tab, setTab] = useState(panels[0]?.id ?? '');
   const [dirty, setDirty] = useState(false);
   const [leaveTo, setLeaveTo] = useState<string | null>(null);
+  // Bumped by Discard: remounting the panels restores every field, including
+  // editors that keep their own state and so ignore form.reset().
+  const [generation, setGeneration] = useState(0);
   const settle = useCallback(() => setDirty(false), []);
 
   useEffect(() => {
@@ -157,7 +160,11 @@ export function FormShell({
       {panels.length > 1 ? <Tabs tabs={panels} active={tab} onSelect={setTab} /> : null}
       {tabsAbove}
       {outer.map((p) => (
-        <div key={p.id} hidden={p.id !== tab} className="order-1 flex flex-col gap-4">
+        <div
+          key={`${p.id}-${generation}`}
+          hidden={p.id !== tab}
+          className="order-1 flex flex-col gap-4"
+        >
           {p.content}
         </div>
       ))}
@@ -171,7 +178,12 @@ export function FormShell({
         {hidden}
         <Settled onSettled={settle} />
         {inner.map((p) => (
-          <div key={p.id} data-panel={p.id} hidden={p.id !== tab} className="flex flex-col gap-4">
+          <div
+            key={`${p.id}-${generation}`}
+            data-panel={p.id}
+            hidden={p.id !== tab}
+            className="flex flex-col gap-4"
+          >
             {p.content}
           </div>
         ))}
@@ -191,6 +203,7 @@ export function FormShell({
                   className={btn.secondary}
                   onClick={() => {
                     formRef.current?.reset();
+                    setGeneration((g) => g + 1);
                     setDirty(false);
                   }}
                 >

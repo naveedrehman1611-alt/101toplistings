@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole, roleAtLeast } from '@/lib/auth';
-import { setListingStatus } from '@/lib/admin-actions';
+import { bulkListingAction } from '@/lib/listing-bulk-actions';
 import {
   CellText,
   ErrorNotice,
@@ -11,18 +11,17 @@ import {
   ago,
   label,
   rowAct,
+  textareaCls,
   toneOf,
 } from '@/components/admin/kit';
 import { DataTable, type TableRow } from '@/components/admin/data-table';
 import { ConfirmButton } from '@/components/admin/dialog';
-import { ExportCsvButton } from '@/components/admin/export-button';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Listings' };
 
 const STATUSES = ['all', 'pending', 'approved', 'rejected', 'suspended', 'draft'] as const;
 type Status = (typeof STATUSES)[number];
-type ListingStatus = Exclude<Status, 'all' | 'draft'>;
 const LIMIT = 500;
 
 type Row = {
@@ -39,37 +38,61 @@ type Row = {
   owner: { display_name: string | null } | null;
 };
 
-/** One status change, posted to the existing moderation action. */
-function StatusButton({
+/**
+ * One row change, posted to bulkListingAction with a single id: the same
+ * action as the bulk bar, so approving or rejecting emails the owner.
+ */
+function RowOp({
   id,
   name,
-  to,
+  op,
+  back,
   children,
   className,
 }: {
   id: string;
   name: string;
-  to: ListingStatus;
+  op: 'approve' | 'reject' | 'suspend';
+  back: string;
   children: React.ReactNode;
   className: string;
 }) {
-  const act = async () => {
-    'use server';
-    await setListingStatus(id, to);
-  };
-  if (to === 'rejected' || to === 'suspended') {
+  const hidden = (
+    <>
+      <input type="hidden" name="ids" value={id} />
+      <input type="hidden" name="op" value={op} />
+      <input type="hidden" name="back" value={back} />
+    </>
+  );
+  if (op === 'reject' || op === 'suspend') {
     return (
-      <form action={act}>
+      <form action={bulkListingAction}>
+        {hidden}
         <ConfirmButton
           className={className}
-          title={to === 'rejected' ? `Reject ${name}?` : `Suspend ${name}?`}
+          title={op === 'reject' ? `Reject ${name}?` : `Suspend ${name}?`}
           body={
-            to === 'rejected'
-              ? 'It stays off the public site. You can approve it later.'
+            op === 'reject'
+              ? 'It stays off the public site. If it has an owner, they get an email with your reason and can fix and resubmit it.'
               : 'It is hidden from the public site until you restore it.'
           }
-          ok={to === 'rejected' ? 'Reject' : 'Suspend'}
+          ok={op === 'reject' ? 'Reject' : 'Suspend'}
           danger
+          fields={
+            op === 'reject' ? (
+              <label className="flex flex-col gap-1.5 text-[13px] font-semibold">
+                Reason for the owner
+                <textarea
+                  name="reason"
+                  required
+                  rows={3}
+                  maxLength={1000}
+                  placeholder="e.g. Duplicate of an existing listing"
+                  className={`${textareaCls} font-normal`}
+                />
+              </label>
+            ) : undefined
+          }
         >
           {children}
         </ConfirmButton>
@@ -77,7 +100,8 @@ function StatusButton({
     );
   }
   return (
-    <form action={act}>
+    <form action={bulkListingAction}>
+      {hidden}
       <button type="submit" className={className}>
         {children}
       </button>
@@ -136,6 +160,12 @@ export default async function AdminListings({
     const str = p.toString();
     return `/admin/listings${str ? `?${str}` : ''}`;
   };
+  // Where row actions return to, so the filter and search survive a change.
+  const here = qs(status);
+  const exportHref = `/admin/listings/export?${new URLSearchParams({
+    ...(status !== 'all' ? { status } : {}),
+    ...(q ? { q } : {}),
+  }).toString()}`;
 
   const rows: TableRow[] = listings.map((l) => {
     const cat = l.category_id ? (catName.get(l.category_id) ?? '—') : '—';
@@ -176,31 +206,30 @@ export default async function AdminListings({
       actions: (
         <>
           {l.status === 'pending' || l.status === 'rejected' || l.status === 'draft' ? (
-            <StatusButton id={l.id} name={l.name} to="approved" className={rowAct.ok}>
+            <RowOp id={l.id} name={l.name} op="approve" back={here} className={rowAct.ok}>
               Approve
-            </StatusButton>
+            </RowOp>
           ) : null}
           {l.status === 'pending' ? (
-            <StatusButton id={l.id} name={l.name} to="rejected" className={rowAct.bad}>
+            <RowOp id={l.id} name={l.name} op="reject" back={here} className={rowAct.bad}>
               Reject
-            </StatusButton>
+            </RowOp>
           ) : null}
           {l.status === 'approved' ? (
-            <StatusButton id={l.id} name={l.name} to="suspended" className={rowAct.base}>
+            <RowOp id={l.id} name={l.name} op="suspend" back={here} className={rowAct.base}>
               Suspend
-            </StatusButton>
+            </RowOp>
           ) : null}
           {l.status === 'suspended' ? (
-            <StatusButton id={l.id} name={l.name} to="approved" className={rowAct.ok}>
+            <RowOp id={l.id} name={l.name} op="approve" back={here} className={rowAct.ok}>
               Restore
-            </StatusButton>
+            </RowOp>
           ) : null}
           <Link href={`/admin/listings/${l.id}`} className={`${rowAct.base} hover:no-underline`}>
             Edit
           </Link>
         </>
       ),
-      csv: [l.name, cat, city, area ?? '', owner, l.status, l.verification],
     };
   });
 
@@ -211,14 +240,13 @@ export default async function AdminListings({
       <PageHeader
         title="Listings"
         description="Approve new submissions and keep business details accurate."
-        actions={[{ label: 'Add listing', href: '/admin/listings/new', primary: true }]}
-      >
-        <ExportCsvButton
-          filename="listings.csv"
-          header={['Name', 'Category', 'City', 'Area', 'Owner', 'Status', 'Verification']}
-          rows={rows.map((r) => r.csv ?? [])}
-        />
-      </PageHeader>
+        actions={[
+          { label: 'Import CSV', href: '/admin/listings/import' },
+          // A plain download link: next/link would prefetch, and so build, the file.
+          { label: 'Export CSV', href: exportHref, download: true },
+          { label: 'Add listing', href: '/admin/listings/new', primary: true },
+        ]}
+      />
       {error ? <ErrorNotice>Could not load listings: {error.message}</ErrorNotice> : null}
 
       <DataTable
@@ -244,25 +272,33 @@ export default async function AdminListings({
         actionsWidth="210px"
         footnote={total > LIMIT ? `newest ${LIMIT} of ${total} loaded` : undefined}
         bulk={[
-          { label: 'Approve', tone: 'ok', op: 'listing_status', arg: 'approved' },
+          { label: 'Approve', tone: 'ok', op: 'listing', arg: 'approve' },
           {
             label: 'Reject',
-            op: 'listing_status',
-            arg: 'rejected',
+            op: 'listing',
+            arg: 'reject',
             confirm: {
               title: 'Reject {n} listings?',
-              body: 'They stay off the public site.',
+              body: 'They stay off the public site. Owners get an email with your reason.',
               ok: 'Reject',
               danger: true,
+              reason: {
+                label: 'Reason for the owners',
+                placeholder: 'e.g. Missing contact details',
+              },
             },
           },
-          { label: 'Suspend', op: 'listing_status', arg: 'suspended' },
+          { label: 'Suspend', op: 'listing', arg: 'suspend' },
+          { label: 'Feature', op: 'listing', arg: 'feature' },
+          { label: 'Unfeature', op: 'listing', arg: 'unfeature' },
+          { label: 'Verify', op: 'listing', arg: 'verify' },
           ...(canDelete
             ? [
                 {
                   label: 'Delete permanently',
                   tone: 'bad' as const,
-                  op: 'listing_delete' as const,
+                  op: 'listing' as const,
+                  arg: 'delete',
                   confirm: {
                     title: 'Delete {n} listings permanently?',
                     body: 'Their hours and reviews go too. This can’t be undone.',

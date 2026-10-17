@@ -19,8 +19,8 @@ import {
   inputCls,
   rowAct,
   selectCls,
-  textareaCls,
 } from '@/components/admin/kit';
+import { MarkdownEditor } from '@/components/admin/markdown-editor';
 import { DataTable, type TableRow } from '@/components/admin/data-table';
 import { ConfirmButton, ModalForm } from '@/components/admin/dialog';
 
@@ -168,15 +168,16 @@ function CityFields({
       </FormField>
       <Common loc={c} k={k} />
       <Coords loc={c} k={k} />
-      <FormField label="Intro text for the city page" htmlFor={`ci-${k}`}>
-        <textarea
-          id={`ci-${k}`}
-          name="intro_copy"
-          rows={3}
-          defaultValue={c?.intro_copy ?? ''}
-          className={textareaCls}
-        />
-      </FormField>
+      <MarkdownEditor
+        key={k}
+        inline
+        label="Intro text for the city page"
+        name="intro_copy"
+        defaultValue={c?.intro_copy}
+        rows={3}
+        maxLength={2000}
+        hint="Use the link button to point to categories, listings or other pages."
+      />
       <SwitchField
         name="is_featured"
         label="Featured on the home page"

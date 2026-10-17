@@ -1,7 +1,6 @@
 'use server';
 
-import { setListingStatus } from './admin-actions';
-import { deleteListing } from './listing-actions';
+import { bulkListingAction } from './listing-bulk-actions';
 import { decideClaim, moderateReview, setSubmissionStatus } from './moderation-actions';
 import { deleteSubscriber, setSubscriberStatus } from './subscriber-actions';
 import { deleteBlogPost } from './blog-actions';
@@ -20,8 +19,7 @@ import { deleteRedirect } from './seo-actions';
  */
 
 export type BulkOp =
-  | 'listing_status'
-  | 'listing_delete'
+  | 'listing'
   | 'review'
   | 'inbox_status'
   | 'claim'
@@ -46,10 +44,11 @@ function redirectUrl(e: unknown): string | null {
 /** Runs a redirecting form action and reports its outcome. */
 async function viaForm(
   action: (fd: FormData) => Promise<unknown>,
-  fields: Record<string, string>,
+  fields: Record<string, string | string[]>,
 ): Promise<string | null> {
   const fd = new FormData();
-  for (const [k, v] of Object.entries(fields)) fd.set(k, v);
+  for (const [k, v] of Object.entries(fields))
+    for (const item of Array.isArray(v) ? v : [v]) fd.append(k, item);
   try {
     await action(fd);
     return null;
@@ -64,19 +63,6 @@ async function viaForm(
 
 async function one(op: BulkOp, id: string, arg: string | undefined): Promise<string | null> {
   switch (op) {
-    case 'listing_status': {
-      if (arg !== 'approved' && arg !== 'rejected' && arg !== 'suspended' && arg !== 'pending')
-        return 'Unknown status.';
-      try {
-        const r = await setListingStatus(id, arg);
-        return r.ok ? null : r.error;
-      } catch (e) {
-        if (redirectUrl(e) !== null) return 'Not allowed.';
-        throw e;
-      }
-    }
-    case 'listing_delete':
-      return viaForm(deleteListing, { id });
     case 'review':
       return viaForm(moderateReview, { id, decision: arg ?? '' });
     case 'inbox_status':
@@ -98,8 +84,25 @@ async function one(op: BulkOp, id: string, arg: string | undefined): Promise<str
   }
 }
 
-export async function runBulk(op: BulkOp, ids: string[], arg?: string): Promise<BulkResult> {
+export async function runBulk(
+  op: BulkOp,
+  ids: string[],
+  arg?: string,
+  reason?: string,
+): Promise<BulkResult> {
   const list = [...new Set(ids)].filter((id) => UUID.test(id)).slice(0, MAX);
+
+  // Listings have a real bulk action (it also emails owners once per batch),
+  // so every id goes in one request rather than one per row.
+  if (op === 'listing') {
+    const err = await viaForm(bulkListingAction, {
+      ids: list,
+      op: arg ?? '',
+      ...(reason ? { reason } : {}),
+    });
+    return err ? { done: 0, failed: list.length, error: err } : { done: list.length, failed: 0 };
+  }
+
   let done = 0;
   let failed = 0;
   let error: string | undefined;

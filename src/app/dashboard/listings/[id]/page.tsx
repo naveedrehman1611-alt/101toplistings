@@ -49,6 +49,18 @@ export default async function EditOwnListing({
       </p>
       <h1 className="mt-2 text-2xl font-semibold">{l.name}</h1>
       <Notice ok={sp.ok} error={sp.error} />
+      {l.status === 'rejected' ? (
+        <div
+          role="note"
+          className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900"
+        >
+          <p className="font-medium">This listing was not approved.</p>
+          {l.rejection_note ? <p className="mt-1">Reason: {l.rejection_note}</p> : null}
+          <p className="mt-1">
+            Fix the details below and press “Save and resubmit”. It goes straight back into review.
+          </p>
+        </div>
+      ) : null}
       <div className="mt-6">
         <ListingForm
           action={updateOwnListing}
@@ -56,7 +68,7 @@ export default async function EditOwnListing({
           hours={(hours ?? []) as EditableHour[]}
           categories={options.categories}
           cities={options.cities}
-          submitLabel="Save changes"
+          submitLabel={l.status === 'rejected' ? 'Save and resubmit' : 'Save changes'}
         />
       </div>
       <ListingImages listingId={l.id} context="owner" />

@@ -50,7 +50,14 @@ export type BulkAction = {
   op?: BulkOp;
   /** Extra form value the op needs, such as a status. */
   arg?: string;
-  confirm?: { title: string; body?: string; ok: string; danger?: boolean };
+  confirm?: {
+    title: string;
+    body?: string;
+    ok: string;
+    danger?: boolean;
+    /** Ask for a required reason (such as for rejecting), sent with the op. */
+    reason?: { label: string; placeholder?: string };
+  };
   /** Downloads the selected rows' `csv` values instead of calling the server. */
   exportCsv?: { filename: string; header: string[] };
   /** A client-only action, for preview screens with no server write yet. */
@@ -118,6 +125,7 @@ export function DataTable({
   const [page, setPage] = useState(0);
   const [sel, setSel] = useState<string[]>([]);
   const [confirm, setConfirm] = useState<BulkAction | null>(null);
+  const [reason, setReason] = useState('');
   const [busy, startBusy] = useTransition();
 
   const serverFilters = !!filters?.some((f) => f.href);
@@ -150,7 +158,7 @@ export function DataTable({
     .filter(Boolean)
     .join(' ');
 
-  const runAction = (a: BulkAction) => {
+  const runAction = (a: BulkAction, why?: string) => {
     if (a.exportCsv) {
       const chosen = rows.filter((r) => sel.includes(r.id)).map((r) => r.csv ?? []);
       downloadCsv(a.exportCsv.filename, a.exportCsv.header, chosen);
@@ -164,7 +172,7 @@ export function DataTable({
     if (!a.op) return;
     const ids = sel;
     startBusy(async () => {
-      const res = await runBulk(a.op!, ids, a.arg);
+      const res = await runBulk(a.op!, ids, a.arg, why);
       if (res.failed === 0) toast(`${res.done} ${res.done === 1 ? 'item' : 'items'} updated`);
       else
         toast(`${res.done} updated, ${res.failed} failed${res.error ? `: ${res.error}` : ''}`, {
@@ -175,7 +183,11 @@ export function DataTable({
     });
   };
 
-  const onBulk = (a: BulkAction) => (a.confirm ? setConfirm(a) : runAction(a));
+  const onBulk = (a: BulkAction) => {
+    setReason('');
+    if (a.confirm) setConfirm(a);
+    else runAction(a);
+  };
 
   const submitSearch = () => {
     if (!searchParam) return;
@@ -482,17 +494,33 @@ export function DataTable({
                 type="button"
                 autoFocus
                 className={confirm.confirm!.danger ? btn.danger : btn.primary}
+                disabled={!!confirm.confirm!.reason && !reason.trim()}
                 onClick={() => {
                   const a = confirm;
                   setConfirm(null);
-                  runAction(a);
+                  runAction(a, reason.trim() || undefined);
                 }}
               >
                 {confirm.confirm!.ok}
               </button>
             </>
           }
-        />
+        >
+          {confirm.confirm!.reason ? (
+            <label className="flex flex-col gap-1.5 text-[13px] font-semibold">
+              {confirm.confirm!.reason.label}
+              <textarea
+                autoFocus
+                rows={3}
+                maxLength={1000}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={confirm.confirm!.reason.placeholder}
+                className="rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm font-normal outline-none focus:border-[#1884E7]"
+              />
+            </label>
+          ) : null}
+        </Dialog>
       ) : null}
     </div>
   );

@@ -33,6 +33,7 @@ export type EditableListing = {
   is_featured: boolean;
   seo_title: string | null;
   seo_description: string | null;
+  rejection_note?: string | null;
 };
 
 export type EditableHour = {
@@ -265,6 +266,14 @@ export function ListingForm({
           />
           <div className="flex items-end pb-2">
             <Check label="Featured" name="is_featured" defaultChecked={listing?.is_featured} />
+          </div>
+          <div className="sm:col-span-2">
+            <TextArea
+              label="Reason for rejecting (used only when Status is rejected; emailed to the owner)"
+              name="rejection_note"
+              defaultValue={listing?.rejection_note}
+              rows={2}
+            />
           </div>
           <Field label="SEO title" name="seo_title" defaultValue={listing?.seo_title} />
           <Field

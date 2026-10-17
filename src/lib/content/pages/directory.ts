@@ -208,7 +208,7 @@ const BUSINESS_CATEGORIES = definePage({
         intro: textarea(
           'Intro text',
           'This business directory by category groups companies by the industry they work in. Pick a category to see the businesses listed under it, or [list your business](/add-business) in the category that fits.',
-          { max: 600, hint: 'Links are written [like this](/path).' },
+          { max: 600, hint: 'Links are written [like this](/path).', markdown: 'inline' },
         ),
         stat_categories: text('Figure label: categories', 'Categories', { max: 30 }),
         stat_subcategories: text('Figure label: subcategories', 'Subcategories', { max: 30 }),
@@ -899,7 +899,7 @@ const BLOG_POST = definePage({
         text: text(
           'Text',
           '[Need help with SEO?](/seo-services) or [list your business](/add-business).',
-          { max: 300, hint: 'Links are written [like this](/path).' },
+          { max: 300, hint: 'Links are written [like this](/path).', markdown: 'inline' },
         ),
       },
     }),

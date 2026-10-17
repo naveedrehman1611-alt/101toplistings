@@ -127,7 +127,11 @@ export function ConfirmButton({
                 autoFocus
                 className={danger ? btn.danger : btn.primary}
                 onClick={() => {
-                  ref.current?.form?.requestSubmit();
+                  const form = ref.current?.form;
+                  // A required field in the dialog (such as a rejection reason)
+                  // keeps it open until it is filled in.
+                  if (form && !form.reportValidity()) return;
+                  form?.requestSubmit();
                   setOpen(false);
                 }}
               >

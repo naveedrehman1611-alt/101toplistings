@@ -12,8 +12,8 @@ import {
   inputCls,
   rowAct,
   selectCls,
-  textareaCls,
 } from '@/components/admin/kit';
+import { MarkdownEditor } from '@/components/admin/markdown-editor';
 import { DataTable, type TableRow } from '@/components/admin/data-table';
 import { ConfirmButton, ModalForm } from '@/components/admin/dialog';
 
@@ -81,15 +81,17 @@ function CategoryFields({ rows, editing }: { rows: Row[]; editing?: Row }) {
           />
         </FormField>
       </div>
-      <FormField label="Description" htmlFor={`cd-${k}`}>
-        <textarea
-          id={`cd-${k}`}
-          name="description"
-          rows={3}
-          defaultValue={editing?.description ?? ''}
-          className={textareaCls}
-        />
-      </FormField>
+      {/* Keyed so each category's dialog starts from its own text. */}
+      <MarkdownEditor
+        key={k}
+        inline
+        label="Description"
+        name="description"
+        defaultValue={editing?.description}
+        rows={3}
+        maxLength={1000}
+        hint="Shown on the category page. Use the link button to point to other pages on the site."
+      />
       <SwitchField
         name="is_featured"
         label="Featured on the home page"

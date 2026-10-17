@@ -1,5 +1,6 @@
 import type { EditablePost } from '@/components/blog-form';
 import { FormShell } from './form-shell';
+import { MarkdownEditor } from './markdown-editor';
 import { FormField, Section, SwitchField, inputCls, selectCls, textareaCls } from './kit';
 import { OgPicker, type OgOption } from './og-picker';
 
@@ -87,26 +88,15 @@ export function PostEditor({
             className={textareaCls}
           />
         </FormField>
-        <FormField
-          label="Body"
-          htmlFor="p-body"
-          full
-          help={
-            <>
-              Markdown supported: <code>## Heading</code>, <code>**bold**</code>,{' '}
-              <code>*italic*</code>, <code>[text](https://…)</code> and lists. Reading time is
-              worked out on save.
-            </>
-          }
-        >
-          <textarea
-            id="p-body"
+        <div className="sm:col-span-2">
+          <MarkdownEditor
+            label="Body"
             name="body"
-            rows={14}
-            defaultValue={post?.body ?? ''}
-            className={`${textareaCls} font-mono`}
+            defaultValue={post?.body}
+            rows={16}
+            hint="Markdown: a blank line between paragraphs. Select words and press Link to point them at a page on this site, or use Link keyword to link a phrase wherever it appears. Reading time is worked out on save."
           />
-        </FormField>
+        </div>
       </Section>
 
       <Section title="Publishing">

@@ -24,7 +24,7 @@ export function tableTag(table: string): string {
 /**
  * Cache tag for stored search_listings results (queries.ts). Every write that
  * can change a result — listings, reviews, categories, cities — expires it:
- * runAndReturn's default revalidation and setListingStatus both do.
+ * runAndReturn's default revalidation and bulkListingAction both do.
  */
 export const SEARCH_TAG = tableTag('search_listings');
 
