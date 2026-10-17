@@ -52,7 +52,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...SERVICE_PAGES.map((s) => s.path),
     '/seo-audit',
     '/pricing',
-    '/blog',
+    // The blog index is noindex while it has no posts, as the guide hubs are.
+    ...(posts.length > 0 ? ['/blog'] : []),
     ...BLOG_CLUSTERS.filter((c) => (clusterCounts.get(c.slug) ?? 0) > 0).map((c) => c.path),
     '/about',
     '/contact',

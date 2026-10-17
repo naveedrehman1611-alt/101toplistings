@@ -237,6 +237,20 @@ export async function pageMetadata(path: string, meta: Metadata): Promise<Metada
   return out;
 }
 
+/**
+ * An editor-written title without a trailing brand ("Local SEO | RankYouSite"),
+ * since the root layout's title template adds the brand itself; without this
+ * the brand shows twice. The old spellings are matched too.
+ */
+export function withoutBrandSuffix(title: string, brand: string): string {
+  const names = [brand, 'RankYouSite', 'RankYourSite', 'Rank Your Site', 'Rank You Site']
+    .filter(Boolean)
+    .map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const re = new RegExp(`\\s*[|\\-–—·:]\\s*(?:${names.join('|')})\\s*$`, 'i');
+  const stripped = title.replace(re, '').trim();
+  return stripped || title;
+}
+
 /** The stored robots value for the "hide from search engines" toggle. */
 export const NOINDEX_ROBOTS = 'noindex, follow';
 
@@ -271,7 +285,15 @@ export async function seoMetadata(route: SeoRoute, base: Metadata): Promise<Meta
   const merged: Metadata = { ...base };
   if (o) {
     const text: { title?: string; description?: string } = {};
-    if (o.title) text.title = o.title;
+    if (o.title) {
+      text.title =
+        route === '/'
+          ? o.title
+          : withoutBrandSuffix(
+              o.title,
+              settingText(await getSettings(), 'brand.name', 'RankYouSite'),
+            );
+    }
     if (o.description) text.description = o.description;
     // The home page's default title is the full site title, not "x · Brand",
     // so its override escapes the layout's template the same way.
