@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { moderateReview } from '@/lib/moderation-actions';
@@ -119,7 +120,7 @@ export default async function AdminReviews({
         <CellText key="l" bold>
           {listing}
         </CellText>,
-        <>
+        <Fragment key="c224">
           <div className="flex items-center gap-1 font-semibold">
             <span className="tracking-[1px] text-[#F59E0B]" aria-label={`${r.rating} of 5`}>
               {stars(r.rating)}
@@ -132,7 +133,7 @@ export default async function AdminReviews({
               <NewBadge />
             </div>
           ) : null}
-        </>,
+        </Fragment>,
         <Pill key="s" tone={toneOf(r.status)}>
           {label(r.status)}
         </Pill>,

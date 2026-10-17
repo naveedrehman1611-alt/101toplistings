@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
@@ -99,7 +100,7 @@ export default async function AdminClaims() {
       search: [listing, claimant, c.message].join(' '),
       sort: { listing, claimant, status: shown, date: c.created_at },
       cells: [
-        <>
+        <Fragment key="c17">
           {c.listings ? (
             <Link
               href={`/listing/${c.listings.slug}`}
@@ -114,11 +115,11 @@ export default async function AdminClaims() {
           {open && ownedByOther ? (
             <div className="text-xs text-[#B91C1C]">Already managed by another account</div>
           ) : null}
-        </>,
+        </Fragment>,
         <CellText key="c" sub={<code className="text-[11px]">{c.claimant_id.slice(0, 8)}</code>}>
           {claimant}
         </CellText>,
-        <>
+        <Fragment key="c718">
           <div className="line-clamp-2 max-w-full text-[13px] whitespace-pre-line">
             {c.message || '—'}
           </div>
@@ -132,7 +133,7 @@ export default async function AdminClaims() {
               View proof ↗
             </a>
           ) : null}
-        </>,
+        </Fragment>,
         <Pill key="s" tone={shown}>
           {SHOWN_LABEL[shown]}
         </Pill>,

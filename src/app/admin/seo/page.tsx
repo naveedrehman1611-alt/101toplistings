@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
@@ -89,7 +90,7 @@ export default async function AdminSeo() {
         >
           {label}
         </CellText>,
-        <>
+        <Fragment key="c262">
           <div className="max-w-full truncate">
             {v.title || <span className="text-[#64748B]">Page’s own title</span>}
           </div>
@@ -101,7 +102,7 @@ export default async function AdminSeo() {
               <Tag tone="gold">No override</Tag>
             </div>
           ) : null}
-        </>,
+        </Fragment>,
         isSearch ? (
           <SwitchView key="n" on label="Noindex" />
         ) : (

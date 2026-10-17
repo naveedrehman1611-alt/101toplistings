@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole, roleAtLeast } from '@/lib/auth';
@@ -178,7 +179,7 @@ export default async function AdminListings({
       search: [l.name, l.slug, cat, city, area, owner].join(' '),
       sort: { name: l.name, cat, city, owner, status: l.status, updated: l.updated_at },
       cells: [
-        <>
+        <Fragment key="c17">
           <Link
             href={`/admin/listings/${l.id}`}
             className="max-w-full truncate font-semibold text-[#062347] hover:text-[#1884E7] hover:no-underline"
@@ -192,7 +193,7 @@ export default async function AdminListings({
               {l.is_featured ? <Tag tone="gold">Featured</Tag> : null}
             </div>
           ) : null}
-        </>,
+        </Fragment>,
         <CellText key="c">{cat}</CellText>,
         <CellText key="l" sub={area}>
           {city}

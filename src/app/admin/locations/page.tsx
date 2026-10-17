@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
@@ -224,7 +225,7 @@ export default async function AdminLocations() {
       search: [loc.name, loc.slug, parent, type].join(' '),
       sort: { name: loc.name, type, parent, count },
       cells: [
-        <>
+        <Fragment key="c17">
           <div className="flex max-w-full items-center gap-2 font-semibold">
             <span className="truncate">
               {'— '.repeat(depth)}
@@ -247,7 +248,7 @@ export default async function AdminLocations() {
               {loc.latitude}, {loc.longitude}
             </div>
           ) : null}
-        </>,
+        </Fragment>,
         <Pill key="t" tone={type === 'Country' ? 'blue' : type === 'Region' ? 'teal' : 'slate'}>
           {type}
         </Pill>,

@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
@@ -66,7 +67,7 @@ export default async function AdminBlog() {
         date: p.published_at ?? p.updated_at,
       },
       cells: [
-        <>
+        <Fragment key="c17">
           <Link
             href={`/admin/blog/${p.id}`}
             className="max-w-full truncate font-semibold text-[#062347] hover:text-[#1884E7] hover:no-underline"
@@ -76,7 +77,7 @@ export default async function AdminBlog() {
           <div className="max-w-full truncate text-xs text-[#64748B]">
             {tagList || `/blog/${p.slug}`}
           </div>
-        </>,
+        </Fragment>,
         <CellText key="c">{cat}</CellText>,
         <SwitchView key="f" on={p.is_featured} label="Featured" />,
         <Pill key="s" tone={status}>
