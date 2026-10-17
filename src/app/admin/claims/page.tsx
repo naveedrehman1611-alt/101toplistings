@@ -2,12 +2,12 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { decideClaim } from '@/lib/moderation-actions';
-import { Notice } from '@/components/admin-ui';
+import { CellText, ErrorNotice, PageHeader, Pill, ago, rowAct } from '@/components/admin/kit';
+import { DataTable, type TableRow } from '@/components/admin/data-table';
+import { ConfirmButton } from '@/components/admin/dialog';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Claims' };
-
-const FILTERS = ['open', 'resolved', 'all'] as const;
 
 type Row = {
   id: string;
@@ -17,184 +17,216 @@ type Row = {
   evidence_url: string | null;
   status: string;
   created_at: string;
-  handled_at: string | null;
   listings: { name: string; slug: string; owner_user_id: string | null } | null;
   claimant: { display_name: string | null } | null;
 };
 
-export default async function AdminClaims({
-  searchParams,
-}: {
-  searchParams: Promise<{ show?: string; ok?: string; error?: string }>;
-}) {
-  await requireRole('moderator');
-  const sp = await searchParams;
-  const show = FILTERS.includes(sp.show as (typeof FILTERS)[number]) ? sp.show! : 'open';
+type Shown = 'pending' | 'in_progress' | 'approved' | 'rejected';
+const SHOWN_LABEL: Record<Shown, string> = {
+  pending: 'Pending',
+  in_progress: 'In progress',
+  approved: 'Approved',
+  rejected: 'Rejected',
+};
 
-  const supabase = await createClient();
-  let q = supabase
-    .from('claims')
-    .select(
-      // Two FKs point claims at profiles (claimant_id, handled_by), so the
-      // embed has to name the one it means.
-      'id, listing_id, claimant_id, message, evidence_url, status, created_at, handled_at, listings(name, slug, owner_user_id), claimant:profiles!claims_claimant_id_fkey(display_name)',
-    )
-    .order('created_at', { ascending: false })
-    .limit(100);
-  if (show === 'open') q = q.in('status', ['new', 'in_progress']);
-  else if (show === 'resolved') q = q.in('status', ['resolved', 'spam']);
-  const { data, error } = await q;
-  const claims = (data ?? []) as unknown as Row[];
-
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold">Claims</h1>
-      <p className="mt-2 text-sm text-[var(--text-muted)]">
-        People asking to manage an existing listing. Call the number they gave (ideally the one on
-        the listing) before approving. Approving makes them the listing&apos;s owner, so they can
-        edit it from their dashboard.
-      </p>
-      <Notice ok={sp.ok} error={sp.error ?? error?.message} />
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        {FILTERS.map((f) => (
-          <Link
-            key={f}
-            href={`/admin/claims?show=${f}`}
-            className={`rounded-lg border px-3 py-1.5 text-sm capitalize ${
-              show === f
-                ? 'border-brand-500 bg-brand-50 text-brand-800'
-                : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-            }`}
-          >
-            {f}
-          </Link>
-        ))}
-      </div>
-
-      <ul className="mt-6 space-y-4">
-        {claims.map((c) => {
-          const owner = c.listings?.owner_user_id ?? null;
-          const open = c.status === 'new' || c.status === 'in_progress';
-          // No outcome column: a resolved claim was approved exactly when its
-          // claimant now owns the listing.
-          const outcome = open ? null : owner === c.claimant_id ? 'Approved' : 'Rejected';
-          const ownedByOther = Boolean(owner && owner !== c.claimant_id);
-          return (
-            <li key={c.id} className="surface-card p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-medium">
-                  {c.listings ? (
-                    <Link href={`/listing/${c.listings.slug}`} className="hover:text-brand-700">
-                      {c.listings.name}
-                    </Link>
-                  ) : (
-                    'Deleted listing'
-                  )}
-                </p>
-                <span className="text-xs text-[var(--text-muted)]">
-                  {new Date(c.created_at).toLocaleString('en-GB')} ·{' '}
-                  {outcome ?? c.status.replace('_', ' ')}
-                </span>
-              </div>
-              <p className="mt-1 text-sm">
-                Claimed by{' '}
-                <span className="font-medium">{c.claimant?.display_name ?? 'Unnamed user'}</span>{' '}
-                <span className="font-mono text-xs text-[var(--text-muted)]">
-                  {c.claimant_id.slice(0, 8)}
-                </span>
-              </p>
-              {c.message ? <p className="mt-2 text-sm whitespace-pre-line">{c.message}</p> : null}
-              {c.evidence_url ? (
-                <p className="mt-2 text-sm">
-                  Proof:{' '}
-                  <a
-                    href={c.evidence_url}
-                    target="_blank"
-                    rel="noopener noreferrer nofollow"
-                    className="text-brand-700 break-all hover:underline"
-                  >
-                    {c.evidence_url}
-                  </a>
-                </p>
-              ) : null}
-              {open && ownedByOther ? (
-                <p className="text-on-error-container mt-2 text-sm">
-                  This listing is already managed by another account.
-                </p>
-              ) : null}
-
-              {open ? (
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {!ownedByOther ? (
-                    <form action={decideClaim} className="flex flex-wrap items-center gap-2">
-                      <input type="hidden" name="id" value={c.id} />
-                      <input type="hidden" name="show" value={show} />
-                      <input type="hidden" name="decision" value="approve" />
-                      <button
-                        type="submit"
-                        className="bg-primary-container hover:bg-primary text-on-primary rounded-lg px-3 py-1 text-xs font-medium"
-                      >
-                        Approve
-                      </button>
-                      <label className="flex items-center gap-1.5 text-xs">
-                        <input
-                          type="checkbox"
-                          name="verify"
-                          defaultChecked
-                          className="accent-primary-container size-3.5"
-                        />
-                        Also mark Verified
-                      </label>
-                    </form>
-                  ) : null}
-                  {c.status === 'new' ? (
-                    <DecisionButton id={c.id} show={show} decision="in_progress">
-                      In progress
-                    </DecisionButton>
-                  ) : null}
-                  <DecisionButton id={c.id} show={show} decision="reject">
-                    Reject
-                  </DecisionButton>
-                </div>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
-      {claims.length === 0 ? (
-        <p className="mt-6 text-sm text-[var(--text-muted)]">Nothing here.</p>
-      ) : null}
-    </div>
-  );
-}
-
-function DecisionButton({
+function Decide({
   id,
-  show,
   decision,
+  className,
   children,
+  confirm,
+  fields,
 }: {
   id: string;
-  show: string;
-  decision: string;
+  decision: 'approve' | 'in_progress' | 'reject';
+  className: string;
   children: React.ReactNode;
+  confirm?: { title: string; body: string; ok: string; danger?: boolean };
+  fields?: React.ReactNode;
 }) {
   return (
     <form action={decideClaim}>
       <input type="hidden" name="id" value={id} />
-      <input type="hidden" name="show" value={show} />
+      <input type="hidden" name="show" value="all" />
       <input type="hidden" name="decision" value={decision} />
-      <button
-        type="submit"
-        className={`rounded-lg border px-2.5 py-1 text-xs ${
-          decision === 'reject'
-            ? 'border-error/30 text-on-error-container hover:bg-error-container/40'
-            : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-        }`}
-      >
-        {children}
-      </button>
+      {confirm ? (
+        <ConfirmButton className={className} {...confirm} fields={fields}>
+          {children}
+        </ConfirmButton>
+      ) : (
+        <button type="submit" className={className}>
+          {children}
+        </button>
+      )}
     </form>
+  );
+}
+
+export default async function AdminClaims() {
+  await requireRole('moderator');
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('claims')
+    .select(
+      // Two FKs point claims at profiles (claimant_id, handled_by), so the
+      // embed has to name the one it means.
+      'id, listing_id, claimant_id, message, evidence_url, status, created_at, listings(name, slug, owner_user_id), claimant:profiles!claims_claimant_id_fkey(display_name)',
+    )
+    .order('created_at', { ascending: false })
+    .limit(300);
+  const claims = (data ?? []) as unknown as Row[];
+
+  const rows: TableRow[] = claims.map((c) => {
+    const owner = c.listings?.owner_user_id ?? null;
+    const open = c.status === 'new' || c.status === 'in_progress';
+    // No outcome column: a resolved claim was approved exactly when its
+    // claimant now owns the listing.
+    const shown: Shown =
+      c.status === 'new'
+        ? 'pending'
+        : c.status === 'in_progress'
+          ? 'in_progress'
+          : owner === c.claimant_id
+            ? 'approved'
+            : 'rejected';
+    const ownedByOther = Boolean(owner && owner !== c.claimant_id);
+    const listing = c.listings?.name ?? 'Deleted listing';
+    const claimant = c.claimant?.display_name ?? 'Unnamed user';
+    return {
+      id: c.id,
+      filter: shown,
+      selectable: open,
+      search: [listing, claimant, c.message].join(' '),
+      sort: { listing, claimant, status: shown, date: c.created_at },
+      cells: [
+        <>
+          {c.listings ? (
+            <Link
+              href={`/listing/${c.listings.slug}`}
+              target="_blank"
+              className="max-w-full truncate font-semibold text-[#062347] hover:text-[#1884E7] hover:no-underline"
+            >
+              {listing}
+            </Link>
+          ) : (
+            <span className="font-semibold">{listing}</span>
+          )}
+          {open && ownedByOther ? (
+            <div className="text-xs text-[#B91C1C]">Already managed by another account</div>
+          ) : null}
+        </>,
+        <CellText key="c" sub={<code className="text-[11px]">{c.claimant_id.slice(0, 8)}</code>}>
+          {claimant}
+        </CellText>,
+        <>
+          <div className="line-clamp-2 max-w-full text-[13px] whitespace-pre-line">
+            {c.message || '—'}
+          </div>
+          {c.evidence_url ? (
+            <a
+              href={c.evidence_url}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="max-w-full truncate text-xs"
+            >
+              View proof ↗
+            </a>
+          ) : null}
+        </>,
+        <Pill key="s" tone={shown}>
+          {SHOWN_LABEL[shown]}
+        </Pill>,
+        <CellText key="d">{ago(c.created_at)}</CellText>,
+      ],
+      actions: open ? (
+        <>
+          {!ownedByOther ? (
+            <Decide
+              id={c.id}
+              decision="approve"
+              className={rowAct.ok}
+              confirm={{
+                title: 'Approve claim?',
+                body: `${claimant} will be able to manage ${listing} from their dashboard. Call the number they gave (ideally the one on the listing) first.`,
+                ok: 'Approve claim',
+              }}
+              fields={
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="verify"
+                    defaultChecked
+                    className="size-4 accent-[#0E7A7C]"
+                  />
+                  Also mark the listing as Verified
+                </label>
+              }
+            >
+              Approve
+            </Decide>
+          ) : null}
+          {c.status === 'new' ? (
+            <Decide id={c.id} decision="in_progress" className={rowAct.base}>
+              In progress
+            </Decide>
+          ) : null}
+          <Decide
+            id={c.id}
+            decision="reject"
+            className={rowAct.bad}
+            confirm={{
+              title: 'Reject this claim?',
+              body: 'The listing stays with its current owner.',
+              ok: 'Reject',
+              danger: true,
+            }}
+          >
+            Reject
+          </Decide>
+        </>
+      ) : null,
+    };
+  });
+
+  const n = (s: Shown) => rows.filter((r) => r.filter === s).length;
+
+  return (
+    <>
+      <PageHeader
+        title="Claims"
+        description="Owners asking to manage a listing. Approving makes them its owner, so they can edit it from /dashboard."
+      />
+      {error ? <ErrorNotice>Could not load claims: {error.message}</ErrorNotice> : null}
+      <DataTable
+        columns={[
+          { key: 'listing', label: 'Listing', width: 'minmax(200px,1.6fr)' },
+          { key: 'claimant', label: 'Claimant' },
+          { key: 'proof', label: 'Message & proof', width: 'minmax(200px,1.6fr)', sortable: false },
+          { key: 'status', label: 'Status', width: '120px' },
+          { key: 'date', label: 'Submitted', width: '110px' },
+        ]}
+        rows={rows}
+        filters={[
+          { value: 'all', label: 'All' },
+          ...(['pending', 'in_progress', 'approved', 'rejected'] as Shown[]).map((s) => ({
+            value: s,
+            label: SHOWN_LABEL[s],
+            count: n(s),
+          })),
+        ]}
+        searchPlaceholder="Search listing or claimant…"
+        actionsWidth="240px"
+        bulk={[
+          { label: 'Mark in progress', op: 'claim', arg: 'in_progress' },
+          {
+            label: 'Reject',
+            tone: 'bad',
+            op: 'claim',
+            arg: 'reject',
+            confirm: { title: 'Reject {n} claims?', ok: 'Reject', danger: true },
+          },
+        ]}
+      />
+    </>
   );
 }

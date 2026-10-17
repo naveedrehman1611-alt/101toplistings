@@ -2,6 +2,9 @@ import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from './supabase-server';
 import { signInHref } from './legacy-redirects';
+import { roleAtLeast, type Role } from './role-order';
+
+export { roleAtLeast, type Role };
 
 /**
  * Data Access Layer for authorisation.
@@ -12,23 +15,6 @@ import { signInHref } from './legacy-redirects';
  * admin action calls into here, and RLS enforces the same rules again at the
  * database. That is the two-layer requirement in §9.5.6.
  */
-
-// Declaration order in the user_role enum is the authority ordering; mirror it.
-const ROLE_ORDER = [
-  'user',
-  'business_owner',
-  'moderator',
-  'editor',
-  'admin',
-  'super_admin',
-] as const;
-
-export type Role = (typeof ROLE_ORDER)[number];
-
-export function roleAtLeast(role: Role | null, required: Role): boolean {
-  if (!role) return false;
-  return ROLE_ORDER.indexOf(role) >= ROLE_ORDER.indexOf(required);
-}
 
 export type CurrentUser = {
   id: string;

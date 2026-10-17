@@ -1,8 +1,10 @@
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { deleteBlogCategory, saveBlogCategory } from '@/lib/blog-actions';
-import { DangerButton, Field, Notice, SubmitButton, TextArea } from '@/components/admin-ui';
+import { CellText, FormField, PageHeader, btn, inputCls, rowAct, textareaCls } from '@/components/admin/kit';
+import { DataTable, type TableRow } from '@/components/admin/data-table';
+import { ConfirmButton, ModalForm } from '@/components/admin/dialog';
+import { BLOG_TABS } from '@/components/admin/blog-tabs';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Blog categories' };
@@ -17,13 +19,37 @@ type Row = {
   seo_description: string | null;
 };
 
-export default async function AdminBlogCategories({
-  searchParams,
-}: {
-  searchParams: Promise<{ edit?: string; ok?: string; error?: string }>;
-}) {
+function Fields({ c }: { c?: Row }) {
+  const k = c?.id ?? 'new';
+  return (
+    <>
+      {c ? <input type="hidden" name="id" value={c.id} /> : null}
+      <FormField label="Name" htmlFor={`bn-${k}`} required>
+        <input id={`bn-${k}`} name="name" required defaultValue={c?.name} className={inputCls} />
+      </FormField>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Slug" htmlFor={`bs-${k}`} help="Blank = from the name.">
+          <input id={`bs-${k}`} name="slug" defaultValue={c?.slug} className={inputCls} />
+        </FormField>
+        <FormField label="Sort order" htmlFor={`bo-${k}`}>
+          <input id={`bo-${k}`} name="sort_order" type="number" defaultValue={c?.sort_order ?? 0} className={inputCls} />
+        </FormField>
+      </div>
+      <FormField label="Description" htmlFor={`bd-${k}`}>
+        <textarea id={`bd-${k}`} name="description" rows={3} defaultValue={c?.description ?? ''} className={textareaCls} />
+      </FormField>
+      <FormField label="SEO title" htmlFor={`bt-${k}`}>
+        <input id={`bt-${k}`} name="seo_title" defaultValue={c?.seo_title ?? ''} className={inputCls} />
+      </FormField>
+      <FormField label="SEO description" htmlFor={`be-${k}`}>
+        <textarea id={`be-${k}`} name="seo_description" rows={2} defaultValue={c?.seo_description ?? ''} className={textareaCls} />
+      </FormField>
+    </>
+  );
+}
+
+export default async function AdminBlogCategories() {
   await requireRole('editor');
-  const sp = await searchParams;
   const supabase = await createClient();
   const [{ data }, { data: posts }] = await Promise.all([
     supabase
@@ -33,8 +59,7 @@ export default async function AdminBlogCategories({
       .order('name'),
     supabase.from('blog_posts').select('category_id').not('category_id', 'is', null),
   ]);
-  const rows = (data ?? []) as Row[];
-  const editing = sp.edit ? rows.find((r) => r.id === sp.edit) : undefined;
+  const cats = (data ?? []) as Row[];
   // Shown so editors know which categories can be deleted before they try.
   const postCount = new Map<string, number>();
   for (const p of posts ?? []) {
@@ -42,105 +67,62 @@ export default async function AdminBlogCategories({
     postCount.set(c, (postCount.get(c) ?? 0) + 1);
   }
 
+  const rows: TableRow[] = cats.map((c) => {
+    const n = postCount.get(c.id) ?? 0;
+    return {
+      id: c.id,
+      search: `${c.name} ${c.slug}`,
+      sort: { name: c.name, count: n, slug: c.slug },
+      cells: [
+        <CellText key="n" bold sub={c.description ?? undefined}>
+          {c.name}
+        </CellText>,
+        <CellText key="c">{n}</CellText>,
+        <code key="u" className="max-w-full truncate rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[12.5px]">
+          {c.slug}
+        </code>,
+      ],
+      actions: (
+        <>
+          <ModalForm trigger="Edit" triggerClassName={rowAct.base} title={`Edit ${c.name}`} action={saveBlogCategory} ok="Save">
+            <Fields c={c} />
+          </ModalForm>
+          <form action={deleteBlogCategory}>
+            <input type="hidden" name="id" value={c.id} />
+            <ConfirmButton
+              className={rowAct.bad}
+              title={`Delete ${c.name}?`}
+              body={n ? `It still has ${n} post(s); move them to another category first.` : 'This can’t be undone.'}
+              ok="Delete"
+              danger
+            >
+              Delete
+            </ConfirmButton>
+          </form>
+        </>
+      ),
+    };
+  });
+
   return (
-    <div>
-      <p className="text-sm">
-        <Link href="/admin/blog" className="text-brand-700 hover:underline">
-          ← Blog
-        </Link>
-      </p>
-      <h1 className="mt-2 text-2xl font-semibold">Blog categories</h1>
-      <p className="mt-2 text-sm text-[var(--text-muted)]">
-        A category that still has posts cannot be deleted. Move its posts first.
-      </p>
-      <Notice ok={sp.ok} error={sp.error} />
-
-      <form action={saveBlogCategory} className="surface-card mt-6 grid gap-4 p-5 sm:grid-cols-2">
-        <h2 className="text-lg font-semibold sm:col-span-2">
-          {editing ? `Edit ${editing.name}` : 'Add a category'}
-        </h2>
-        {editing ? <input type="hidden" name="id" value={editing.id} /> : null}
-        <Field label="Name" name="name" required defaultValue={editing?.name} />
-        <Field
-          label="Slug"
-          name="slug"
-          defaultValue={editing?.slug}
-          hint="Leave blank to make one from the name."
-        />
-        <Field
-          label="Sort order"
-          name="sort_order"
-          type="number"
-          defaultValue={editing?.sort_order ?? 0}
-        />
-        <Field label="SEO title" name="seo_title" defaultValue={editing?.seo_title} />
-        <div className="sm:col-span-2">
-          <TextArea
-            label="Description"
-            name="description"
-            defaultValue={editing?.description}
-            rows={3}
-          />
-        </div>
-        <div className="sm:col-span-2">
-          <TextArea
-            label="SEO description"
-            name="seo_description"
-            defaultValue={editing?.seo_description}
-            rows={2}
-          />
-        </div>
-        <div className="flex items-center gap-3 sm:col-span-2">
-          <SubmitButton>{editing ? 'Save changes' : 'Add category'}</SubmitButton>
-          {editing ? (
-            <Link href="/admin/blog/categories" className="text-brand-700 text-sm hover:underline">
-              Cancel
-            </Link>
-          ) : null}
-        </div>
-      </form>
-
-      <div className="mt-8 overflow-x-auto">
-        <table className="w-full min-w-[32rem] text-sm">
-          <thead>
-            <tr className="border-b border-[var(--border)] text-left">
-              <th className="py-2 font-medium">Name</th>
-              <th className="py-2 font-medium">Posts</th>
-              <th className="py-2 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-b border-[var(--border)] last:border-0">
-                <td className="py-3">
-                  <span className="font-medium">{r.name}</span>
-                  <span className="ml-2 text-xs text-[var(--text-muted)]">/{r.slug}</span>
-                </td>
-                <td className="py-3 text-[var(--text-muted)]">{postCount.get(r.id) ?? 0}</td>
-                <td className="py-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={`/admin/blog/categories?edit=${r.id}`}
-                      className="rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs"
-                    >
-                      Edit
-                    </Link>
-                    <form action={deleteBlogCategory}>
-                      <input type="hidden" name="id" value={r.id} />
-                      <DangerButton>Delete</DangerButton>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {rows.length === 0 ? (
-          <p className="mt-6 text-sm text-[var(--text-muted)]">
-            No blog categories yet. Add the first one above.
-          </p>
-        ) : null}
-      </div>
-    </div>
+    <>
+      <PageHeader title="Blog" description="Posts and blog categories. A category that still has posts can’t be deleted.">
+        <ModalForm trigger="Add blog category" triggerClassName={btn.primary} title="Add blog category" action={saveBlogCategory} ok="Add">
+          <Fields />
+        </ModalForm>
+      </PageHeader>
+      <DataTable
+        tabs={BLOG_TABS('cats')}
+        columns={[
+          { key: 'name', label: 'Category', width: 'minmax(200px,2fr)' },
+          { key: 'count', label: 'Posts', width: '120px' },
+          { key: 'slug', label: 'Slug' },
+        ]}
+        rows={rows}
+        searchPlaceholder="Search categories…"
+        actionsWidth="140px"
+        emptyText="No blog categories yet."
+      />
+    </>
   );
 }
