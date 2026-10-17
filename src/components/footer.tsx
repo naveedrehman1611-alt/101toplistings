@@ -127,21 +127,31 @@ function ContactRow({
   children,
 }: {
   icon: IconName;
-  href: string;
+  /** Omit for a plain line with nothing to open. */
+  href?: string;
   external?: boolean;
   children: ReactNode;
 }) {
+  const body = (
+    <>
+      <span className="text-brand-400 grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 transition-colors group-hover:border-white/20">
+        <Icon name={icon} size={18} />
+      </span>
+      <span className="min-w-0 break-words">{children}</span>
+    </>
+  );
   return (
     <li>
-      <FooterAnchor
-        link={{ href, external }}
-        className={`group flex items-center gap-3 text-[15px] font-medium text-slate-200 transition-colors hover:text-white ${textLink}`}
-      >
-        <span className="text-brand-400 grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 transition-colors group-hover:border-white/20">
-          <Icon name={icon} size={18} />
-        </span>
-        <span className="min-w-0 break-words">{children}</span>
-      </FooterAnchor>
+      {href ? (
+        <FooterAnchor
+          link={{ href, external }}
+          className={`group flex items-center gap-3 text-[15px] font-medium text-slate-200 transition-colors hover:text-white ${textLink}`}
+        >
+          {body}
+        </FooterAnchor>
+      ) : (
+        <div className="flex items-center gap-3 text-[15px] font-medium text-slate-200">{body}</div>
+      )}
     </li>
   );
 }
@@ -202,7 +212,9 @@ export function Footer({
                 >
                   {address}
                 </ContactRow>
-              ) : null}
+              ) : (
+                <ContactRow icon="public">Serving businesses worldwide</ContactRow>
+              )}
               {c.whatsapp_label ? (
                 <ContactRow icon="chat" href={WHATSAPP_HREF} external>
                   {c.whatsapp_label}

@@ -45,6 +45,7 @@ async function submitAudit(fd: FormData) {
   fd.set('subject', 'SEO services');
   fd.set('message', `SEO audit request\nWebsite: ${site || 'not given'}\n\n${message}`);
   fd.delete('site_url');
+  fd.set('source', 'audit');
   await submitContact(fd);
 }
 

@@ -15,6 +15,7 @@ import { getPageContent } from '@/lib/content/get';
 import { ErrorContentProvider } from '@/components/error-content';
 import { SiteChrome } from '@/components/site-chrome';
 import { toolsWithCopy } from '@/components/tools/tool-page';
+import { FOUNDER_ID } from '@/lib/founder';
 import GoogleAnalytics from './google-analytics';
 
 // Criterion 36: critical fonts preloaded.
@@ -85,7 +86,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const sameAs = social.map((s) => s.href);
   // The phone in Settings, else the WhatsApp number the site already shows.
   const telephone = settingText(settings, 'contact.phone').trim() || `+${WHATSAPP_NUMBER}`;
-  // Only a real stored address: the footer's fallback city is not one.
+  // Only a real stored address; without one the footer says the business serves worldwide.
   const address = settingText(settings, 'contact.address').trim();
   // The site's default meta description also describes the brand entity.
   const description = settingText(settings, 'seo.default_description').trim();
@@ -118,6 +119,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         },
         ...(address ? { address } : {}),
         ...(sameAs.length ? { sameAs } : {}),
+        founder: { '@id': FOUNDER_ID },
       },
       {
         '@type': 'WebSite',
@@ -173,9 +175,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             trustLine={settingText(settings, 'footer.trust_line').trim()}
             copyright={settingText(settings, 'footer.copyright', brand)}
             email={email}
-            address={
-              settingText(settings, 'contact.address').trim() || 'Manchester, United Kingdom'
-            }
+            address={address}
             social={social}
             content={{
               footer: site.footer,

@@ -6,91 +6,6 @@ const SEO_GUIDES = { label: 'SEO guides and how-tos', href: '/blog/seo' };
 /** Core SEO service pages shown in the "core" section of the /seo-services hub. */
 export const CORE_PAGES: ServicePage[] = [
   {
-    slug: 'national-seo',
-    path: '/seo-services/national-seo',
-    name: 'National SEO',
-    title: 'National SEO Services | Rank Across Your Country',
-    description:
-      'National SEO for businesses that sell across a whole country. Keyword, content, technical and link work built for broad commercial searches, not map results.',
-    h1: 'National SEO services',
-    intro:
-      'National SEO is the work of ranking a website for non-local commercial searches across an entire country, such as "project management software" or "buy running shoes online". There is no map pack to win here. Results depend on strong category pages, helpful topical content, a healthy site and links from authoritative sources.',
-    icon: 'flag',
-    category: 'seo',
-    hub: 'core',
-    tag: 'Country-Wide',
-    includes: [
-      {
-        title: 'Country-level keyword mapping',
-        body: 'We group the terms buyers use across your country into topics, judge how competitive each one is and decide what to pursue first. Regional wording and spelling differences are noted so pages match the market.',
-      },
-      {
-        title: 'Category and service page optimization',
-        body: 'The pages that earn commercial rankings get clear targeting, strong headings, useful detail and internal links, so each one answers a specific search better than the pages currently ahead of it.',
-      },
-      {
-        title: 'Topic cluster content',
-        body: 'Guides, comparisons and explainers that support your money pages and cover the questions buyers ask before they choose. Each piece is planned around a gap we found in the results.',
-      },
-      {
-        title: 'Authority link building',
-        body: 'Outreach and digital PR aimed at relevant sites in your sector, because broad national terms are rarely won on content alone. We avoid link schemes that put your site at risk.',
-      },
-      {
-        title: 'Technical foundation',
-        body: 'Crawl, indexing, speed and structured data are checked on the templates that matter, so the national content you publish can actually be found, rendered and understood by search engines. We also look at rendering and duplicate pages.',
-      },
-      {
-        title: 'Rank and revenue tracking',
-        body: 'Tracking for priority terms across the country plus organic sessions, enquiries and sales in analytics, so reports show business movement and not just a list of positions. Reports are written in plain language.',
-      },
-    ],
-    steps: [
-      {
-        title: 'Market and competitor research',
-        body: 'We study who ranks for your priority terms nationally and why, and where the realistic openings are for your site.',
-      },
-      {
-        title: 'Roadmap by commercial value',
-        body: 'Pages, content and links are sequenced by likely business impact and effort, not by search volume alone. We also note where rivals are weak.',
-      },
-      {
-        title: 'Build and publish',
-        body: 'We optimize existing pages, create the missing ones and earn links in steady monthly batches. Quick wins are separated from longer projects, so you see progress early.',
-      },
-      {
-        title: 'Measure and expand',
-        body: 'Each month we review what gained visibility, double down on it and extend into the next group of terms. Everything is documented for your team.',
-      },
-    ],
-    faq: [
-      {
-        q: 'What is national SEO?',
-        a: 'National SEO aims to rank a site for searches across a whole country rather than a single city. It suits businesses that ship, serve or sell nationally and compete on broad, non-local commercial terms. It is common for online shops, software companies and publishers.',
-      },
-      {
-        q: 'How is it different from local SEO?',
-        a: 'Local SEO targets map results and "near me" searches for a defined area, so listings and reviews matter most. National SEO is closer to standard organic search, where content depth, site quality and links decide results. Both can be used together when a company has shops and an online offer.',
-      },
-      {
-        q: 'Do I need it if I only serve some regions?',
-        a: 'Not necessarily. If customers search by city or region, local or multi-location work fits better. National SEO makes sense when your offer is the same wherever the buyer lives and you can fulfil orders widely. We look at where your customers and competitors actually are before suggesting a scope.',
-      },
-      {
-        q: 'How long does national SEO take?',
-        a: 'Broad terms are contested, so it generally takes longer than local work. We cannot promise rankings or dates, but we will set milestones, show what has changed each month and explain what comes next. Time to results varies with your starting point, so we agree what to measure first.',
-      },
-      {
-        q: 'How will we know it is working?',
-        a: 'We track visibility for agreed terms, organic traffic to key pages and the enquiries or sales that follow. If traffic grows without business results, we tell you and adjust the plan. Reports are plain, and the numbers come from your own analytics, not just our tools.',
-      },
-    ],
-    ctaLabel: 'Get a Free SEO Audit',
-    ctaHref: '/seo-audit',
-    related: ['multi-location-seo', 'lead-generation-seo', 'content-marketing'],
-    guides: [SEO_GUIDES],
-  },
-  {
     slug: 'international-seo',
     path: '/seo-services/international-seo',
     name: 'International SEO',
@@ -192,92 +107,7 @@ export const CORE_PAGES: ServicePage[] = [
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['enterprise-seo', 'national-seo', 'technical-seo'],
-    guides: [SEO_GUIDES],
-  },
-  {
-    slug: 'enterprise-seo',
-    path: '/seo-services/enterprise-seo',
-    name: 'Enterprise SEO',
-    title: 'Enterprise SEO Services | SEO for Large Websites',
-    description:
-      'Enterprise SEO for large, complex websites: template-level fixes, governance across teams, scalable content and reporting that executives can act on.',
-    h1: 'Enterprise SEO services',
-    intro:
-      'Enterprise SEO is search optimization for large organizations whose websites run to many thousands of pages, several teams and a formal release process. The work shifts from fixing single pages to improving templates, setting standards, influencing roadmaps and proving the value of organic search to stakeholders who are not SEOs.',
-    icon: 'domain',
-    category: 'seo',
-    hub: 'core',
-    tag: 'Enterprise',
-    includes: [
-      {
-        title: 'Large-site audit and prioritization',
-        body: 'Crawl data, log files and analytics are combined to find issues by template and section, then ranked by traffic at stake and engineering effort, so scarce developer time goes to the biggest wins.',
-      },
-      {
-        title: 'Template-level technical fixes',
-        body: 'Product, category, article and listing templates are reviewed for rendering, indexation, pagination, faceted URLs and internal linking, because one change on a template can affect thousands of pages at once.',
-      },
-      {
-        title: 'Content governance',
-        body: 'Briefing standards, review steps and ownership rules help many writers and regional teams publish consistently, avoid cannibalization and retire thin or outdated pages instead of letting them pile up. Ownership is written down.',
-      },
-      {
-        title: 'Cross-team workflows',
-        body: 'We write tickets developers can estimate, join sprint planning where useful and agree a clear route between SEO, product, engineering, legal and brand teams so recommendations are not stuck in a queue.',
-      },
-      {
-        title: 'Release and migration safeguards',
-        body: 'SEO checks are added to launches, redesigns and platform changes, with pre-release testing and post-release monitoring to catch accidental noindex tags, broken redirects or lost content early. Findings go to the release owner.',
-      },
-      {
-        title: 'Executive reporting',
-        body: 'Dashboards and summaries connect organic performance to revenue, pipeline or other business measures, with enough detail for specialists and a clear narrative for leadership. Reports are scheduled around your planning cycle.',
-      },
-    ],
-    steps: [
-      {
-        title: 'Stakeholder and site discovery',
-        body: 'We learn how decisions are made, who owns what and where the platform limits what SEO can change. Findings are written up for sign-off.',
-      },
-      {
-        title: 'Business-case roadmap',
-        body: 'Recommendations are sized by impact and effort and tied to goals so they can be funded and scheduled. Each item shows its expected effect and owner.',
-      },
-      {
-        title: 'Embedded delivery',
-        body: 'We work alongside your teams on tickets, reviews and launches, rather than handing over a report and leaving. Hand-offs stay documented in your own systems.',
-      },
-      {
-        title: 'Governance and review',
-        body: 'Quarterly reviews check progress against the roadmap, update standards and plan the next set of changes. Standards are updated as the site grows and teams change.',
-      },
-    ],
-    faq: [
-      {
-        q: 'What makes enterprise SEO different?',
-        a: 'Scale and organisation. The same SEO principles apply, but changes are made through templates, approvals and release cycles, and most of the effort goes into prioritisation, communication and governance rather than single-page tweaks. That is why relationships matter as much as technical skill.',
-      },
-      {
-        q: 'How big does a site need to be?',
-        a: 'There is no fixed number. If your site has tens of thousands of URLs, multiple regions or brands, or several teams publishing at once, enterprise methods help. Smaller sites are usually better served by standard SEO. We can tell you honestly which side of the line you are on.',
-      },
-      {
-        q: 'Can you work with our in-house SEO team?',
-        a: 'Yes. We often support existing teams with specialist audits, technical direction, content scaling or extra capacity, and we agree up front who owns which tasks so work is not duplicated. Our team can also train new hires or fill a gap while a role is open.',
-      },
-      {
-        q: 'Do you handle multiple domains and regions?',
-        a: 'We can, including shared standards across brands and regional sites. For hreflang and country structure we draw on our international SEO work, so each market is handled consistently. Where several teams are involved we agree one owner for each market so nothing falls between them.',
-      },
-      {
-        q: 'How do you report to non-SEO executives?',
-        a: 'We keep the headline view short: organic traffic, leads or revenue, risks and decisions needed. Technical detail sits underneath for your team. We do not promise rankings, only transparent measurement of progress. You see risks and decisions needed early, not at the end of the quarter.',
-      },
-    ],
-    ctaLabel: 'Request a quote',
-    ctaHref: SEO_QUOTE,
-    related: ['seo-strategy', 'seo-management', 'technical-seo'],
+    related: ['multi-location-seo', 'technical-seo', 'seo-consulting'],
     guides: [SEO_GUIDES],
   },
   {
@@ -362,92 +192,7 @@ export const CORE_PAGES: ServicePage[] = [
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['seo-audit-services', 'custom-seo', 'seo-strategy'],
-    guides: [SEO_GUIDES],
-  },
-  {
-    slug: 'lead-generation-seo',
-    path: '/seo-services/lead-generation-seo',
-    name: 'Lead Generation SEO',
-    title: 'Lead Generation SEO | Turn Organic Search Into Leads',
-    description:
-      'Lead generation SEO focuses on search terms and pages that bring enquiries, calls and sign-ups, not just traffic, with tracking that ties visits to leads.',
-    h1: 'Lead generation SEO services',
-    intro:
-      'Lead generation SEO is search optimization measured by enquiries, calls, demo requests and sign-ups instead of visits alone. It starts from the searches people make when they are ready to talk to a provider, builds pages that answer those searches and tracks every lead back to the page and query that produced it.',
-    icon: 'contact_phone',
-    category: 'seo',
-    hub: 'core',
-    tag: 'ROI-Focused',
-    includes: [
-      {
-        title: 'Buyer-intent keyword mapping',
-        body: 'We separate searches from people researching from those comparing providers or ready to enquire, then prioritise terms that sit close to a decision and are realistic for your site to win.',
-      },
-      {
-        title: 'Landing and service page optimization',
-        body: 'Pages are reworked with a clear offer, proof, answers to common objections and a simple next step, so a visitor from search knows what to do and why to trust you.',
-      },
-      {
-        title: 'Funnel-stage content',
-        body: 'Comparison pages, pricing explainers, case-style write-ups and how-to guides support each stage of the journey and lead readers toward a conversion page instead of leaving them at a dead end.',
-      },
-      {
-        title: 'Form and call tracking setup',
-        body: 'Analytics events, form submissions and optional call tracking are configured and tested, so each lead is credited to its source page, keyword group and channel. Everything is tested before it goes live.',
-      },
-      {
-        title: 'Lead quality feedback loop',
-        body: 'Where you can share outcomes from your CRM or sales team, we compare which pages bring qualified leads and which bring noise, then shift effort toward the useful ones. Sharing is voluntary.',
-      },
-      {
-        title: 'Conversion rate improvements',
-        body: 'Layout, forms, calls to action and page speed on lead pages are tested and refined, because extra enquiries often come from converting existing traffic better. Changes are made one at a time so results can be read.',
-      },
-    ],
-    steps: [
-      {
-        title: 'Define a lead',
-        body: 'We agree what counts as a qualified lead for you and set up measurement so it can be tracked from the first visit.',
-      },
-      {
-        title: 'Intent and gap analysis',
-        body: 'We find high-intent searches you are missing and weak spots on pages that already get traffic but few enquiries. Quick fixes are noted.',
-      },
-      {
-        title: 'Build and improve',
-        body: 'Priority pages are created or rewritten, tracking is verified and links support the pages that matter most. Tracking is checked before launch.',
-      },
-      {
-        title: 'Review lead data',
-        body: 'Each month we look at leads by page and query, drop what is not working and expand what is. Findings are shared in plain language.',
-      },
-    ],
-    faq: [
-      {
-        q: 'How is lead generation SEO different from regular SEO?',
-        a: 'Regular SEO often reports on rankings and traffic. Lead generation SEO ranks success by qualified enquiries, so keyword choice, page design and tracking all revolve around the visitor taking a specific action. The difference shows up in which pages we prioritise.',
-      },
-      {
-        q: 'Does it work for B2B and service businesses?',
-        a: 'Yes, those are typical fits, since buyers research online and then request a quote or call. It can also support ecommerce or local work, though other service pages may be a closer match for those models. We will say if another service suits you better.',
-      },
-      {
-        q: 'How do you measure lead quality?',
-        a: 'We track form completions, calls and bookings, then compare them with whatever outcome data you can share, such as qualified, won or unsuitable leads. The clearer that feedback, the better we can steer the work. Even a basic form-and-call count is a useful start.',
-      },
-      {
-        q: 'How long until leads arrive?',
-        a: 'Improving conversion on pages that already rank can help within weeks, while new rankings take longer and depend on competition. We cannot promise lead volumes, but we will report what is changing each month. Seasonal and sales-cycle delays are normal in some sectors.',
-      },
-      {
-        q: 'Do I need an existing website?',
-        a: 'It helps, because existing pages and data show where to start. If you have no site yet, we can plan the structure and key pages first, so it is built around lead capture from the beginning. It also avoids rebuilding later.',
-      },
-    ],
-    ctaLabel: 'Get a Free SEO Audit',
-    ctaHref: '/seo-audit',
-    related: ['on-page-seo', 'content-marketing', 'local-seo'],
+    related: ['seo-audit-services', 'seo-migration', 'white-label-seo'],
     guides: [SEO_GUIDES],
   },
   {
@@ -532,108 +277,7 @@ export const CORE_PAGES: ServicePage[] = [
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['local-seo', 'national-seo', 'franchise-seo'],
-    guides: [SEO_GUIDES],
-  },
-  {
-    slug: 'custom-seo',
-    path: '/seo-services/custom-seo',
-    name: 'Custom SEO',
-    title: 'Custom SEO Services | A Plan Built From Your Audit',
-    description:
-      'Custom SEO starts with an audit and ends with a plan sized to your site, goals and team, rather than a fixed package. Pay for the work your site needs.',
-    h1: 'Custom SEO services',
-    intro:
-      'Custom SEO is a plan built from an audit of your own site, market and goals, instead of a fixed package with preset deliverables. We find what is holding the site back, decide which work will matter most and scope only that, so your effort goes where the evidence points and nothing is included just to fill a list.',
-    icon: 'build',
-    category: 'seo',
-    hub: 'core',
-    tag: 'Tailored',
-    includes: [
-      {
-        title: 'Audit-led scoping',
-        body: 'A technical, content and link review shows where the site stands, and the findings, not a sales template, decide what work goes into the plan and what is left out.',
-      },
-      {
-        title: 'Goal-based priorities',
-        body: 'We turn your targets, such as more qualified enquiries, a product launch or recovery from a drop, into specific SEO objectives with a short list of actions behind each one.',
-      },
-      {
-        title: 'Modular workstreams',
-        body: 'Technical fixes, content, on-page work and links are chosen as separate modules and combined in the mix your site needs, so you do not pay for tasks that add little.',
-      },
-      {
-        title: 'Fit to your team and platform',
-        body: 'Tasks are shaped around your CMS, developers and in-house skills, so we know which work we do, which you do and which needs a third party before the plan starts.',
-      },
-      {
-        title: 'Reporting that matches the plan',
-        body: 'We agree measures for each workstream up front, so reports show progress on the things we said would matter, instead of a standard dashboard of unrelated numbers. This keeps expectations realistic.',
-      },
-      {
-        title: 'Scheduled scope reviews',
-        body: 'Every few months we revisit the plan, retire finished work, add new priorities and rebalance effort as results come in and the business changes. You are never locked into work that has stopped helping.',
-      },
-      {
-        title: 'A named lead',
-        body: 'One accountable person who knows your business and brings issues and opportunities to you before you ask. They are the person you contact when something unexpected happens.',
-      },
-      {
-        title: 'Deep technical and data work',
-        body: 'Log file analysis, rendering checks, large-scale crawl segmentation and custom data pulls for problems standard audits are not designed to catch. These take time and experience, so we add them to the scope only where the likely payoff justifies it.',
-      },
-    ],
-    steps: [
-      {
-        title: 'Audit your site',
-        body: 'We review technical health, content, links and competitors to understand your starting point. The audit is the basis for every later decision, so it is done first.',
-      },
-      {
-        title: 'Agree the scope',
-        body: 'We present findings, propose workstreams in priority order and settle what is included with clear deliverables. You approve the plan before work begins.',
-      },
-      {
-        title: 'Deliver the plan',
-        body: 'Work starts on the highest-value items, with regular updates and a named contact. We report against the measures agreed in the plan.',
-      },
-      {
-        title: 'Review and reshape',
-        body: 'At each review we change the scope to match what is working and what the business needs next. Nothing is added without your agreement.',
-      },
-    ],
-    faq: [
-      {
-        q: 'What makes SEO "custom"?',
-        a: 'The scope comes from an audit of your site and goals, not from a package list. Two businesses in the same industry can end up with very different plans because their sites, competitors and limits are different. The audit is what makes the plan specific.',
-      },
-      {
-        q: 'Do I have to pay for an audit first?',
-        a: 'You can begin with our free SEO audit tool for a quick view. For a bespoke plan we review your site in more depth, and we will explain what that involves before you commit to anything. We agree this at the start so there are no surprises later.',
-      },
-      {
-        q: 'Can the plan change after we start?',
-        a: 'Yes, that is the point. If priorities shift, a workstream underperforms or a new opportunity appears, we revise the scope at the next review so effort follows results and not a contract template. Reviews are scheduled, and urgent changes can be made sooner.',
-      },
-      {
-        q: 'Is custom SEO only for large sites?',
-        a: 'No. Small sites often benefit most, since a narrow, well-chosen scope avoids wasted work. The approach is the same at any size; only the number of workstreams and the amount of detail change. Budget also shapes the scope, and we will tell you what fits.',
-      },
-      {
-        q: 'Is custom SEO the same as bespoke SEO, and how does it differ from consulting?',
-        a: 'Custom and bespoke SEO describe the same thing here: we deliver the work in a scope tailored to your site. Consulting is advice for your team to carry out. Both start with analysis, and we can combine them if you want guidance on some tasks and hands-on help on others.',
-      },
-      {
-        q: 'Who will work on my account?',
-        a: 'Experienced specialists lead the strategy and key decisions, supported by other team members for routine tasks. You are told who works on your account and what each person is responsible for.',
-      },
-      {
-        q: 'Do you guarantee results?',
-        a: 'No. A tailored plan buys focus, expertise and accountability, not a promised ranking. We commit to clear goals, honest reporting and regular reviews of whether the work is paying off, so you can decide whether the investment is justified.',
-      },
-    ],
-    ctaLabel: 'Request a quote',
-    ctaHref: SEO_QUOTE,
-    related: ['seo-strategy', 'seo-consulting', 'seo-audit-services'],
+    related: ['local-seo', 'google-business-profile', 'international-seo'],
     guides: [SEO_GUIDES],
   },
 ];
@@ -722,7 +366,7 @@ export const TECHNICAL_PAGES: ServicePage[] = [
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['technical-seo', 'seo-consulting', 'custom-seo'],
+    related: ['technical-seo', 'seo-consulting', 'seo-migration'],
     guides: [SEO_GUIDES, { label: 'Website Speed Test', href: '/free-tools/website-speed-test' }],
   },
   {
@@ -892,7 +536,7 @@ export const TECHNICAL_PAGES: ServicePage[] = [
     ],
     ctaLabel: 'Request a quote',
     ctaHref: SEO_QUOTE,
-    related: ['seo-audit-services', 'off-page-seo', 'link-building'],
+    related: ['seo-audit-services', 'link-building', 'technical-seo'],
     guides: [SEO_GUIDES],
   },
 ];

@@ -247,6 +247,29 @@ export const ABOUT_PAGE = definePage({
         }),
       },
     }),
+    founder: defineSection({
+      label: 'Meet the founder',
+      description:
+        'The person behind the business. The name, role and profile link also go into the page’s Person schema, so keep them real.',
+      fields: {
+        eyebrow: text('Eyebrow', 'Meet the founder', { max: 60 }),
+        name: text('Name', 'Naveed ur Rehman', { max: 80 }),
+        role: text('Role', 'Founder & SEO Lead', { max: 80 }),
+        experience: text('Experience line', '10+ years in SEO', {
+          max: 60,
+          hint: 'Shown as a badge next to the name. Leave blank to hide it.',
+        }),
+        bio: textarea(
+          'Bio',
+          'Naveed ur Rehman founded {brand} after more than ten years working in search engine optimisation. He leads every client campaign personally, from the first audit to the monthly report, so the person who plans your strategy is the person who does the work.\n\nHis focus today is helping small and growing businesses be found in both classic search results and AI answers from Google, ChatGPT and Perplexity, using [technical SEO](/seo-services/technical-seo), useful content and white-hat [link building](/seo-services/link-building).',
+          { max: 2000, hint: `${PARAGRAPHS_HINT} ${MARKDOWN_HINT}`, markdown: 'inline' },
+        ),
+        profile_url: text('LinkedIn or profile URL', '', {
+          max: 300,
+          hint: 'Full https:// address of a public profile, such as LinkedIn. Leave blank until you have one.',
+        }),
+      },
+    }),
     why: defineSection({
       label: 'Why choose us panel',
       description: 'The rounded navy panel with buttons and the list of reasons.',

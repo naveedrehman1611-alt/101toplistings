@@ -15,11 +15,14 @@ const DESCRIPTION =
 
 export const revalidate = 600;
 export async function generateMetadata(): Promise<Metadata> {
+  const posts = await getBlogPosts();
   return seoMetadata('/blog', {
     title: TITLE,
     description: DESCRIPTION,
     openGraph: { title: TITLE, description: DESCRIPTION },
     twitter: { card: 'summary_large_image', title: TITLE },
+    // Noindex (but followed) until the first post is published, like the guide hubs.
+    ...(posts.length === 0 ? { robots: { index: false, follow: true } } : {}),
   });
 }
 

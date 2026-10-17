@@ -2,11 +2,7 @@ import type { IconName } from '@/components/icon';
 import { CORE_PAGES, TECHNICAL_PAGES } from '@/lib/services/core';
 import { LINKS_AI_PAGES } from '@/lib/services/links-ai';
 import { PLATFORM_ECOMMERCE_PAGES } from '@/lib/services/platform-ecommerce';
-import { SPECIALTY_PAGES } from '@/lib/services/specialty';
-import { INDUSTRY_PAGES_1 } from '@/lib/services/industries-1';
-import { INDUSTRY_PAGES_2 } from '@/lib/services/industries-2';
-import { INDUSTRY_PAGES_3 } from '@/lib/services/industries-3';
-import { INDUSTRY_PAGES_4 } from '@/lib/services/industries-4';
+import { INDUSTRY_PAGES } from '@/lib/services/industries';
 
 /**
  * The SEO and digital marketing service pages: one list that drives each page
@@ -323,97 +319,12 @@ export const MENU_SERVICE_PAGES: ServicePage[] = [
     ],
     ctaLabel: 'Request SEO Audit',
     ctaHref: '/seo-audit',
-    related: ['technical-seo', 'content-marketing', 'off-page-seo'],
+    related: ['technical-seo', 'content-marketing', 'link-building'],
     guides: [
       SEO_GUIDES,
       { label: 'Meta Tags & SERP Preview', href: '/free-tools/meta-tag-generator' },
       { label: 'Keyword Density Checker', href: '/free-tools/keyword-density-checker' },
     ],
-  },
-  {
-    slug: 'off-page-seo',
-    path: '/seo-services/off-page-seo',
-    name: 'Off-Page SEO',
-    title: 'Off-Page SEO Services | Build Website Authority',
-    description:
-      'Strengthen your website authority with ethical off-page SEO: backlink reviews, digital PR, relevant link acquisition, outreach and brand mention building.',
-    h1: 'Off-page SEO services',
-    intro:
-      'Off-page SEO covers the signals that come from outside your website, mainly links, brand mentions and citations from other trusted sites. We build that authority ethically, with relevant outreach and useful content, and avoid the shortcuts that put rankings at risk. The aim is a reputation that search engines can verify across the web.',
-    icon: 'public',
-    category: 'seo',
-    hub: 'technical',
-    tag: 'Off-Page',
-    includes: [
-      {
-        title: 'Backlink profile review',
-        body: 'We look at who links to you and to your competitors, and flag risky or low-value links. The review covers anchor text patterns, lost links and sudden spikes, so we know whether to build, clean up or simply monitor.',
-      },
-      {
-        title: 'Link acquisition',
-        body: 'Relevant links earned through outreach and genuinely useful resources, in line with search engine guidelines. We pitch pages that deserve links, such as guides, data and tools, to sites whose audiences would genuinely benefit from them.',
-      },
-      {
-        title: 'Digital PR',
-        body: 'Story ideas and data-led content that give publishers a reason to mention and link to you. We look for angles tied to news, seasonal interest or original research your business can credibly offer, then pitch them to journalists and editors.',
-      },
-      {
-        title: 'Brand mentions and citations',
-        body: 'Consistent, accurate mentions of your business on credible sites and directories. We also find unlinked mentions of your brand and politely ask publishers whether they would add a link where that makes sense for readers.',
-      },
-      {
-        title: 'Competitor gap analysis',
-        body: 'We find the sites that link to similar businesses but not to you, and decide which are worth approaching. Each target is rated by relevance and effort, so the plan starts with achievable wins rather than unrealistic names.',
-      },
-      {
-        title: 'Risky link clean-up',
-        body: 'Where the review finds manipulative or spammy links that could cause harm, we document them and advise whether to ignore, request removal or disavow. We only recommend the disavow tool when there is a real reason, since it is rarely needed.',
-      },
-    ],
-    steps: [
-      {
-        title: 'Authority audit',
-        body: 'We review your current links and mentions against the sites you compete with. The result is a clear picture of your strengths, gaps and any links that need attention.',
-      },
-      {
-        title: 'Outreach plan',
-        body: 'We choose realistic targets and the content or angle that gives each one a reason to link. You approve the shortlist and the assets before any outreach begins.',
-      },
-      {
-        title: 'Outreach',
-        body: 'We contact editors, publishers and site owners with personal messages, follow up politely and keep a record of every conversation and outcome.',
-      },
-      {
-        title: 'Report and refine',
-        body: 'We report on the links and mentions earned, not just activity, and show how they connect to visibility, so the next round targets what is helping.',
-      },
-    ],
-    faq: [
-      {
-        q: 'What counts as off-page SEO?',
-        a: 'Backlinks, brand mentions, citations, digital PR and other signals from beyond your own site that show others trust you. Social sharing and reviews can support these, though links and mentions from credible publishers are the signals search engines lean on most.',
-      },
-      {
-        q: 'Do you buy links?',
-        a: 'No. We do not use paid link schemes, private blog networks or automated link blasts. We earn links through outreach and useful content. Buying links breaks search engine guidelines and can cost you visibility, so we build fewer links that hold up over time.',
-      },
-      {
-        q: 'Can you guarantee a ranking?',
-        a: 'No one honestly can. We can show you the authority work we do and how your visibility and links change over time. Rankings depend on competitors, content, technical health and search engine updates, so we report on what we control and explain the rest.',
-      },
-      {
-        q: 'How do I know if my backlinks are bad?',
-        a: 'Warning signs include many links from unrelated foreign-language sites, exact-match anchor text repeated across low-quality pages, and sudden unexplained spikes. A profile review looks at relevance and context, not just tool scores, because a link that looks odd may still be harmless.',
-      },
-      {
-        q: 'How is off-page SEO different from link building?',
-        a: 'Link building is one part of off-page SEO. Off-page work also includes digital PR, brand mentions, citations and reputation, which together build trust beyond links. We usually plan them as one programme, so each effort supports the others and nothing is done in isolation.',
-      },
-    ],
-    ctaLabel: 'Build Authority',
-    ctaHref: SEO_QUOTE,
-    related: ['link-building', 'guest-posting', 'content-marketing'],
-    guides: [SEO_GUIDES, { label: 'Business directory guides', href: '/blog/business-directory' }],
   },
   {
     slug: 'link-building',
@@ -497,92 +408,7 @@ export const MENU_SERVICE_PAGES: ServicePage[] = [
     ],
     ctaLabel: 'Get Link Building Strategy',
     ctaHref: '/contact?subject=link%20building',
-    related: ['guest-posting', 'off-page-seo', 'content-marketing'],
-    guides: [SEO_GUIDES],
-  },
-  {
-    slug: 'guest-posting',
-    path: '/seo-services/guest-posting',
-    name: 'Guest posting',
-    title: 'Guest Posting Services | SEO Outreach & Backlinks',
-    description:
-      'Reach relevant websites with targeted guest post outreach and original articles, built to strengthen authority, visibility and trust with real audiences.',
-    h1: 'Guest posting services',
-    intro:
-      'Guest posting means writing a useful article for another website in your field, with a link back to yours where it fits. Our guest post outreach services focus on relevant sites with real readers, editorial standards and content that earns its place, so each article builds your reputation as well as a link.',
-    icon: 'handshake',
-    category: 'links',
-    hub: 'links',
-    tag: 'Outreach',
-    includes: [
-      {
-        title: 'Site selection',
-        body: 'We shortlist relevant publications that have real audiences and editorial standards, not sites that sell posts in bulk. Checks cover topical fit, genuine traffic, content quality and whether the site links out to others naturally.',
-      },
-      {
-        title: 'Topic pitching',
-        body: 'Ideas matched to what each site publishes, pitched personally to the right editor. We study recent articles first, so each pitch fills a real gap instead of repeating something the site has already covered.',
-      },
-      {
-        title: 'Article writing',
-        body: 'Original, well-researched articles that offer something readers cannot get elsewhere. We include examples, sources and a clear point of view, and match the host site’s style guide, length and formatting requirements.',
-      },
-      {
-        title: 'Natural link placement',
-        body: 'Links added only where they help the reader, with descriptive anchor text and disclosure where required. Most articles link to a relevant guide or resource on your site, not always the homepage or a sales page.',
-      },
-      {
-        title: 'Placement reporting',
-        body: 'A clear record of pitches, published articles and the links they earned. You see which sites accepted, which declined and the live URL of each piece, so every result can be checked at any time.',
-      },
-      {
-        title: 'Author profile and expertise',
-        body: 'Editors prefer contributors who can show real expertise, so we help prepare a short author bio and supporting profile links. Where you have a subject expert on your team, we involve them to add genuine insight to articles.',
-      },
-    ],
-    steps: [
-      {
-        title: 'Outreach plan',
-        body: 'We agree your topics, target sites and the pages worth linking to. The plan also sets how many pitches are sent, so expectations stay realistic from the start.',
-      },
-      {
-        title: 'Pitch editors',
-        body: 'We send personal pitches with a specific angle for each site, follow up politely and keep track of every reply.',
-      },
-      {
-        title: 'Write and approve',
-        body: 'We write the articles that are accepted and share each draft with you for approval before it goes to the editor.',
-      },
-      {
-        title: 'Publish and report',
-        body: 'Once articles go live we report on placements and links, check that the links work as agreed and note which topics editors responded to best.',
-      },
-    ],
-    faq: [
-      {
-        q: 'Is guest posting good for SEO?',
-        a: 'It can be, when the site is relevant and the article is genuinely useful. Mass-produced guest posts on low-quality sites can hurt more than they help. We choose fewer, better placements, because one article readers value is worth more than many ignored ones.',
-      },
-      {
-        q: 'Do you publish on blog networks?',
-        a: 'No. We do not use private blog networks or sites that exist to sell links. We pitch real publications and industry sites. A site that advertises guaranteed posts for a fee with no editorial review fails our checks before we ever contact it.',
-      },
-      {
-        q: 'Can I approve articles before they go out?',
-        a: 'Yes. You see the topic and the draft first, and nothing is submitted without your sign-off. Editors sometimes request changes, and we share those with you too, so the final published version never contains a surprise. If an editor changes the text heavily, you see that too.',
-      },
-      {
-        q: 'Do guest posts have to link to my site?',
-        a: 'Not always, and many strong placements link only in the author bio. Editors decide what is acceptable. We aim for a contextual link where it genuinely helps readers, but a respected mention with a bio link can still build visibility and trust.',
-      },
-      {
-        q: 'Are guest posts labelled as sponsored?',
-        a: 'It depends on the arrangement. Where money or a product changes hands, search engine guidelines expect links to carry a sponsored attribute, and the site may add a disclosure. Where an editor accepts an article purely on merit, no label is usually needed. We follow each site’s policy.',
-      },
-    ],
-    ctaLabel: 'Request Outreach Plan',
-    ctaHref: '/contact?subject=guest%20posting',
-    related: ['link-building', 'off-page-seo', 'content-marketing'],
+    related: ['content-marketing', 'on-page-seo', 'seo-penalty-removal'],
     guides: [SEO_GUIDES],
   },
   {
@@ -768,11 +594,7 @@ export const SERVICE_PAGES: ServicePage[] = [
   ...TECHNICAL_PAGES,
   ...LINKS_AI_PAGES,
   ...PLATFORM_ECOMMERCE_PAGES,
-  ...SPECIALTY_PAGES,
-  ...INDUSTRY_PAGES_1,
-  ...INDUSTRY_PAGES_2,
-  ...INDUSTRY_PAGES_3,
-  ...INDUSTRY_PAGES_4,
+  ...INDUSTRY_PAGES,
 ];
 
 export function servicePage(slug: string): ServicePage | undefined {

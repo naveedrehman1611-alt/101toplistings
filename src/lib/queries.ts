@@ -537,6 +537,7 @@ export async function getSitemapPosts(
 }
 
 export type BlogPostDetail = BlogPost & {
+  updated_at: string | null;
   seo_title: string | null;
   seo_description: string | null;
   canonical_url: string | null;
@@ -550,7 +551,9 @@ export const getBlogPost = cache(async function getBlogPost(
     'blog_posts.bySlug',
     supabase
       .from('blog_posts')
-      .select(`${POST_SUMMARY_COLUMNS}, body, seo_title, seo_description, canonical_url`)
+      .select(
+        `${POST_SUMMARY_COLUMNS}, body, updated_at, seo_title, seo_description, canonical_url`,
+      )
       .eq('slug', slug)
       // RLS already hides drafts from this anon client; the filter states the
       // intent so a draft stays unreachable without relying on the policy alone.

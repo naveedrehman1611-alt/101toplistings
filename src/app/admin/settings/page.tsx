@@ -109,7 +109,7 @@ const HELP: Record<string, string> = {
   'contact.email': 'Rendered in the footer and on the contact page.',
   'contact.phone': 'Not shown by the current footer design.',
   'contact.address':
-    'Location shown in the footer, linked to Google Maps. Leave it blank to show Manchester, United Kingdom.',
+    'Location shown in the footer, linked to Google Maps. Only enter a real address; leave it blank to show "Serving businesses worldwide" instead.',
   'social.facebook': `Full https:// address of the Facebook page. ${SOCIAL_HELP}`,
   'social.instagram': `Full https:// address of the Instagram profile. ${SOCIAL_HELP}`,
   'social.x': `Full https:// address of the X (Twitter) profile. ${SOCIAL_HELP}`,

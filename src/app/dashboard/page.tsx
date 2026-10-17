@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/auth';
 import { removeFavourite } from '@/lib/favourite-actions';
 import { Notice } from '@/components/admin-ui';
 import { ListingStatusTracker } from '@/components/listing-status-tracker';
+import { TrackEvent } from '@/components/analytics-events';
 import { LiveListingStatus } from '@/components/live-listing-status';
 
 export const metadata = { title: 'My listings' };
@@ -14,7 +15,7 @@ type SavedRow = { listing_id: string; listings: { slug: string; name: string } |
 export default async function Dashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; submitted?: string }>;
 }) {
   const user = await requireUser('/dashboard');
   const sp = await searchParams;
@@ -50,6 +51,7 @@ export default async function Dashboard({
         </Link>
       </div>
       <Notice ok={sp.ok} error={sp.error} />
+      {sp.submitted && sp.ok ? <TrackEvent name="listing_submitted" /> : null}
       {listings.length > 0 ? (
         <div className="mt-3">
           <LiveListingStatus userId={user.id} />
