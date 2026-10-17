@@ -15,6 +15,7 @@ import {
 } from './listing-image-store';
 import { LISTING_IMAGE_MAX_BYTES, LOGO_FIELD, PHOTO_FIELDS } from './listing-image-limits';
 import { notifyListingDecisions, notifyListingSubmitted } from './listing-notifications';
+import { notifyIndexNow } from './indexnow';
 
 const STATUSES = ['approved', 'pending', 'draft', 'rejected', 'suspended'] as const;
 const VERIFICATIONS = ['unverified', 'pending', 'verified', 'rejected'] as const;
@@ -72,6 +73,10 @@ export async function saveListingAsStaff(fd: FormData) {
       );
       await writeHours(supabase, id, hours);
       await writeAudit(user.id, 'update', 'listing', id, before, after);
+      // Approved listings are public; one leaving that state has changed for search too.
+      if (after && (status === 'approved' || before.status === 'approved')) {
+        notifyIndexNow([`/listing/${after.slug}`]);
+      }
       if (after && (status === 'approved' || status === 'rejected') && before.status !== status) {
         await notifyListingDecisions(supabase, [after], status, rejectionNote);
         return `Saved ${row.name}. The owner, if it has one, is being emailed.`;
@@ -92,6 +97,7 @@ export async function saveListingAsStaff(fd: FormData) {
     );
     await writeHours(supabase, after.id, hours);
     await writeAudit(user.id, 'create', 'listing', after.id, null, after);
+    if (status === 'approved') notifyIndexNow([`/listing/${after.slug}`]);
     return `Added ${row.name}.`;
   });
 }
