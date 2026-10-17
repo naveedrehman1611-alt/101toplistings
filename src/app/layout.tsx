@@ -13,6 +13,7 @@ import { jsonLdHtml } from '@/lib/json-ld';
 import { serviceNavItems } from '@/lib/service-pages';
 import { getPageContent } from '@/lib/content/get';
 import { ErrorContentProvider } from '@/components/error-content';
+import { SiteChrome } from '@/components/site-chrome';
 import { toolsWithCopy } from '@/components/tools/tool-page';
 import { FOUNDER_ID } from '@/lib/founder';
 import GoogleAnalytics from './google-analytics';
@@ -149,39 +150,43 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           Skip to content
         </a>
-        <Header
-          nav={nav}
-          mobileNav={mobileNav}
-          services={serviceNavItems()}
-          tools={toolsWithCopy(toolsHub).filter((t) => t.visible)}
-          content={{ header: site.header, services_menu: site.services_menu }}
-        />
+        <SiteChrome>
+          <Header
+            nav={nav}
+            mobileNav={mobileNav}
+            services={serviceNavItems()}
+            tools={toolsWithCopy(toolsHub).filter((t) => t.visible)}
+            content={{ header: site.header, services_menu: site.services_menu }}
+          />
+        </SiteChrome>
         {/* tabIndex lets the skip link move keyboard focus here, not just scroll. */}
         <main id="main" tabIndex={-1} className="flex-1 outline-hidden">
           {/* error.tsx is a client component, so its copy reaches it through context. */}
           <ErrorContentProvider value={errors.error}>{children}</ErrorContentProvider>
         </main>
-        <Footer
-          brand={brand}
-          about={settingText(
-            settings,
-            'footer.about',
-            'A business directory and SEO services for businesses worldwide. Connecting customers with trusted local businesses.',
-          )}
-          trustLine={settingText(settings, 'footer.trust_line').trim()}
-          copyright={settingText(settings, 'footer.copyright', brand)}
-          email={email}
-          address={address}
-          social={social}
-          content={{
-            footer: site.footer,
-            footer_quick_links: site.footer_quick_links,
-            footer_core_services: site.footer_core_services,
-            footer_ai_services: site.footer_ai_services,
-          }}
-        />
-        <BackToTop />
-        {site.whatsapp.visible ? <WhatsAppButton content={site.whatsapp} /> : null}
+        <SiteChrome>
+          <Footer
+            brand={brand}
+            about={settingText(
+              settings,
+              'footer.about',
+              'A business directory and SEO services for businesses worldwide. Connecting customers with trusted local businesses.',
+            )}
+            trustLine={settingText(settings, 'footer.trust_line').trim()}
+            copyright={settingText(settings, 'footer.copyright', brand)}
+            email={email}
+            address={address}
+            social={social}
+            content={{
+              footer: site.footer,
+              footer_quick_links: site.footer_quick_links,
+              footer_core_services: site.footer_core_services,
+              footer_ai_services: site.footer_ai_services,
+            }}
+          />
+          <BackToTop />
+          {site.whatsapp.visible ? <WhatsAppButton content={site.whatsapp} /> : null}
+        </SiteChrome>
         <GoogleAnalytics />
       </body>
     </html>

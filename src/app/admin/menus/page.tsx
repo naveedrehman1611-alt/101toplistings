@@ -1,8 +1,10 @@
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { deleteMenuItem, moveMenuItem, saveMenuItem, toggleMenuItem } from '@/lib/menu-actions';
-import { Check, DangerButton, Field, Notice, Select, SubmitButton } from '@/components/admin-ui';
+import { FormField, PageHeader, SwitchField, inputCls, rowAct } from '@/components/admin/kit';
+import { ConfirmButton, ModalForm } from '@/components/admin/dialog';
+import { OrderRow, moveBtn } from '@/components/admin/order-list';
+import { TabbedCard } from '@/components/admin/tabbed-card';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Menus' };
@@ -22,16 +24,49 @@ type Item = {
 // Matches the order the layout renders them in.
 const LOCATION_ORDER = ['header', 'mobile', 'footer'];
 
-const smallBtn =
-  'rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs hover:bg-[var(--surface-2)] disabled:opacity-40';
+function LinkFields({ item, menuId }: { item?: Item; menuId?: string }) {
+  const k = item?.id ?? `new-${menuId}`;
+  return (
+    <>
+      {item ? <input type="hidden" name="id" value={item.id} /> : null}
+      {menuId ? <input type="hidden" name="menu_id" value={menuId} /> : null}
+      <FormField label="Label" htmlFor={`ml-${k}`} required>
+        <input
+          id={`ml-${k}`}
+          name="label"
+          required
+          maxLength={80}
+          defaultValue={item?.label}
+          placeholder="e.g. Deals"
+          className={inputCls}
+        />
+      </FormField>
+      <FormField
+        label="Link"
+        htmlFor={`mu-${k}`}
+        required
+        help="A path on this site, such as /business-directory, or a full https:// address."
+      >
+        <input
+          id={`mu-${k}`}
+          name="url"
+          required
+          defaultValue={item?.url}
+          placeholder="/deals"
+          className={inputCls}
+        />
+      </FormField>
+      <SwitchField
+        name="is_visible"
+        label="Visible"
+        defaultChecked={item ? item.is_visible : true}
+      />
+    </>
+  );
+}
 
-export default async function AdminMenus({
-  searchParams,
-}: {
-  searchParams: Promise<{ edit?: string; ok?: string; error?: string }>;
-}) {
+export default async function AdminMenus() {
   await requireRole('editor');
-  const sp = await searchParams;
   const supabase = await createClient();
   const [{ data: menuData }, { data: itemData }] = await Promise.all([
     supabase.from('menus').select('id, location, name').order('name'),
@@ -45,160 +80,125 @@ export default async function AdminMenus({
     (a, b) => LOCATION_ORDER.indexOf(a.location) - LOCATION_ORDER.indexOf(b.location),
   );
   const items = (itemData ?? []) as Item[];
-  const editing = sp.edit ? items.find((i) => i.id === sp.edit) : undefined;
-  const menuName = (m: Menu) => `${m.name} (${m.location})`;
+  // Two menus can share a location (the footer has columns), so name them both.
+  const sharedLocation = (m: Menu) => menus.filter((x) => x.location === m.location).length > 1;
+  const tabLabel = (m: Menu) =>
+    sharedLocation(m) ? `${m.name}` : m.location.charAt(0).toUpperCase() + m.location.slice(1);
+
+  const tabs = menus.map((menu) => {
+    const rows = items.filter((i) => i.menu_id === menu.id);
+    // Parents in order, each followed by its children.
+    const ordered = rows
+      .filter((r) => !r.parent_id)
+      .flatMap((p) => [p, ...rows.filter((c) => c.parent_id === p.id)]);
+    const orphans = rows.filter((r) => r.parent_id && !rows.some((p) => p.id === r.parent_id));
+    const list = [...ordered, ...orphans];
+    return {
+      id: menu.id,
+      label: tabLabel(menu),
+      content: (
+        <>
+          {list.map((item, i) => {
+            // Reordering is among siblings, so first/last is per parent.
+            const siblings = rows.filter((r) => r.parent_id === item.parent_id);
+            const pos = siblings.findIndex((s) => s.id === item.id);
+            return (
+              <OrderRow
+                key={item.id}
+                n={i + 1}
+                label={item.label}
+                sub={`${item.url}${item.is_external ? ' ↗' : ''}`}
+                hidden={!item.is_visible}
+                indent={!!item.parent_id}
+              >
+                <form action={moveMenuItem}>
+                  <input type="hidden" name="id" value={item.id} />
+                  <input type="hidden" name="direction" value="up" />
+                  <button
+                    type="submit"
+                    className={moveBtn}
+                    disabled={pos <= 0}
+                    aria-label={`Move ${item.label} up`}
+                  >
+                    ↑
+                  </button>
+                </form>
+                <form action={moveMenuItem}>
+                  <input type="hidden" name="id" value={item.id} />
+                  <input type="hidden" name="direction" value="down" />
+                  <button
+                    type="submit"
+                    className={moveBtn}
+                    disabled={pos === siblings.length - 1}
+                    aria-label={`Move ${item.label} down`}
+                  >
+                    ↓
+                  </button>
+                </form>
+                <form action={toggleMenuItem}>
+                  <input type="hidden" name="id" value={item.id} />
+                  <button type="submit" className={rowAct.base}>
+                    {item.is_visible ? 'Hide' : 'Show'}
+                  </button>
+                </form>
+                <ModalForm
+                  trigger="Edit"
+                  triggerClassName={rowAct.base}
+                  title={`Edit “${item.label}”`}
+                  action={saveMenuItem}
+                  ok="Save"
+                >
+                  <LinkFields item={item} />
+                </ModalForm>
+                <form action={deleteMenuItem}>
+                  <input type="hidden" name="id" value={item.id} />
+                  <ConfirmButton
+                    className={rowAct.bad}
+                    title={`Delete “${item.label}”?`}
+                    body="The link is removed from this menu. Hide it instead to keep it for later."
+                    ok="Delete"
+                    danger
+                  >
+                    Delete
+                  </ConfirmButton>
+                </form>
+              </OrderRow>
+            );
+          })}
+          {list.length === 0 ? (
+            <p className="m-0 px-4 py-8 text-center text-sm text-[#64748B]">
+              No links in this menu yet.
+            </p>
+          ) : null}
+        </>
+      ),
+      footer: (
+        <ModalForm
+          trigger={`+ Add link`}
+          triggerClassName="cursor-pointer border-0 bg-transparent p-0 text-[13.5px] font-semibold text-[#0C8226]"
+          title={`Add link to ${tabLabel(menu)}`}
+          action={saveMenuItem}
+          ok="Add link"
+        >
+          <LinkFields menuId={menu.id} />
+        </ModalForm>
+      ),
+    };
+  });
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Menus</h1>
-      <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
-        The header, mobile and footer navigation. Links are either a path on this site, such as
-        /business-directory, or a full http(s):// address. Hidden links stay here but are not shown.
-      </p>
-      <Notice ok={sp.ok} error={sp.error} />
-
-      <form action={saveMenuItem} className="surface-card mt-6 grid gap-4 p-5 sm:grid-cols-2">
-        <h2 className="text-lg font-semibold sm:col-span-2">
-          {editing ? `Edit ${editing.label}` : 'Add a link'}
-        </h2>
-        {editing ? (
-          <input type="hidden" name="id" value={editing.id} />
-        ) : (
-          <div className="sm:col-span-2">
-            <Select
-              label="Menu"
-              name="menu_id"
-              required
-              options={menus.map((m) => ({ value: m.id, label: menuName(m) }))}
-            />
-          </div>
-        )}
-        <Field label="Label" name="label" required defaultValue={editing?.label} />
-        <Field
-          label="URL"
-          name="url"
-          required
-          defaultValue={editing?.url}
-          placeholder="/business-directory or https://example.com"
-        />
-        <Check
-          label="Visible"
-          name="is_visible"
-          defaultChecked={editing ? editing.is_visible : true}
-        />
-        <div className="flex items-center gap-3 sm:col-span-2">
-          <SubmitButton>{editing ? 'Save changes' : 'Add link'}</SubmitButton>
-          {editing ? (
-            <Link href="/admin/menus" className="text-brand-700 text-sm hover:underline">
-              Cancel
-            </Link>
-          ) : null}
-        </div>
-      </form>
-
-      {menus.map((menu) => {
-        const rows = items.filter((i) => i.menu_id === menu.id);
-        // Reordering is among siblings, so first/last is per parent.
-        const siblingsOf = (i: Item) => rows.filter((r) => r.parent_id === i.parent_id);
-        return (
-          <section key={menu.id} className="mt-8">
-            <h2 className="text-lg font-semibold">{menuName(menu)}</h2>
-            <div className="mt-3 overflow-x-auto">
-              <table className="w-full min-w-[40rem] text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--border)] text-left">
-                    <th className="py-2 font-medium">Label</th>
-                    <th className="py-2 font-medium">URL</th>
-                    <th className="py-2 font-medium">Order</th>
-                    <th className="py-2 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((item) => {
-                    const siblings = siblingsOf(item);
-                    const pos = siblings.findIndex((s) => s.id === item.id);
-                    return (
-                      <tr
-                        key={item.id}
-                        className={`border-b border-[var(--border)] last:border-0 ${
-                          item.is_visible ? '' : 'text-[var(--text-muted)]'
-                        }`}
-                      >
-                        <td className="py-3">
-                          <span className="font-medium">
-                            {item.parent_id ? '↳ ' : ''}
-                            {item.label}
-                          </span>
-                          {item.is_visible ? null : <span className="ml-2 text-xs">(hidden)</span>}
-                        </td>
-                        <td className="py-3 break-all">
-                          {item.url}
-                          {item.is_external ? (
-                            <span className="ml-1 text-xs">(external)</span>
-                          ) : null}
-                        </td>
-                        <td className="py-3">
-                          <div className="flex gap-1">
-                            <form action={moveMenuItem}>
-                              <input type="hidden" name="id" value={item.id} />
-                              <input type="hidden" name="direction" value="up" />
-                              <button
-                                type="submit"
-                                className={smallBtn}
-                                disabled={pos <= 0}
-                                aria-label={`Move ${item.label} up`}
-                              >
-                                ↑
-                              </button>
-                            </form>
-                            <form action={moveMenuItem}>
-                              <input type="hidden" name="id" value={item.id} />
-                              <input type="hidden" name="direction" value="down" />
-                              <button
-                                type="submit"
-                                className={smallBtn}
-                                disabled={pos === siblings.length - 1}
-                                aria-label={`Move ${item.label} down`}
-                              >
-                                ↓
-                              </button>
-                            </form>
-                          </div>
-                        </td>
-                        <td className="py-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Link href={`/admin/menus?edit=${item.id}`} className={smallBtn}>
-                              Edit
-                            </Link>
-                            <form action={toggleMenuItem}>
-                              <input type="hidden" name="id" value={item.id} />
-                              <button type="submit" className={smallBtn}>
-                                {item.is_visible ? 'Hide' : 'Show'}
-                              </button>
-                            </form>
-                            <form action={deleteMenuItem}>
-                              <input type="hidden" name="id" value={item.id} />
-                              <DangerButton>Delete</DangerButton>
-                            </form>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {rows.length === 0 ? (
-                <p className="mt-4 text-sm text-[var(--text-muted)]">No links in this menu yet.</p>
-              ) : null}
-            </div>
-          </section>
-        );
-      })}
-      {menus.length === 0 ? (
-        <p className="mt-8 text-sm text-[var(--text-muted)]">
-          No menus exist. Run migration 0013 to create the four the layout renders.
+    <>
+      <PageHeader
+        title="Menus"
+        description="Order and visibility of the Header, Mobile and Footer links. Hidden links stay here but are not shown."
+      />
+      {tabs.length ? (
+        <TabbedCard tabs={tabs} />
+      ) : (
+        <p className="m-0 text-sm text-[#64748B]">
+          No menus exist. Run migration 0013 to create the ones the layout renders.
         </p>
-      ) : null}
-    </div>
+      )}
+    </>
   );
 }

@@ -1,44 +1,101 @@
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole, roleAtLeast, type Role } from '@/lib/auth';
 import { updateUser } from '@/lib/user-actions';
-import { Notice } from '@/components/admin-ui';
+import { CellText, ErrorNotice, PageHeader, Pill, ago, rowAct } from '@/components/admin/kit';
+import { DataTable, type TableRow } from '@/components/admin/data-table';
+import { ConfirmButton } from '@/components/admin/dialog';
+import { AutoSubmitSelect } from '@/components/admin/auto-submit-select';
+import { ROLE_LABEL } from '@/components/admin/nav';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Users' };
 
 const ROLES: Role[] = ['user', 'business_owner', 'moderator', 'editor', 'admin', 'super_admin'];
-const FILTERS = ['all', 'staff', 'business_owner', 'user', 'suspended'] as const;
-const PAGE_SIZE = 50;
+const FILTERS = [
+  'all',
+  'staff',
+  'super_admin',
+  'admin',
+  'editor',
+  'moderator',
+  'business_owner',
+  'user',
+  'suspended',
+] as const;
+type F = (typeof FILTERS)[number];
+const LIMIT = 500;
 
-const label = (r: string) => r.replace('_', ' ');
+const FILTER_LABEL: Record<F, string> = {
+  all: 'All',
+  staff: 'Staff',
+  super_admin: 'Super admin',
+  admin: 'Admin',
+  editor: 'Editor',
+  moderator: 'Moderator',
+  business_owner: 'Business owners',
+  user: 'Users',
+  suspended: 'Suspended',
+};
+
+type Row = {
+  id: string;
+  role: Role;
+  display_name: string | null;
+  is_suspended: boolean;
+  created_at: string;
+};
 
 export default async function AdminUsers({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string; q?: string; page?: string; ok?: string; error?: string }>;
+  searchParams: Promise<{ show?: string; q?: string }>;
 }) {
   const actor = await requireRole('admin');
   const sp = await searchParams;
-  const show = FILTERS.includes(sp.show as (typeof FILTERS)[number]) ? sp.show! : 'all';
-  const q = (sp.q ?? '').trim().slice(0, 80);
-  const page = Math.max(1, Number.parseInt(sp.page ?? '1', 10) || 1);
+  const show: F = FILTERS.includes(sp.show as F) ? (sp.show as F) : 'all';
+  const q = (sp.q ?? '')
+    .trim()
+    .slice(0, 80)
+    .replace(/[%_\\]/g, '');
 
   const supabase = await createClient();
-  let query = supabase
-    .from('profiles')
-    .select('id, role, display_name, is_suspended, created_at', { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
-  if (show === 'staff') query = query.in('role', ['moderator', 'editor', 'admin', 'super_admin']);
-  else if (show === 'suspended') query = query.eq('is_suspended', true);
-  else if (show !== 'all') query = query.eq('role', show);
-  if (q) query = query.ilike('display_name', `%${q.replace(/[%_\\]/g, '')}%`);
-  const { data, count, error } = await query;
-  const users = data ?? [];
+  // The same filter on the list and on each count; typed loosely because
+  // the Supabase builder generics are too deep to carry through a helper.
+  type Q = {
+    in(c: string, v: string[]): Q;
+    eq(c: string, v: unknown): Q;
+    ilike(c: string, v: string): Q;
+  };
+  function apply<T>(query: T, f: F): T {
+    let x = query as unknown as Q;
+    if (f === 'staff') x = x.in('role', ['moderator', 'editor', 'admin', 'super_admin']);
+    else if (f === 'suspended') x = x.eq('is_suspended', true);
+    else if (f !== 'all') x = x.eq('role', f);
+    if (q) x = x.ilike('display_name', `%${q}%`);
+    return x as unknown as T;
+  }
+
+  const [{ data, error }, counts] = await Promise.all([
+    apply(
+      supabase
+        .from('profiles')
+        .select('id, role, display_name, is_suspended, created_at')
+        .order('created_at', { ascending: false })
+        .limit(LIMIT),
+      show,
+    ),
+    Promise.all(
+      FILTERS.map(
+        async (f) =>
+          (await apply(supabase.from('profiles').select('id', { count: 'exact', head: true }), f))
+            .count ?? 0,
+      ),
+    ),
+  ]);
+  const users = (data ?? []) as Row[];
 
   // Listing counts show who is an active business owner at a glance.
-  const ids = users.map((u) => u.id as string);
+  const ids = users.map((u) => u.id);
   const { data: owned } = ids.length
     ? await supabase.from('listings').select('owner_user_id').in('owner_user_id', ids)
     : { data: [] as { owner_user_id: string }[] };
@@ -47,170 +104,115 @@ export default async function AdminUsers({
     listingCount.set(l.owner_user_id, (listingCount.get(l.owner_user_id) ?? 0) + 1);
 
   const isSuper = actor.role === 'super_admin';
+  // Only a super admin can make someone an Admin or Super admin.
   const grantable = ROLES.filter((r) => isSuper || !roleAtLeast(r, 'admin'));
-  const base = `?show=${show}${q ? `&q=${encodeURIComponent(q)}` : ''}`;
-  const qs = `${base}${page > 1 ? `&page=${page}` : ''}`;
-  const pages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
+  const qs = `?show=${show}${q ? `&q=${encodeURIComponent(q)}` : ''}`;
+  const href = (f: F) => `/admin/users?show=${f}${q ? `&q=${encodeURIComponent(q)}` : ''}`;
+
+  const rows: TableRow[] = users.map((u) => {
+    const self = u.id === actor.id;
+    // Nobody edits themselves here; only a super admin edits another admin.
+    const locked = self || (!isSuper && roleAtLeast(u.role, 'admin'));
+    const name = u.display_name ?? 'Unnamed';
+    const status = u.is_suspended ? 'suspended' : 'active';
+    const n = listingCount.get(u.id) ?? 0;
+    return {
+      id: u.id,
+      selectable: false,
+      search: `${name} ${u.role}`,
+      sort: { name, role: ROLES.indexOf(u.role), listings: n, status, joined: u.created_at },
+      cells: [
+        <CellText key="n" bold sub={<code className="text-[11px]">{u.id.slice(0, 8)}</code>}>
+          {name}
+          {self ? <span className="font-normal text-[#64748B]"> (you)</span> : null}
+        </CellText>,
+        locked ? (
+          <CellText key="r" sub={self ? undefined : 'Only a Super admin can change'}>
+            {ROLE_LABEL[u.role]}
+          </CellText>
+        ) : (
+          <form key="r" action={updateUser}>
+            <input type="hidden" name="id" value={u.id} />
+            <input type="hidden" name="qs" value={qs} />
+            <AutoSubmitSelect
+              name="role"
+              defaultValue={u.role}
+              aria-label={`Role for ${name}`}
+              className="h-[30px] rounded-md border border-[#E2E8F0] bg-white px-1.5 text-[13px]"
+            >
+              {grantable.map((r) => (
+                <option key={r} value={r}>
+                  {ROLE_LABEL[r]}
+                </option>
+              ))}
+            </AutoSubmitSelect>
+          </form>
+        ),
+        <CellText key="l">{n}</CellText>,
+        <Pill key="s" tone={status}>
+          {u.is_suspended ? 'Suspended' : 'Active'}
+        </Pill>,
+        <CellText key="j">{ago(u.created_at)}</CellText>,
+      ],
+      actions: locked ? null : (
+        <form action={updateUser}>
+          <input type="hidden" name="id" value={u.id} />
+          <input type="hidden" name="qs" value={qs} />
+          <input type="hidden" name="suspend" value={u.is_suspended ? 'false' : 'true'} />
+          {u.is_suspended ? (
+            <button type="submit" className={rowAct.ok}>
+              Restore
+            </button>
+          ) : (
+            <ConfirmButton
+              className={rowAct.bad}
+              title={`Suspend ${name}?`}
+              body="They’ll be signed out and can’t log in until restored."
+              ok="Suspend"
+              danger
+            >
+              Suspend
+            </ConfirmButton>
+          )}
+        </form>
+      ),
+    };
+  });
+
+  const total = counts[FILTERS.indexOf(show)] ?? 0;
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Users</h1>
-      <p className="mt-2 text-sm text-[var(--text-muted)]">
-        Everyone who has registered. Change a role to give someone access to the admin panel, or
-        suspend an account to sign it out everywhere. {count ?? 0} total.
-      </p>
-      <Notice ok={sp.ok} error={sp.error ?? error?.message} />
-
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {FILTERS.map((f) => (
-          <Link
-            key={f}
-            href={`/admin/users?show=${f}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
-            className={`rounded-lg border px-3 py-1.5 text-sm capitalize ${
-              show === f
-                ? 'border-brand-500 bg-brand-50 text-brand-800'
-                : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-            }`}
-          >
-            {label(f)}
-          </Link>
-        ))}
-        <form action="/admin/users" className="ml-auto flex gap-2">
-          <input type="hidden" name="show" value={show} />
-          <input
-            name="q"
-            defaultValue={q}
-            placeholder="Search by name"
-            aria-label="Search by name"
-            className="focus:border-primary-container focus:ring-primary-container/20 h-9 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-hidden focus:ring-2"
-          />
-          <button
-            type="submit"
-            className="h-9 rounded-lg border border-[var(--border)] px-3 text-sm hover:bg-[var(--surface-2)]"
-          >
-            Search
-          </button>
-        </form>
-      </div>
-
-      {users.length === 0 ? (
-        <p className="mt-6 text-sm text-[var(--text-muted)]">No users match.</p>
-      ) : (
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[40rem] text-sm">
-            <thead>
-              <tr className="border-b border-[var(--border)] text-left">
-                <th className="py-2 font-medium">Name</th>
-                <th className="py-2 font-medium">Joined</th>
-                <th className="py-2 font-medium">Listings</th>
-                <th className="py-2 font-medium">Role</th>
-                <th className="py-2 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => {
-                const self = u.id === actor.id;
-                // Nobody edits themselves here; only a super admin edits another admin.
-                const locked = self || (!isSuper && roleAtLeast(u.role as Role, 'admin'));
-                return (
-                  <tr key={u.id} className="border-b border-[var(--border)] last:border-0">
-                    <td className="py-2">
-                      <span className="font-medium">{u.display_name ?? 'Unnamed'}</span>
-                      {self ? <span className="text-brand-700 ml-2 text-xs">you</span> : null}
-                      <p className="font-mono text-xs text-[var(--text-muted)]">
-                        {String(u.id).slice(0, 8)}
-                      </p>
-                    </td>
-                    <td className="py-2 text-[var(--text-muted)]">
-                      {new Date(u.created_at).toLocaleDateString('en-GB')}
-                    </td>
-                    <td className="py-2">{listingCount.get(u.id) ?? 0}</td>
-                    <td className="py-2">
-                      {locked ? (
-                        <span className="capitalize">{label(u.role)}</span>
-                      ) : (
-                        <form action={updateUser} className="flex items-center gap-2">
-                          <input type="hidden" name="id" value={u.id} />
-                          <input type="hidden" name="qs" value={qs} />
-                          <select
-                            name="role"
-                            defaultValue={u.role}
-                            aria-label={`Role for ${u.display_name ?? 'user'}`}
-                            className="h-8 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 text-sm capitalize"
-                          >
-                            {grantable.map((r) => (
-                              <option key={r} value={r}>
-                                {label(r)}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            type="submit"
-                            className="rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs hover:bg-[var(--surface-2)]"
-                          >
-                            Save
-                          </button>
-                        </form>
-                      )}
-                    </td>
-                    <td className="py-2">
-                      {locked ? (
-                        <span className={u.is_suspended ? 'text-on-error-container' : ''}>
-                          {u.is_suspended ? 'Suspended' : 'Active'}
-                        </span>
-                      ) : (
-                        <form action={updateUser}>
-                          <input type="hidden" name="id" value={u.id} />
-                          <input type="hidden" name="qs" value={qs} />
-                          <input
-                            type="hidden"
-                            name="suspend"
-                            value={u.is_suspended ? 'false' : 'true'}
-                          />
-                          <button
-                            type="submit"
-                            className={`rounded-lg border px-2.5 py-1 text-xs ${
-                              u.is_suspended
-                                ? 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-                                : 'border-error/30 text-on-error-container hover:bg-error-container/40'
-                            }`}
-                          >
-                            {u.is_suspended ? 'Restore' : 'Suspend'}
-                          </button>
-                        </form>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {pages > 1 ? (
-        <nav aria-label="Pages" className="mt-6 flex items-center gap-3 text-sm">
-          {page > 1 ? (
-            <Link
-              href={`/admin/users${base}&page=${page - 1}`}
-              className="text-brand-700 hover:underline"
-            >
-              ← Previous
-            </Link>
-          ) : null}
-          <span className="text-[var(--text-muted)]">
-            Page {page} of {pages}
-          </span>
-          {page < pages ? (
-            <Link
-              href={`/admin/users${base}&page=${page + 1}`}
-              className="text-brand-700 hover:underline"
-            >
-              Next →
-            </Link>
-          ) : null}
-        </nav>
-      ) : null}
-    </div>
+    <>
+      <PageHeader
+        title="Users"
+        description={`Team members and their roles. Give someone a staff role to open the admin to them, or suspend an account to sign it out everywhere. ${counts[0]} accounts.`}
+      />
+      {error ? <ErrorNotice>Could not load users: {error.message}</ErrorNotice> : null}
+      <DataTable
+        columns={[
+          { key: 'name', label: 'User', width: 'minmax(220px,1.8fr)' },
+          { key: 'role', label: 'Role', width: '180px' },
+          { key: 'listings', label: 'Listings', width: '100px' },
+          { key: 'status', label: 'Status', width: '120px' },
+          { key: 'joined', label: 'Joined', width: '120px' },
+        ]}
+        rows={rows}
+        filters={FILTERS.map((f, i) => ({
+          value: f,
+          label: FILTER_LABEL[f],
+          count: counts[i],
+          href: href(f),
+        }))}
+        activeFilter={show}
+        searchPlaceholder="Search by name…"
+        searchParam="q"
+        initialQuery={q}
+        actionsWidth="120px"
+        emptyText="No users match."
+        footnote={
+          total > LIMIT ? `newest ${LIMIT} of ${total} loaded; search to narrow` : undefined
+        }
+      />
+    </>
   );
 }

@@ -2,14 +2,25 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { setSubmissionStatus } from '@/lib/moderation-actions';
-import { Notice } from '@/components/admin-ui';
 import { REPORT_REASONS } from '@/lib/report-reasons';
+import {
+  CellText,
+  ErrorNotice,
+  PageHeader,
+  Pill,
+  ago,
+  label,
+  rowAct,
+  toneOf,
+} from '@/components/admin/kit';
+import { DataTable, type TableRow } from '@/components/admin/data-table';
+import { InfoDialog } from '@/components/admin/dialog';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Inbox' };
 
-const FILTERS = ['new', 'in_progress', 'resolved', 'spam', 'all'] as const;
-const TYPES = ['all', 'contact', 'report'] as const;
+const FILTERS = ['all', 'new', 'in_progress', 'resolved', 'spam'] as const;
+type F = (typeof FILTERS)[number];
 
 type Payload = {
   name?: string;
@@ -24,154 +35,175 @@ type Payload = {
   listing_name?: string;
 };
 
+const TYPE_LABEL: Record<string, string> = {
+  contact: 'Contact',
+  report: 'Report a problem',
+  claim: 'Claim',
+  review_flag: 'Flagged review',
+};
+
+function SetStatus({
+  id,
+  status,
+  className,
+  children,
+}: {
+  id: string;
+  status: 'in_progress' | 'resolved' | 'spam';
+  className: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <form action={setSubmissionStatus}>
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="status" value={status} />
+      <button type="submit" className={className}>
+        {children}
+      </button>
+    </form>
+  );
+}
+
 export default async function AdminInbox({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; type?: string; ok?: string; error?: string }>;
+  searchParams: Promise<{ status?: string }>;
 }) {
   await requireRole('moderator');
   const sp = await searchParams;
-  const status = FILTERS.includes(sp.status as (typeof FILTERS)[number]) ? sp.status! : 'new';
-  const type = TYPES.includes(sp.type as (typeof TYPES)[number]) ? sp.type! : 'all';
+  const status: F = FILTERS.includes(sp.status as F) ? (sp.status as F) : 'all';
 
   const supabase = await createClient();
   let q = supabase
     .from('form_submissions')
     .select('id, form_type, payload, status, is_spam, created_at')
     .order('created_at', { ascending: false })
-    .limit(100);
+    .limit(300);
   if (status !== 'all') q = q.eq('status', status);
-  if (type !== 'all') q = q.eq('form_type', type);
-  const { data, error } = await q;
+  const countOf = async (f: F) => {
+    let c = supabase.from('form_submissions').select('*', { count: 'exact', head: true });
+    if (f !== 'all') c = c.eq('status', f);
+    return (await c).count ?? 0;
+  };
+  const [{ data, error }, counts] = await Promise.all([q, Promise.all(FILTERS.map(countOf))]);
+
+  const rows: TableRow[] = (data ?? []).map((m) => {
+    const p = (m.payload ?? {}) as Payload;
+    const type = m.form_type as string;
+    const from = p.name ?? (type === 'report' ? 'Visitor' : 'Unknown');
+    const subject =
+      type === 'report'
+        ? `${REPORT_REASONS[p.reason as keyof typeof REPORT_REASONS] ?? 'Report'}${
+            p.listing_name ? ` — ${p.listing_name}` : ''
+          }`
+        : p.listing_name
+          ? `Message for ${p.listing_name}`
+          : p.subject || 'No subject';
+    const st = m.status as string;
+    const id = m.id as string;
+    return {
+      id,
+      emphasis: st === 'new',
+      search: [from, p.email, subject, p.message].join(' '),
+      sort: { from, subject, type, status: st, date: m.created_at as string },
+      cells: [
+        <CellText key="f" sub={p.email}>
+          {from}
+        </CellText>,
+        <CellText key="s" bold={st === 'new'} sub={p.message?.slice(0, 120)}>
+          {subject}
+        </CellText>,
+        <Pill key="t" tone={type === 'report' ? 'gold' : 'slate'}>
+          {TYPE_LABEL[type] ?? label(type)}
+        </Pill>,
+        <Pill key="st" tone={toneOf(st)}>
+          {label(st)}
+        </Pill>,
+        <CellText key="d">{ago(m.created_at as string)}</CellText>,
+      ],
+      actions: (
+        <>
+          <InfoDialog trigger="Open" triggerClassName={rowAct.base} title={subject}>
+            <p className="m-0 text-[13px] text-[#64748B]">
+              {from}
+              {p.email ? (
+                <>
+                  {' · '}
+                  <a href={`mailto:${p.email}`}>{p.email}</a>
+                </>
+              ) : null}
+              {p.phone ? (
+                <>
+                  {' · '}
+                  <a href={`tel:${p.phone.replace(/\s+/g, '')}`}>{p.phone}</a>
+                </>
+              ) : null}
+              {' · '}
+              {new Date(m.created_at as string).toLocaleString('en-GB')}
+            </p>
+            {p.listing_slug ? (
+              <p className="m-0 text-[13px]">
+                Listing:{' '}
+                <Link href={`/listing/${p.listing_slug}`} target="_blank">
+                  {p.listing_name ?? p.listing_slug} ↗
+                </Link>
+              </p>
+            ) : null}
+            <p className="m-0 text-sm whitespace-pre-line text-[#062347]">
+              {p.message || '(no message)'}
+            </p>
+          </InfoDialog>
+          {st === 'new' ? (
+            <SetStatus id={id} status="in_progress" className={rowAct.base}>
+              In progress
+            </SetStatus>
+          ) : null}
+          {st !== 'resolved' ? (
+            <SetStatus id={id} status="resolved" className={rowAct.ok}>
+              Resolve
+            </SetStatus>
+          ) : null}
+          {st !== 'spam' ? (
+            <SetStatus id={id} status="spam" className={rowAct.bad}>
+              Spam
+            </SetStatus>
+          ) : null}
+        </>
+      ),
+    };
+  });
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Inbox</h1>
-      <p className="mt-2 text-sm text-[var(--text-muted)]">
-        Messages from the contact form and problem reports on listings. Deal with each one, then
-        mark it resolved.
-      </p>
-      <Notice ok={sp.ok} error={sp.error ?? error?.message} />
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        {FILTERS.map((f) => (
-          <Link
-            key={f}
-            href={`/admin/inbox?status=${f}&type=${type}`}
-            className={`rounded-lg border px-3 py-1.5 text-sm ${
-              status === f
-                ? 'border-brand-500 bg-brand-50 text-brand-800'
-                : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-            }`}
-          >
-            {f.replace('_', ' ')}
-          </Link>
-        ))}
-      </div>
-
-      <div className="mt-2 flex flex-wrap gap-2">
-        {TYPES.map((t) => (
-          <Link
-            key={t}
-            href={`/admin/inbox?status=${status}&type=${t}`}
-            className={`rounded-lg border px-3 py-1 text-xs capitalize ${
-              type === t
-                ? 'border-brand-500 bg-brand-50 text-brand-800'
-                : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-            }`}
-          >
-            {t === 'all' ? 'all types' : t === 'report' ? 'reports' : t}
-          </Link>
-        ))}
-      </div>
-
-      <ul className="mt-6 space-y-4">
-        {(data ?? []).map((m) => {
-          const p = (m.payload ?? {}) as Payload;
-          const listingLink = p.listing_slug ? (
-            <Link href={`/listing/${p.listing_slug}`} className="text-brand-700 hover:underline">
-              {p.listing_name ?? p.listing_slug}
-            </Link>
-          ) : null;
-          return (
-            <li key={m.id} className="surface-card p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-medium">
-                  {m.form_type === 'report' ? (
-                    <>
-                      {REPORT_REASONS[p.reason as keyof typeof REPORT_REASONS] ?? 'Report'}
-                      {listingLink ? (
-                        <>
-                          {' — '}
-                          {listingLink}
-                        </>
-                      ) : null}
-                    </>
-                  ) : listingLink ? (
-                    <>Message for {listingLink}</>
-                  ) : (
-                    p.subject || 'No subject'
-                  )}{' '}
-                  <span className="text-sm font-normal text-[var(--text-muted)]">
-                    · {m.form_type}
-                  </span>
-                </p>
-                <span className="text-xs text-[var(--text-muted)]">
-                  {new Date(m.created_at as string).toLocaleString('en-GB')} · {m.status}
-                </span>
-              </div>
-              <p className="mt-1 text-sm">
-                {p.name ?? (m.form_type === 'report' ? 'Visitor' : 'Unknown')}
-                {p.email ? (
-                  <>
-                    {' '}
-                    ·{' '}
-                    <a href={`mailto:${p.email}`} className="text-brand-700 hover:underline">
-                      {p.email}
-                    </a>
-                  </>
-                ) : null}
-                {p.phone ? (
-                  <>
-                    {' '}
-                    ·{' '}
-                    <a
-                      href={`tel:${p.phone.replace(/\s+/g, '')}`}
-                      className="text-brand-700 hover:underline"
-                    >
-                      {p.phone}
-                    </a>
-                  </>
-                ) : null}
-              </p>
-              {p.message ? <p className="mt-2 text-sm whitespace-pre-line">{p.message}</p> : null}
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(['in_progress', 'resolved', 'spam'] as const)
-                  .filter((s) => s !== m.status)
-                  .map((s) => (
-                    <form key={s} action={setSubmissionStatus}>
-                      <input type="hidden" name="id" value={m.id as string} />
-                      <input type="hidden" name="status" value={s} />
-                      <button
-                        type="submit"
-                        className="rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs"
-                      >
-                        {s === 'in_progress'
-                          ? 'In progress'
-                          : s === 'resolved'
-                            ? 'Resolved'
-                            : 'Spam'}
-                      </button>
-                    </form>
-                  ))}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-      {(data ?? []).length === 0 ? (
-        <p className="mt-6 text-sm text-[var(--text-muted)]">Nothing here.</p>
-      ) : null}
-    </div>
+    <>
+      <PageHeader
+        title="Inbox"
+        description="Contact form and “Report a problem” messages. Deal with each one, then mark it resolved."
+      />
+      {error ? <ErrorNotice>Could not load messages: {error.message}</ErrorNotice> : null}
+      <DataTable
+        columns={[
+          { key: 'from', label: 'From', width: 'minmax(160px,1fr)' },
+          { key: 'subject', label: 'Subject', width: 'minmax(240px,2fr)' },
+          { key: 'type', label: 'Type', width: '160px' },
+          { key: 'status', label: 'Status', width: '120px' },
+          { key: 'date', label: 'Received', width: '110px' },
+        ]}
+        rows={rows}
+        filters={FILTERS.map((f, i) => ({
+          value: f,
+          label: label(f),
+          count: counts[i],
+          href: f === 'all' ? '/admin/inbox' : `/admin/inbox?status=${f}`,
+        }))}
+        activeFilter={status}
+        searchPlaceholder="Search sender or subject…"
+        actionsWidth="270px"
+        bulk={[
+          { label: 'Resolve', tone: 'ok', op: 'inbox_status', arg: 'resolved' },
+          { label: 'Mark in progress', op: 'inbox_status', arg: 'in_progress' },
+          { label: 'Mark spam', tone: 'bad', op: 'inbox_status', arg: 'spam' },
+        ]}
+      />
+    </>
   );
 }

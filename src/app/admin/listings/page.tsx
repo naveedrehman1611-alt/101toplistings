@@ -1,63 +1,125 @@
+import { Fragment } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole, roleAtLeast } from '@/lib/auth';
 import { bulkListingAction } from '@/lib/listing-bulk-actions';
-import { Notice } from '@/components/admin-ui';
-import { BulkControls, SelectAll } from '@/components/admin/bulk-select';
+import {
+  CellText,
+  ErrorNotice,
+  PageHeader,
+  Pill,
+  Tag,
+  ago,
+  label,
+  rowAct,
+  textareaCls,
+  toneOf,
+} from '@/components/admin/kit';
+import { DataTable, type TableRow } from '@/components/admin/data-table';
+import { ConfirmButton } from '@/components/admin/dialog';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Listings' };
 
 const STATUSES = ['all', 'pending', 'approved', 'rejected', 'suspended', 'draft'] as const;
-const PAGE_SIZES = [50, 100, 200] as const;
-const BULK_FORM = 'bulk-listings';
+type Status = (typeof STATUSES)[number];
+const LIMIT = 500;
 
-const STATUS_STYLE: Record<string, string> = {
-  pending: 'bg-amber-100 text-amber-900',
-  approved: 'bg-brand-50 text-brand-800',
-  rejected: 'bg-red-100 text-red-900',
-  suspended: 'bg-zinc-200 text-zinc-800',
-  draft: 'bg-zinc-100 text-zinc-700',
+type Row = {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+  verification: string;
+  is_featured: boolean;
+  category_id: string | null;
+  city_id: string | null;
+  area_id: string | null;
+  updated_at: string;
+  owner: { display_name: string | null } | null;
 };
+
+/**
+ * One row change, posted to bulkListingAction with a single id: the same
+ * action as the bulk bar, so approving or rejecting emails the owner.
+ */
+function RowOp({
+  id,
+  name,
+  op,
+  back,
+  children,
+  className,
+}: {
+  id: string;
+  name: string;
+  op: 'approve' | 'reject' | 'suspend';
+  back: string;
+  children: React.ReactNode;
+  className: string;
+}) {
+  const hidden = (
+    <>
+      <input type="hidden" name="ids" value={id} />
+      <input type="hidden" name="op" value={op} />
+      <input type="hidden" name="back" value={back} />
+    </>
+  );
+  if (op === 'reject' || op === 'suspend') {
+    return (
+      <form action={bulkListingAction}>
+        {hidden}
+        <ConfirmButton
+          className={className}
+          title={op === 'reject' ? `Reject ${name}?` : `Suspend ${name}?`}
+          body={
+            op === 'reject'
+              ? 'It stays off the public site. If it has an owner, they get an email with your reason and can fix and resubmit it.'
+              : 'It is hidden from the public site until you restore it.'
+          }
+          ok={op === 'reject' ? 'Reject' : 'Suspend'}
+          danger
+          fields={
+            op === 'reject' ? (
+              <label className="flex flex-col gap-1.5 text-[13px] font-semibold">
+                Reason for the owner
+                <textarea
+                  name="reason"
+                  required
+                  rows={3}
+                  maxLength={1000}
+                  placeholder="e.g. Duplicate of an existing listing"
+                  className={`${textareaCls} font-normal`}
+                />
+              </label>
+            ) : undefined
+          }
+        >
+          {children}
+        </ConfirmButton>
+      </form>
+    );
+  }
+  return (
+    <form action={bulkListingAction}>
+      {hidden}
+      <button type="submit" className={className}>
+        {children}
+      </button>
+    </form>
+  );
+}
 
 export default async function AdminListings({
   searchParams,
 }: {
-  searchParams: Promise<{
-    status?: string;
-    q?: string;
-    page?: string;
-    size?: string;
-    ok?: string;
-    error?: string;
-  }>;
+  searchParams: Promise<{ status?: string; q?: string }>;
 }) {
   const user = await requireRole('moderator');
   const canDelete = roleAtLeast(user.role, 'admin');
   const sp = await searchParams;
-  const status = STATUSES.includes(sp.status as (typeof STATUSES)[number])
-    ? (sp.status as string)
-    : 'all';
-  const q = sp.q?.trim() ?? '';
-  const size = PAGE_SIZES.find((s) => String(s) === sp.size) ?? PAGE_SIZES[0];
-  const page = Math.max(1, Number.parseInt(sp.page ?? '1', 10) || 1);
-
-  /** This page's URL with some parameters changed; ok/error are always dropped. */
-  const href = (change: Record<string, string | number | null>) => {
-    const params = new URLSearchParams();
-    const merged: Record<string, string | number | null> = {
-      status: status === 'all' ? null : status,
-      q: q || null,
-      size: size === PAGE_SIZES[0] ? null : size,
-      page: page > 1 ? page : null,
-      ...change,
-    };
-    for (const [k, v] of Object.entries(merged))
-      if (v !== null && v !== '') params.set(k, String(v));
-    const qs = params.toString();
-    return `/admin/listings${qs ? `?${qs}` : ''}`;
-  };
-  const here = href({});
+  const status: Status = STATUSES.includes(sp.status as Status) ? (sp.status as Status) : 'all';
+  const q = sp.q?.trim().replace(/[%_\\]/g, '') ?? '';
 
   const supabase = await createClient();
   // Reads `listings`, not `public_listings`: moderation needs the rows the
@@ -65,291 +127,195 @@ export default async function AdminListings({
   let query = supabase
     .from('listings')
     .select(
-      'id, slug, name, status, verification, is_featured, owner_user_id, created_at, cities(name)',
-      {
-        count: 'exact',
-      },
+      'id, slug, name, status, verification, is_featured, category_id, city_id, area_id, updated_at, owner:profiles!listings_owner_user_id_fkey(display_name)',
     )
-    .order('created_at', { ascending: false })
-    .order('id')
-    .range((page - 1) * size, page * size - 1);
-
+    .order('updated_at', { ascending: false })
+    .limit(LIMIT);
   if (status !== 'all') query = query.eq('status', status);
   if (q) query = query.ilike('name', `%${q}%`);
 
-  const { data: listings, error, count } = await query;
-  const total = count ?? 0;
-  const pages = Math.max(1, Math.ceil(total / size));
+  const countOf = async (s: Status) => {
+    let c = supabase.from('listings').select('*', { count: 'exact', head: true });
+    if (s !== 'all') c = c.eq('status', s);
+    if (q) c = c.ilike('name', `%${q}%`);
+    return (await c).count ?? 0;
+  };
+
+  const [{ data, error }, counts, { data: cats }, { data: cities }, { data: areas }] =
+    await Promise.all([
+      query,
+      Promise.all(STATUSES.map(countOf)),
+      supabase.from('categories').select('id, name'),
+      supabase.from('cities').select('id, name'),
+      supabase.from('areas').select('id, name'),
+    ]);
+  const listings = (data ?? []) as unknown as Row[];
+  const catName = new Map((cats ?? []).map((c) => [c.id as string, c.name as string]));
+  const cityName = new Map((cities ?? []).map((c) => [c.id as string, c.name as string]));
+  const areaName = new Map((areas ?? []).map((c) => [c.id as string, c.name as string]));
+
+  const qs = (s: Status) => {
+    const p = new URLSearchParams();
+    if (s !== 'all') p.set('status', s);
+    if (q) p.set('q', q);
+    const str = p.toString();
+    return `/admin/listings${str ? `?${str}` : ''}`;
+  };
+  // Where row actions return to, so the filter and search survive a change.
+  const here = qs(status);
   const exportHref = `/admin/listings/export?${new URLSearchParams({
     ...(status !== 'all' ? { status } : {}),
     ...(q ? { q } : {}),
   }).toString()}`;
 
+  const rows: TableRow[] = listings.map((l) => {
+    const cat = l.category_id ? (catName.get(l.category_id) ?? '—') : '—';
+    const city = l.city_id ? (cityName.get(l.city_id) ?? '—') : '—';
+    const area = l.area_id ? areaName.get(l.area_id) : undefined;
+    const owner = l.owner?.display_name ?? '—';
+    const verified = l.verification === 'verified';
+    return {
+      id: l.id,
+      search: [l.name, l.slug, cat, city, area, owner].join(' '),
+      sort: { name: l.name, cat, city, owner, status: l.status, updated: l.updated_at },
+      cells: [
+        <Fragment key="c17">
+          <Link
+            href={`/admin/listings/${l.id}`}
+            className="max-w-full truncate font-semibold text-[#062347] hover:text-[#1884E7] hover:no-underline"
+          >
+            {l.name}
+          </Link>
+          <div className="max-w-full truncate text-xs text-[#64748B]">/listing/{l.slug}</div>
+          {verified || l.is_featured ? (
+            <div className="flex flex-wrap gap-1">
+              {verified ? <Tag tone="teal">Verified</Tag> : null}
+              {l.is_featured ? <Tag tone="gold">Featured</Tag> : null}
+            </div>
+          ) : null}
+        </Fragment>,
+        <CellText key="c">{cat}</CellText>,
+        <CellText key="l" sub={area}>
+          {city}
+        </CellText>,
+        <CellText key="o">{owner}</CellText>,
+        <Pill key="s" tone={toneOf(l.status)}>
+          {label(l.status)}
+        </Pill>,
+        <CellText key="u">{ago(l.updated_at)}</CellText>,
+      ],
+      actions: (
+        <>
+          {l.status === 'pending' || l.status === 'rejected' || l.status === 'draft' ? (
+            <RowOp id={l.id} name={l.name} op="approve" back={here} className={rowAct.ok}>
+              Approve
+            </RowOp>
+          ) : null}
+          {l.status === 'pending' ? (
+            <RowOp id={l.id} name={l.name} op="reject" back={here} className={rowAct.bad}>
+              Reject
+            </RowOp>
+          ) : null}
+          {l.status === 'approved' ? (
+            <RowOp id={l.id} name={l.name} op="suspend" back={here} className={rowAct.base}>
+              Suspend
+            </RowOp>
+          ) : null}
+          {l.status === 'suspended' ? (
+            <RowOp id={l.id} name={l.name} op="approve" back={here} className={rowAct.ok}>
+              Restore
+            </RowOp>
+          ) : null}
+          <Link href={`/admin/listings/${l.id}`} className={`${rowAct.base} hover:no-underline`}>
+            Edit
+          </Link>
+        </>
+      ),
+    };
+  });
+
+  const total = counts[STATUSES.indexOf(status)] ?? 0;
+
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Listings</h1>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/admin/listings/import"
-            className="inline-flex h-10 items-center rounded-lg border border-[var(--border)] px-4 text-sm font-medium hover:bg-[var(--surface-2)]"
-          >
-            Import CSV
-          </Link>
-          {/* A plain download link: next/link would prefetch, and so build, the file. */}
-          <a
-            href={exportHref}
-            className="inline-flex h-10 items-center rounded-lg border border-[var(--border)] px-4 text-sm font-medium hover:bg-[var(--surface-2)]"
-          >
-            Export CSV
-          </a>
-          <Link
-            href="/admin/listings/new"
-            className="bg-primary-container text-on-primary hover:bg-primary inline-flex h-10 items-center rounded-lg px-4 text-sm font-medium"
-          >
-            Add listing
-          </Link>
-        </div>
-      </div>
-      <Notice ok={sp.ok} error={sp.error} />
+    <>
+      <PageHeader
+        title="Listings"
+        description="Approve new submissions and keep business details accurate."
+        actions={[
+          { label: 'Import CSV', href: '/admin/listings/import' },
+          // A plain download link: next/link would prefetch, and so build, the file.
+          { label: 'Export CSV', href: exportHref, download: true },
+          { label: 'Add listing', href: '/admin/listings/new', primary: true },
+        ]}
+      />
+      {error ? <ErrorNotice>Could not load listings: {error.message}</ErrorNotice> : null}
 
-      <form className="mt-4 flex flex-wrap gap-2">
-        <input
-          type="search"
-          name="q"
-          defaultValue={q}
-          placeholder="Search by name"
-          aria-label="Search listings"
-          className="focus:border-primary-container focus:ring-primary-container/20 h-10 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm outline-hidden focus:ring-2"
-        />
-        {status !== 'all' ? <input type="hidden" name="status" value={status} /> : null}
-        <select
-          name="size"
-          defaultValue={String(size)}
-          aria-label="Listings per page"
-          className="h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm"
-        >
-          {PAGE_SIZES.map((s) => (
-            <option key={s} value={s}>
-              {s} per page
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="bg-primary-container text-on-primary h-10 rounded-lg px-4 text-sm font-medium"
-        >
-          Search
-        </button>
-      </form>
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        {STATUSES.map((s) => (
-          <Link
-            key={s}
-            href={href({ status: s === 'all' ? null : s, page: null })}
-            className={`rounded-lg border px-3 py-1.5 text-sm ${
-              status === s
-                ? 'border-brand-500 bg-brand-50 text-brand-800'
-                : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-            }`}
-          >
-            {s}
-          </Link>
-        ))}
-      </div>
-
-      {error ? (
-        <p role="alert" className="text-error mt-6 text-sm">
-          Could not load listings: {error.message}
+      <DataTable
+        columns={[
+          { key: 'name', label: 'Listing', width: 'minmax(220px,2.2fr)' },
+          { key: 'cat', label: 'Category' },
+          { key: 'city', label: 'Location' },
+          { key: 'owner', label: 'Owner' },
+          { key: 'status', label: 'Status', width: '120px' },
+          { key: 'updated', label: 'Updated', width: '110px' },
+        ]}
+        rows={rows}
+        filters={STATUSES.map((s, i) => ({
+          value: s,
+          label: label(s),
+          count: counts[i],
+          href: qs(s),
+        }))}
+        activeFilter={status}
+        searchPlaceholder="Search name, owner, city…"
+        searchParam="q"
+        initialQuery={q}
+        actionsWidth="210px"
+        footnote={total > LIMIT ? `newest ${LIMIT} of ${total} loaded` : undefined}
+        bulk={[
+          { label: 'Approve', tone: 'ok', op: 'listing', arg: 'approve' },
+          {
+            label: 'Reject',
+            op: 'listing',
+            arg: 'reject',
+            confirm: {
+              title: 'Reject {n} listings?',
+              body: 'They stay off the public site. Owners get an email with your reason.',
+              ok: 'Reject',
+              danger: true,
+              reason: {
+                label: 'Reason for the owners',
+                placeholder: 'e.g. Missing contact details',
+              },
+            },
+          },
+          { label: 'Suspend', op: 'listing', arg: 'suspend' },
+          { label: 'Feature', op: 'listing', arg: 'feature' },
+          { label: 'Unfeature', op: 'listing', arg: 'unfeature' },
+          { label: 'Verify', op: 'listing', arg: 'verify' },
+          ...(canDelete
+            ? [
+                {
+                  label: 'Delete permanently',
+                  tone: 'bad' as const,
+                  op: 'listing' as const,
+                  arg: 'delete',
+                  confirm: {
+                    title: 'Delete {n} listings permanently?',
+                    body: 'Their hours and reviews go too. This can’t be undone.',
+                    ok: 'Delete permanently',
+                    danger: true,
+                  },
+                },
+              ]
+            : []),
+        ]}
+      />
+      {canDelete ? null : (
+        <p className="m-0 text-xs text-[#64748B]">
+          Only an Admin can delete a listing. Suspend it to hide it from the site.
         </p>
-      ) : null}
-
-      {/* The bulk form holds no table markup: the row checkboxes join it with
-          form="bulk-listings", so the per-row forms below are never nested. */}
-      <form
-        id={BULK_FORM}
-        action={bulkListingAction}
-        className="surface-card mt-6 flex flex-wrap items-center justify-between gap-3 p-3"
-      >
-        <input type="hidden" name="back" value={here} />
-        <BulkControls formId={BULK_FORM} canDelete={canDelete} />
-        <p className="text-sm text-[var(--text-muted)]">
-          {total} listing{total === 1 ? '' : 's'}
-        </p>
-      </form>
-
-      <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[48rem] text-sm">
-          <thead>
-            <tr className="border-b border-[var(--border)] text-left">
-              <th className="w-8 py-2">
-                <SelectAll formId={BULK_FORM} />
-              </th>
-              <th className="py-2 font-medium">Business</th>
-              <th className="py-2 font-medium">City</th>
-              <th className="py-2 font-medium">Status</th>
-              <th className="py-2 font-medium">Submitted</th>
-              <th className="py-2 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(listings ?? []).map((l) => {
-              const id = l.id as string;
-              const city = l.cities as unknown as { name: string } | null;
-              return (
-                <tr key={id} className="border-b border-[var(--border)] align-top last:border-0">
-                  <td className="py-3">
-                    <input
-                      type="checkbox"
-                      name="ids"
-                      value={id}
-                      form={BULK_FORM}
-                      aria-label={`Select ${l.name}`}
-                      className="size-4 accent-[var(--color-primary-container)]"
-                    />
-                  </td>
-                  <td className="py-3">
-                    <Link
-                      href={`/admin/listings/${id}`}
-                      className="hover:text-brand-700 font-medium"
-                    >
-                      {l.name}
-                    </Link>
-                    <span className="ml-2 text-xs text-[var(--text-muted)]">
-                      {[
-                        l.verification === 'verified' ? 'verified' : null,
-                        l.is_featured ? 'featured' : null,
-                        l.owner_user_id ? 'owner submitted' : null,
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </span>
-                  </td>
-                  <td className="py-3 text-[var(--text-muted)]">{city?.name ?? '—'}</td>
-                  <td className="py-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[l.status as string] ?? ''}`}
-                    >
-                      {l.status}
-                    </span>
-                  </td>
-                  <td className="py-3 whitespace-nowrap text-[var(--text-muted)]">
-                    {new Date(l.created_at as string).toLocaleDateString('en-GB', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </td>
-                  <td className="py-3">
-                    <div className="flex flex-wrap items-start gap-1.5">
-                      {l.status !== 'approved' ? (
-                        <RowAction id={id} back={here} op="approve" primary>
-                          Approve
-                        </RowAction>
-                      ) : null}
-                      {l.status !== 'rejected' ? (
-                        <details className="group">
-                          <summary className="cursor-pointer list-none rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs">
-                            Reject
-                          </summary>
-                          <form action={bulkListingAction} className="mt-1.5 flex gap-1.5">
-                            <input type="hidden" name="ids" value={id} />
-                            <input type="hidden" name="op" value="reject" />
-                            <input type="hidden" name="back" value={here} />
-                            <input
-                              name="reason"
-                              required
-                              maxLength={1000}
-                              placeholder="Reason for the owner"
-                              aria-label={`Reason for rejecting ${l.name}`}
-                              className="h-8 w-48 rounded-lg border border-[var(--border)] px-2 text-xs"
-                            />
-                            <button
-                              type="submit"
-                              className="rounded-lg border border-red-300 px-2.5 text-xs text-red-800"
-                            >
-                              Send
-                            </button>
-                          </form>
-                        </details>
-                      ) : null}
-                      {l.status === 'approved' ? (
-                        <RowAction id={id} back={here} op="suspend">
-                          Suspend
-                        </RowAction>
-                      ) : null}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {(listings ?? []).length === 0 ? (
-          <p className="mt-6 text-sm text-[var(--text-muted)]">Nothing matches this filter.</p>
-        ) : null}
-      </div>
-
-      {pages > 1 ? (
-        <nav aria-label="Pages" className="mt-6 flex items-center justify-between gap-3 text-sm">
-          {page > 1 ? (
-            <Link
-              href={href({ page: page - 1 })}
-              className="rounded-lg border border-[var(--border)] px-3 py-1.5"
-            >
-              ← Previous
-            </Link>
-          ) : (
-            <span />
-          )}
-          <span className="text-[var(--text-muted)]">
-            Page {page} of {pages}
-          </span>
-          {page < pages ? (
-            <Link
-              href={href({ page: page + 1 })}
-              className="rounded-lg border border-[var(--border)] px-3 py-1.5"
-            >
-              Next →
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      ) : null}
-    </div>
-  );
-}
-
-function RowAction({
-  id,
-  back,
-  op,
-  primary,
-  children,
-}: {
-  id: string;
-  back: string;
-  op: string;
-  primary?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <form action={bulkListingAction}>
-      <input type="hidden" name="ids" value={id} />
-      <input type="hidden" name="op" value={op} />
-      <input type="hidden" name="back" value={back} />
-      <button
-        type="submit"
-        className={
-          primary
-            ? 'bg-primary-container text-on-primary rounded-lg px-2.5 py-1 text-xs font-medium'
-            : 'rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs'
-        }
-      >
-        {children}
-      </button>
-    </form>
+      )}
+    </>
   );
 }

@@ -3,7 +3,17 @@ import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { addSection, deleteSection, moveSection, toggleSection } from '@/lib/section-actions';
 import { SECTION_TYPES, isHomeSectionType } from '@/lib/sections';
-import { DangerButton, Notice, SubmitButton } from '@/components/admin-ui';
+import {
+  FormField,
+  PageHeader,
+  PreviewNotice,
+  inputCls,
+  rowAct,
+  selectCls,
+} from '@/components/admin/kit';
+import { ConfirmButton, ModalForm } from '@/components/admin/dialog';
+import { OrderRow, moveBtn } from '@/components/admin/order-list';
+import { TabbedCard } from '@/components/admin/tabbed-card';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Pages & sections' };
@@ -19,12 +29,6 @@ type Section = {
   heading: string | null;
 };
 
-const smallBtn =
-  'rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs hover:bg-[var(--surface-2)] disabled:opacity-40';
-
-const inputCls =
-  'mt-1 h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none focus:border-brand-500';
-
 function typeLabel(type: string): string {
   return isHomeSectionType(type) ? SECTION_TYPES[type].label : type;
 }
@@ -35,13 +39,82 @@ function preview(text: string | null): string | null {
   return t.length > 120 ? `${t.slice(0, 119)}…` : t;
 }
 
-export default async function AdminPages({
-  searchParams,
+function SectionRow({
+  s,
+  n,
+  first,
+  last,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
+  s: Section;
+  n: number;
+  first: boolean;
+  last: boolean;
 }) {
+  // Only builder sections can be added back, so a page's own header is not deletable.
+  const deletable = isHomeSectionType(s.section_type);
+  const name = preview(s.heading) ?? s.section_key;
+  const ids = (
+    <>
+      <input type="hidden" name="id" value={s.id} />
+      <input type="hidden" name="page_id" value={s.page_id} />
+    </>
+  );
+  return (
+    <OrderRow
+      n={n}
+      label={name}
+      sub={`${typeLabel(s.section_type)} · ${s.section_key}`}
+      hidden={!s.is_enabled}
+    >
+      <form action={moveSection}>
+        {ids}
+        <input type="hidden" name="direction" value="up" />
+        <button type="submit" className={moveBtn} disabled={first} aria-label={`Move ${name} up`}>
+          ↑
+        </button>
+      </form>
+      <form action={moveSection}>
+        {ids}
+        <input type="hidden" name="direction" value="down" />
+        <button type="submit" className={moveBtn} disabled={last} aria-label={`Move ${name} down`}>
+          ↓
+        </button>
+      </form>
+      <form action={toggleSection}>
+        {ids}
+        <input type="hidden" name="enabled" value={s.is_enabled ? 'false' : 'true'} />
+        <button type="submit" className={rowAct.base}>
+          {s.is_enabled ? 'Hide' : 'Show'}
+        </button>
+      </form>
+      <Link href={`/admin/pages/sections/${s.id}`} className={`${rowAct.base} hover:no-underline`}>
+        Edit
+      </Link>
+      {deletable ? (
+        <form action={deleteSection}>
+          {ids}
+          <input type="hidden" name="confirm" value="on" />
+          <ConfirmButton
+            className={rowAct.bad}
+            title={`Delete “${name}”?`}
+            body={
+              s.section_type === 'hero_search'
+                ? 'This is the hero: its heading is the page’s main heading and it holds the search bar. Its photo, settings and category tiles go too. Hide it instead if you may want it back.'
+                : 'The section and its items are removed from the homepage. Hide it instead if you may want it back.'
+            }
+            ok="Delete"
+            danger
+          >
+            Delete
+          </ConfirmButton>
+        </form>
+      ) : null}
+    </OrderRow>
+  );
+}
+
+export default async function AdminPages() {
   await requireRole('editor');
-  const sp = await searchParams;
   const supabase = await createClient();
 
   const [{ data: pageData }, { data: sectionData }] = await Promise.all([
@@ -58,189 +131,84 @@ export default async function AdminPages({
   );
   const sections = (sectionData ?? []) as Section[];
 
+  const tabs = pages.map((page) => {
+    const rows = sections.filter((s) => s.page_id === page.id);
+    const isHome = page.slug === 'home';
+    const hasHero = rows.some((s) => s.section_type === 'hero_search');
+    return {
+      id: page.id,
+      label: page.title,
+      content: (
+        <>
+          {rows.map((s, i) => (
+            <SectionRow key={s.id} s={s} n={i + 1} first={i === 0} last={i === rows.length - 1} />
+          ))}
+          {rows.length === 0 ? (
+            <p className="m-0 px-4 py-8 text-center text-sm text-[#64748B]">
+              No sections on this page yet.
+            </p>
+          ) : null}
+        </>
+      ),
+      footer: isHome ? (
+        <ModalForm
+          trigger="+ Add section"
+          triggerClassName="cursor-pointer border-0 bg-transparent p-0 text-[13.5px] font-semibold text-[#0C8226]"
+          title="Add a section"
+          body="New sections start hidden at the end of the homepage. Fill one in, move it into place, then choose Show."
+          action={addSection}
+          ok="Add section"
+        >
+          <FormField label="Section type" htmlFor="sec-type" required>
+            <select id="sec-type" name="type" required defaultValue="" className={selectCls}>
+              <option value="" disabled>
+                Choose a type…
+              </option>
+              {Object.entries(SECTION_TYPES).map(([type, spec]) => {
+                const taken = type === 'hero_search' && hasHero;
+                return (
+                  <option key={type} value={type} disabled={taken}>
+                    {spec.label}
+                    {taken ? ' (already on the page)' : ''}
+                  </option>
+                );
+              })}
+            </select>
+          </FormField>
+          <FormField
+            label="Heading"
+            htmlFor="sec-heading"
+            help="Optional: you can also add it in the section editor."
+          >
+            <input id="sec-heading" name="heading" maxLength={200} className={inputCls} />
+          </FormField>
+        </ModalForm>
+      ) : (
+        <span className="text-[12.5px] text-[#64748B]">
+          {page.route_pattern} · this page has a fixed layout; edit its header copy.
+        </span>
+      ),
+    };
+  });
+
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Pages &amp; sections</h1>
-      <p className="mt-3 max-w-2xl text-sm text-[var(--text-muted)]">
-        The homepage is built from the sections below, top to bottom: edit, reorder, hide, add or
-        delete them. A hidden section stays here but is not shown on the site. The other pages have
-        a header whose copy you can edit. Homepage copy may say {'{brand}'}, which is replaced with
-        the brand name from Settings.
-      </p>
-      <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
+    <>
+      <PageHeader
+        title="Pages & sections"
+        description="Build the homepage from sections: edit, reorder, hide, add or delete them. Homepage copy may say {brand} for the brand name."
+        actions={[{ label: 'Preview homepage ↗', href: '/', external: true }]}
+      />
+      <PreviewNotice>
         The live homepage currently uses the fixed Stitch layout, so edits to the homepage sections
         are saved here but do not change the homepage yet.
-      </p>
-      <Notice ok={sp.ok} error={sp.error} />
-
-      {pages.map((page) => {
-        const rows = sections.filter((s) => s.page_id === page.id);
-        const isHome = page.slug === 'home';
-        return (
-          <section key={page.id} className="mt-8">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-lg font-semibold">{page.title}</h2>
-              <code className="text-xs text-[var(--text-muted)]">{page.route_pattern}</code>
-            </div>
-
-            {rows.length === 0 ? (
-              <p className="mt-2 text-sm text-[var(--text-muted)]">No sections on this page yet.</p>
-            ) : (
-              <ol className="mt-3 space-y-3">
-                {rows.map((s, i) => (
-                  <SectionRow key={s.id} section={s} first={i === 0} last={i === rows.length - 1} />
-                ))}
-              </ol>
-            )}
-
-            {isHome ? (
-              <AddSection hasHero={rows.some((s) => s.section_type === 'hero_search')} />
-            ) : null}
-          </section>
-        );
-      })}
-      {pages.length === 0 ? (
-        <p className="mt-8 text-sm text-[var(--text-muted)]">
+      </PreviewNotice>
+      {tabs.length ? (
+        <TabbedCard tabs={tabs} />
+      ) : (
+        <p className="m-0 text-sm text-[#64748B]">
           No pages exist. Run the migrations to create them.
         </p>
-      ) : null}
-    </div>
-  );
-}
-
-function SectionRow({
-  section: s,
-  first,
-  last,
-}: {
-  section: Section;
-  first: boolean;
-  last: boolean;
-}) {
-  const heading = preview(s.heading);
-  // Only builder sections can be added back, so a page's own header is not deletable.
-  const deletable = isHomeSectionType(s.section_type);
-  const ids = (
-    <>
-      <input type="hidden" name="id" value={s.id} />
-      <input type="hidden" name="page_id" value={s.page_id} />
+      )}
     </>
-  );
-
-  return (
-    <li className={`surface-card p-4 ${s.is_enabled ? '' : 'bg-[var(--surface-2)]'}`}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs text-[var(--text-muted)]">
-            <code>{s.section_key}</code> · {typeLabel(s.section_type)}
-          </p>
-          <p className={`mt-1 break-words ${heading ? 'font-medium' : 'text-[var(--text-muted)]'}`}>
-            {heading ?? 'No heading'}
-          </p>
-        </div>
-        <span
-          className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs ${
-            s.is_enabled
-              ? 'bg-brand-50 text-brand-800'
-              : 'border border-[var(--border)] text-[var(--text-muted)]'
-          }`}
-        >
-          {s.is_enabled ? 'Shown' : 'Hidden'}
-        </span>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Link
-          href={`/admin/pages/sections/${s.id}`}
-          className="bg-brand-700 hover:bg-brand-800 rounded-lg px-3 py-1 text-xs font-medium text-white"
-        >
-          Edit<span className="sr-only"> {s.section_key}</span>
-        </Link>
-        <form action={toggleSection}>
-          {ids}
-          <input type="hidden" name="enabled" value={s.is_enabled ? 'false' : 'true'} />
-          <button type="submit" className={smallBtn}>
-            {s.is_enabled ? 'Hide' : 'Show'}
-            <span className="sr-only"> {s.section_key}</span>
-          </button>
-        </form>
-        <form action={moveSection}>
-          {ids}
-          <input type="hidden" name="direction" value="up" />
-          <button type="submit" className={smallBtn} disabled={first}>
-            Move up<span className="sr-only"> {s.section_key}</span>
-          </button>
-        </form>
-        <form action={moveSection}>
-          {ids}
-          <input type="hidden" name="direction" value="down" />
-          <button type="submit" className={smallBtn} disabled={last}>
-            Move down<span className="sr-only"> {s.section_key}</span>
-          </button>
-        </form>
-        {deletable ? (
-          <form action={deleteSection} className="flex flex-wrap items-center gap-2 sm:ml-auto">
-            {ids}
-            <label className="flex items-center gap-1.5 text-xs">
-              <input type="checkbox" name="confirm" required className="size-4" />
-              Confirm<span className="sr-only"> deleting {s.section_key}</span>
-            </label>
-            <DangerButton>
-              Delete<span className="sr-only"> {s.section_key}</span>
-            </DangerButton>
-          </form>
-        ) : null}
-      </div>
-      {s.section_type === 'hero_search' ? (
-        <p className="mt-2 text-xs text-red-800">
-          Warning: this is the hero. Its heading is the page&apos;s main heading and it holds the
-          search bar. Deleting it also deletes its photo choice, settings and category tiles; hide
-          it instead if you may want it back.
-        </p>
-      ) : null}
-    </li>
-  );
-}
-
-function AddSection({ hasHero }: { hasHero: boolean }) {
-  return (
-    <form action={addSection} className="surface-card mt-4 grid gap-4 p-5 sm:grid-cols-2">
-      <div className="sm:col-span-2">
-        <h3 className="text-base font-semibold">Add a section</h3>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          New sections start hidden at the end of the homepage. Fill one in, move it into place,
-          then choose Show.
-        </p>
-      </div>
-      <label className="block text-sm sm:col-span-2">
-        <span className="font-medium">
-          Section type<span className="text-red-700"> *</span>
-        </span>
-        <select name="type" required defaultValue="" className={inputCls}>
-          <option value="" disabled>
-            Choose a type…
-          </option>
-          {Object.entries(SECTION_TYPES).map(([type, spec]) => {
-            const taken = type === 'hero_search' && hasHero;
-            return (
-              <option key={type} value={type} disabled={taken}>
-                {spec.label} — {spec.description}
-                {taken ? ' (already on the page)' : ''}
-              </option>
-            );
-          })}
-        </select>
-      </label>
-      <label className="block text-sm sm:col-span-2">
-        <span className="font-medium">Heading</span>
-        <input name="heading" maxLength={200} className={inputCls} />
-        <span className="mt-1 block text-xs text-[var(--text-muted)]">
-          Optional: you can also add it in the section editor.
-        </span>
-      </label>
-      <div className="sm:col-span-2">
-        <SubmitButton>Add section</SubmitButton>
-      </div>
-    </form>
   );
 }

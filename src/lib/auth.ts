@@ -1,7 +1,11 @@
 import { cache } from 'react';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from './supabase-server';
 import { signInHref } from './legacy-redirects';
+import { roleAtLeast, type Role } from './role-order';
+
+export { roleAtLeast, type Role };
 
 /**
  * Data Access Layer for authorisation.
@@ -13,29 +17,28 @@ import { signInHref } from './legacy-redirects';
  * database. That is the two-layer requirement in §9.5.6.
  */
 
-// Declaration order in the user_role enum is the authority ordering; mirror it.
-const ROLE_ORDER = [
-  'user',
-  'business_owner',
-  'moderator',
-  'editor',
-  'admin',
-  'super_admin',
-] as const;
-
-export type Role = (typeof ROLE_ORDER)[number];
-
-export function roleAtLeast(role: Role | null, required: Role): boolean {
-  if (!role) return false;
-  return ROLE_ORDER.indexOf(role) >= ROLE_ORDER.indexOf(required);
-}
-
 export type CurrentUser = {
   id: string;
   email: string | null;
+  /** The role every check uses: the real role, or a lower one being previewed. */
   role: Role;
+  /** The role in the profiles table. */
+  actualRole: Role;
   displayName: string | null;
 };
+
+/**
+ * "Preview as": a staff member can view the admin as a lower staff role. The
+ * cookie can only lower the role used for checks, never raise it, so a forged
+ * cookie grants nothing: anything above the profile's own role is ignored.
+ */
+export const PREVIEW_ROLE_COOKIE = 'admin_preview_role';
+
+function previewRole(actual: Role, wanted: string | undefined): Role {
+  const staff: Role[] = ['moderator', 'editor', 'admin', 'super_admin'];
+  const w = staff.find((r) => r === wanted);
+  return w && roleAtLeast(actual, w) ? w : actual;
+}
 
 /**
  * Resolves the signed-in user and their role.
@@ -69,10 +72,13 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Cur
   // suspension takes effect immediately without waiting for the token to expire.
   if (!profile || profile.is_suspended) return null;
 
+  const actualRole = profile.role as Role;
+  const preview = (await cookies()).get(PREVIEW_ROLE_COOKIE)?.value;
   return {
     id: user.id,
     email: user.email ?? null,
-    role: profile.role as Role,
+    role: previewRole(actualRole, preview),
+    actualRole,
     displayName: profile.display_name as string | null,
   };
 });

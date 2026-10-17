@@ -5,7 +5,9 @@ import { requireRole } from '@/lib/auth';
 import { deleteMedia, updateMediaAlt, uploadMedia } from '@/lib/media-actions';
 import { ACCEPT_ATTR, MAX_UPLOAD_BYTES } from '@/lib/media-upload';
 import { mediaUrl } from '@/lib/media';
-import { DangerButton, Field, Notice, SubmitButton } from '@/components/admin-ui';
+import { FormField, PageHeader, btn, card, inputCls } from '@/components/admin/kit';
+import { ConfirmButton, ModalForm } from '@/components/admin/dialog';
+import { AltField } from '@/components/admin/alt-field';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Media' };
@@ -21,7 +23,7 @@ type Row = {
   created_at: string;
 };
 
-// One page is plenty for an admin grid; older images stay reachable by filter.
+// One page is plenty for an admin grid; older images stay reachable by folder.
 const PAGE_SIZE = 60;
 
 const FOLDERS = [
@@ -37,141 +39,169 @@ function formatBytes(n: number | null) {
 export default async function AdminMedia({
   searchParams,
 }: {
-  searchParams: Promise<{ folder?: string; ok?: string; error?: string }>;
+  searchParams: Promise<{ folder?: string }>;
 }) {
   await requireRole('editor');
   const sp = await searchParams;
   const folder = FOLDERS.find((f) => f.key === sp.folder)?.key ?? 'library';
 
   const supabase = await createClient();
-  const { data, count } = await supabase
-    .from('media')
-    .select('id, path, alt, width, height, size_bytes, folder, created_at', { count: 'exact' })
-    .eq('folder', folder)
-    .order('created_at', { ascending: false })
-    .limit(PAGE_SIZE);
+  const [{ data, count }, ...counts] = await Promise.all([
+    supabase
+      .from('media')
+      .select('id, path, alt, width, height, size_bytes, folder, created_at', { count: 'exact' })
+      .eq('folder', folder)
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE),
+    ...FOLDERS.map(
+      async (f) =>
+        (
+          await supabase
+            .from('media')
+            .select('id', { count: 'exact', head: true })
+            .eq('folder', f.key)
+        ).count ?? 0,
+    ),
+  ]);
   const rows = (data ?? []) as Row[];
+  const missing = rows.filter((m) => !m.alt?.trim()).length;
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold">Media</h1>
-      <p className="mt-2 text-sm text-[var(--text-muted)]">
-        Images uploaded here are public. Listing photos are managed from each listing&apos;s edit
-        page; they are shown here so they can be reviewed and their alt text corrected.
-      </p>
-      <Notice ok={sp.ok} error={sp.error} />
-
-      <form action={uploadMedia} className="surface-card mt-6 grid gap-4 p-5 sm:grid-cols-2">
-        <h2 className="text-lg font-semibold sm:col-span-2">Upload an image</h2>
-        <label className="block text-sm">
-          <span className="font-medium">
-            Image<span className="text-error"> *</span>
-          </span>
-          <input
-            type="file"
-            name="file"
-            required
-            accept={ACCEPT_ATTR}
-            className="mt-2 block w-full text-sm file:mr-3 file:rounded-lg file:border file:border-[var(--border)] file:bg-[var(--surface)] file:px-3 file:py-1.5"
-          />
-          <span className="mt-1 block text-xs text-[var(--text-muted)]">
-            JPEG, PNG, WebP, GIF or AVIF, up to {MAX_UPLOAD_BYTES / 1024 / 1024} MB.
-          </span>
-        </label>
-        <Field
-          label="Alt text"
-          name="alt"
-          hint="Describe what the image shows, for screen readers and search engines."
-        />
-        <div className="sm:col-span-2">
-          <SubmitButton>Upload</SubmitButton>
-        </div>
-      </form>
-
-      <nav aria-label="Folders" className="mt-8 flex flex-wrap gap-2">
-        {FOLDERS.map((f) => (
-          <Link
-            key={f.key}
-            href={`/admin/media?folder=${f.key}`}
-            aria-current={f.key === folder ? 'page' : undefined}
-            className={`rounded-lg border px-3 py-1.5 text-sm ${
-              f.key === folder
-                ? 'border-brand-500 bg-brand-50 text-brand-800'
-                : 'border-[var(--border)] hover:bg-[var(--surface-2)]'
-            }`}
+    <>
+      <PageHeader
+        title="Media"
+        description="Uploaded images. Add alt text for accessibility and SEO. Listing photos are managed from each listing’s edit page."
+      >
+        <ModalForm
+          trigger="Upload image"
+          triggerClassName={btn.primary}
+          title="Upload an image"
+          body={`JPEG, PNG, WebP, GIF or AVIF, up to ${MAX_UPLOAD_BYTES / 1024 / 1024} MB. Images uploaded here are public.`}
+          action={uploadMedia}
+          ok="Upload"
+        >
+          <FormField label="Image" htmlFor="m-file" required>
+            <input
+              id="m-file"
+              type="file"
+              name="file"
+              required
+              accept={ACCEPT_ATTR}
+              className="block w-full text-sm file:mr-3 file:h-8 file:rounded-md file:border file:border-solid file:border-[#E2E8F0] file:bg-white file:px-3 file:font-semibold"
+            />
+          </FormField>
+          <FormField
+            label="Alt text"
+            htmlFor="m-alt"
+            help="Describe what the image shows, for screen readers and search engines."
           >
-            {f.label}
-          </Link>
-        ))}
-      </nav>
+            <input id="m-alt" name="alt" maxLength={300} className={inputCls} />
+          </FormField>
+        </ModalForm>
+      </PageHeader>
+
+      <div className="flex flex-wrap items-center gap-1">
+        {FOLDERS.map((f, i) => {
+          const on = f.key === folder;
+          return (
+            <Link
+              key={f.key}
+              href={`/admin/media?folder=${f.key}`}
+              aria-current={on ? 'page' : undefined}
+              className="flex h-[30px] items-center gap-1.5 rounded-lg border px-2.5 text-[13px] font-semibold hover:no-underline"
+              style={{
+                background: on ? '#062347' : '#fff',
+                color: on ? '#fff' : '#334155',
+                borderColor: on ? '#062347' : '#E2E8F0',
+              }}
+            >
+              {f.label}
+              <span className="text-[11.5px] opacity-70">{counts[i]}</span>
+            </Link>
+          );
+        })}
+        <span className="ml-auto text-[13px] text-[#64748B]">
+          {count && count > rows.length
+            ? `Newest ${rows.length} of ${count}`
+            : `${rows.length} images`}
+          {missing ? ` · ${missing} missing alt text` : ''}
+        </span>
+      </div>
 
       {rows.length === 0 ? (
-        <p className="mt-6 text-sm text-[var(--text-muted)]">No images in this folder yet.</p>
+        <div className={`${card} px-4 py-12 text-center text-sm text-[#64748B]`}>
+          No images in this folder yet.
+        </div>
       ) : (
-        <>
-          <p className="mt-4 text-xs text-[var(--text-muted)]">
-            {count && count > rows.length
-              ? `Showing the newest ${rows.length} of ${count}.`
-              : `${rows.length} image(s).`}
-          </p>
-          <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {rows.map((m) => (
-              <li key={m.id} className="surface-card overflow-hidden">
+        <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3.5 p-0">
+          {rows.map((m) => {
+            const name = m.path.split('/').pop() ?? m.path;
+            const hasAlt = !!m.alt?.trim();
+            return (
+              <li key={m.id} className={`${card} overflow-hidden`}>
                 <a
                   href={mediaUrl(m.path)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="relative block aspect-[4/3] bg-[var(--surface-2)]"
+                  className="relative block aspect-[4/3] bg-[#F1F5F9]"
                 >
                   <Image
                     src={mediaUrl(m.path)}
                     alt={m.alt ?? ''}
                     fill
-                    sizes="(min-width: 1024px) 18rem, (min-width: 640px) 45vw, 90vw"
+                    sizes="(min-width: 1024px) 16rem, 45vw"
                     className="object-cover"
                   />
                 </a>
-                <div className="space-y-3 p-3">
-                  <p className="text-xs text-[var(--text-muted)]">
-                    {[
-                      m.width && m.height ? `${m.width}×${m.height}` : null,
-                      formatBytes(m.size_bytes),
-                      new Date(m.created_at).toLocaleDateString('en-GB'),
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </p>
-                  <form action={updateMediaAlt} className="flex items-end gap-2">
-                    <input type="hidden" name="id" value={m.id} />
-                    <input type="hidden" name="folder" value={folder} />
-                    <label className="block flex-1 text-sm">
-                      <span className="sr-only">Alt text</span>
-                      <input
-                        name="alt"
-                        maxLength={300}
-                        defaultValue={m.alt ?? ''}
-                        placeholder="Alt text"
-                        className="focus:border-primary-container focus:ring-primary-container/20 h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-hidden focus:ring-2"
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      className="h-9 rounded-lg border border-[var(--border)] px-3 text-xs hover:bg-[var(--surface-2)]"
+                <div className="flex flex-col gap-2 px-3 py-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="flex-1 truncate font-mono text-[12.5px] font-semibold"
+                      title={name}
                     >
-                      Save
-                    </button>
-                  </form>
-                  <form action={deleteMedia}>
+                      {name}
+                    </span>
+                    <span className="text-[11.5px] whitespace-nowrap text-[#94A3B8]">
+                      {[
+                        m.width && m.height ? `${m.width}×${m.height}` : null,
+                        formatBytes(m.size_bytes),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                  </div>
+                  <form action={updateMediaAlt}>
                     <input type="hidden" name="id" value={m.id} />
                     <input type="hidden" name="folder" value={folder} />
-                    <DangerButton>Delete</DangerButton>
+                    <AltField defaultValue={m.alt ?? ''} />
                   </form>
+                  <div className="flex items-center">
+                    <span
+                      className="flex-1 text-[11.5px] font-medium"
+                      style={{ color: hasAlt ? '#64748B' : '#92400E' }}
+                    >
+                      {hasAlt ? 'Alt text set' : 'Missing alt text'}
+                    </span>
+                    <form action={deleteMedia}>
+                      <input type="hidden" name="id" value={m.id} />
+                      <input type="hidden" name="folder" value={folder} />
+                      <ConfirmButton
+                        className="cursor-pointer border-0 bg-transparent text-[12.5px] font-semibold text-[#B91C1C]"
+                        title="Delete this image permanently?"
+                        body={`${name} is removed from the library and from any page that uses it. This can’t be undone.`}
+                        ok="Delete permanently"
+                        danger
+                      >
+                        Delete
+                      </ConfirmButton>
+                    </form>
+                  </div>
                 </div>
               </li>
-            ))}
-          </ul>
-        </>
+            );
+          })}
+        </ul>
       )}
-    </div>
+    </>
   );
 }

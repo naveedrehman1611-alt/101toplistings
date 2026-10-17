@@ -1,24 +1,76 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
-import { updateSetting, type ActionResult } from '@/lib/admin-actions';
-import { mediaUrl } from '@/lib/media';
-import { Notice } from '@/components/admin-ui';
-import { MediaSelect, type MediaOption } from '@/components/admin/media-select';
+import { updateSetting } from '@/lib/admin-actions';
+import {
+  FormField,
+  PageHeader,
+  Section,
+  inputCls,
+  selectCls,
+  textareaCls,
+} from '@/components/admin/kit';
+import { FormShell, type Panel } from '@/components/admin/form-shell';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Settings' };
 
-// Also the order the groups are shown in; any other group follows these.
+// Also the order the tabs are shown in; any other group follows these.
 const GROUP_LABELS: Record<string, string> = {
   brand: 'Brand',
   header: 'Header',
   footer: 'Footer',
   contact: 'Contact',
   social: 'Social links',
-  seo: 'SEO',
+  seo: 'SEO defaults',
   general: 'General',
 };
+
+/** Plain-language labels, so nobody has to read footer.newsletter_text. */
+const LABEL: Record<string, string> = {
+  'brand.name': 'Brand name',
+  'brand.name_accent': 'Accent part of the name',
+  'brand.logo_light_media_id': 'Logo on light backgrounds',
+  'brand.logo_dark_media_id': 'Logo on dark backgrounds',
+  'brand.tagline': 'Tagline',
+  'brand.domain': 'Domain',
+  'header.login_label': 'Sign-in link text',
+  'header.login_url': 'Sign-in link',
+  'header.register_label': 'Sign-up link text',
+  'header.register_url': 'Sign-up link',
+  'header.cta_label': 'Header button label',
+  'header.cta_url': 'Header button link',
+  'footer.tagline': 'Line under the footer logo',
+  'footer.about': 'About text',
+  'footer.locations_heading': 'Locations column heading',
+  'footer.links_heading': 'Links column heading',
+  'footer.newsletter_heading': 'Newsletter heading',
+  'footer.newsletter_text': 'Newsletter text',
+  'footer.newsletter_placeholder': 'Newsletter email placeholder',
+  'footer.newsletter_button': 'Newsletter button label',
+  'footer.trust_line': 'Trust line',
+  'footer.copyright': 'Copyright line',
+  'contact.email': 'Support email',
+  'contact.phone': 'Phone',
+  'contact.address': 'Office address',
+  'social.facebook': 'Facebook',
+  'social.instagram': 'Instagram',
+  'social.x': 'X (Twitter)',
+  'social.linkedin': 'LinkedIn',
+  'social.youtube': 'YouTube',
+  'seo.default_title': 'Default page title',
+  'seo.default_description': 'Default meta description',
+  'seo.location_page_min_listings': 'Listings a city page needs to be indexed',
+};
+
+/** Longer values get a textarea. */
+const LONG = new Set([
+  'footer.about',
+  'footer.tagline',
+  'contact.address',
+  'seo.default_description',
+  'footer.trust_line',
+]);
 
 const SOCIAL_HELP = 'An empty value hides the icon in the footer.';
 
@@ -76,7 +128,7 @@ type Row = { key: string; value: unknown; group: string | null };
  * footer.copyright (seeded into "general" by 0013) sits with the footer.
  */
 function groupOf(row: Row): string {
-  const prefix = row.key.split('.')[0];
+  const prefix = row.key.split('.')[0]!;
   return prefix in GROUP_LABELS ? prefix : (row.group ?? 'general');
 }
 
@@ -85,22 +137,42 @@ function groupRank(group: string): number {
   return i === -1 ? Number.MAX_SAFE_INTEGER : i;
 }
 
-/** The action's outcome goes in the URL, so the page can show it without client JavaScript. */
-function outcome(result: ActionResult): string {
-  const params = new URLSearchParams(result.ok ? { ok: result.message } : { error: result.error });
-  return `/admin/settings?${params.toString()}`;
+const asText = (v: unknown) => (typeof v === 'string' ? v : JSON.stringify(v));
+const isBlob = (v: unknown) => typeof v === 'object' && v !== null;
+
+/**
+ * Saves every changed field in one go. Each change still goes through
+ * updateSetting, which checks the role, validates the value for its key and
+ * writes the audit entry; unchanged and structured values are skipped.
+ */
+async function saveSettings(fd: FormData) {
+  'use server';
+  await requireRole('admin');
+  const supabase = await createClient();
+  const { data } = await supabase.from('settings').select('key, value');
+  const current = new Map(((data ?? []) as Row[]).map((r) => [r.key, r.value]));
+  const saved: string[] = [];
+  const errors: string[] = [];
+  for (const [name, raw] of fd.entries()) {
+    if (!name.startsWith('s:') || typeof raw !== 'string') continue;
+    const key = name.slice(2);
+    if (!current.has(key)) continue;
+    const before = current.get(key);
+    if (isBlob(before) || raw.trim() === asText(before ?? '').trim()) continue;
+    const res = await updateSetting(key, raw);
+    if (res.ok) saved.push(LABEL[key] ?? key);
+    else errors.push(res.error);
+  }
+  const params = new URLSearchParams(
+    errors.length
+      ? { error: errors.join(' ') }
+      : { ok: saved.length ? `Saved ${saved.join(', ')}.` : 'Nothing changed.' },
+  );
+  redirect(`/admin/settings?${params.toString()}`);
 }
 
-const btnCls =
-  'bg-brand-700 hover:bg-brand-800 h-10 rounded-lg px-4 text-sm font-medium text-white disabled:opacity-40';
-
-export default async function AdminSettings({
-  searchParams,
-}: {
-  searchParams: Promise<{ ok?: string; error?: string }>;
-}) {
+export default async function AdminSettings() {
   await requireRole('admin');
-  const sp = await searchParams;
   const supabase = await createClient();
 
   const [{ data: settings }, { data: media }] = await Promise.all([
@@ -112,9 +184,12 @@ export default async function AdminSettings({
       .order('created_at', { ascending: false })
       .limit(200),
   ]);
-  const mediaOptions: MediaOption[] = (
-    (media ?? []) as { id: string; path: string; alt: string | null }[]
-  ).map((m) => ({ id: m.id, url: mediaUrl(m.path), alt: m.alt }));
+  const mediaOptions = ((media ?? []) as { id: string; path: string; alt: string | null }[]).map(
+    (m) => {
+      const file = m.path.split('/').pop() ?? m.path;
+      return { id: m.id, label: m.alt?.trim() ? `${m.alt} (${file})` : file };
+    },
+  );
 
   const groups = new Map<string, Row[]>();
   for (const row of (settings ?? []) as Row[]) {
@@ -126,78 +201,97 @@ export default async function AdminSettings({
     ([a], [b]) => groupRank(a) - groupRank(b) || a.localeCompare(b),
   );
 
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold">Settings</h1>
-      <p className="mt-3 max-w-2xl text-sm text-[var(--text-muted)]">
-        These rows are what the public site renders. No component holds a brand name or contact
-        detail of its own, so changing a value here changes it everywhere — including page titles
-        and Open Graph tags.
-      </p>
-      <Notice ok={sp.ok} error={sp.error} />
+  const field = (row: Row) => {
+    const id = `set-${row.key.replace(/\W/g, '-')}`;
+    const name = `s:${row.key}`;
+    const label = LABEL[row.key] ?? row.key;
+    const help = HELP[row.key];
+    if (isBlob(row.value)) {
+      return (
+        <FormField
+          key={row.key}
+          label={label}
+          htmlFor={id}
+          full
+          help="A structured value: it needs a dedicated form, which is not built yet, so it is shown read-only."
+        >
+          <input
+            id={id}
+            readOnly
+            value={asText(row.value)}
+            className={`${inputCls} bg-[#F8FAFC] text-[#64748B]`}
+          />
+        </FormField>
+      );
+    }
+    if (row.key.endsWith('_media_id')) {
+      const value = typeof row.value === 'string' ? row.value : '';
+      const listed = mediaOptions.some((o) => o.id === value);
+      return (
+        <FormField
+          key={row.key}
+          label={label}
+          htmlFor={id}
+          full
+          help={<>{help} Upload images under Media first.</>}
+        >
+          <select id={id} name={name} defaultValue={value} className={selectCls}>
+            <option value="">No image</option>
+            {value && !listed ? (
+              <option value={value}>Saved image (not in the library list)</option>
+            ) : null}
+            {mediaOptions.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </FormField>
+      );
+    }
+    const text = asText(row.value ?? '');
+    return (
+      <FormField
+        key={row.key}
+        label={label}
+        htmlFor={id}
+        full={LONG.has(row.key) || row.key.startsWith('social.')}
+        help={help}
+      >
+        {LONG.has(row.key) ? (
+          <textarea id={id} name={name} rows={3} defaultValue={text} className={textareaCls} />
+        ) : (
+          <input
+            id={id}
+            name={name}
+            type={typeof row.value === 'number' ? 'number' : 'text'}
+            defaultValue={text}
+            className={inputCls}
+          />
+        )}
+      </FormField>
+    );
+  };
 
-      {ordered.map(([group, rows]) => (
-        <section key={group} className="mt-8">
-          <h2 className="text-lg font-semibold">{GROUP_LABELS[group] ?? group}</h2>
-          <div className="mt-4 space-y-4">
-            {rows.map((row) => {
-              const raw = typeof row.value === 'string' ? row.value : JSON.stringify(row.value);
-              const isJsonBlob = typeof row.value === 'object' && row.value !== null;
-              const isMedia = row.key.endsWith('_media_id') && !isJsonBlob;
-              // Only the key is bound into the action, not the whole row.
-              const key = row.key;
-              const save = async (formData: FormData) => {
-                'use server';
-                redirect(outcome(await updateSetting(key, String(formData.get('value') ?? ''))));
-              };
-              if (isMedia) {
-                return (
-                  <form key={row.key} action={save} className="surface-card p-4">
-                    <MediaSelect
-                      name="value"
-                      label={row.key}
-                      options={mediaOptions}
-                      defaultValue={typeof row.value === 'string' ? row.value : ''}
-                      hint={HELP[row.key]}
-                    />
-                    <button type="submit" className={`${btnCls} mt-3`}>
-                      Save
-                    </button>
-                  </form>
-                );
-              }
-              return (
-                <form key={row.key} action={save} className="surface-card p-4">
-                  <label htmlFor={`s-${row.key}`} className="block text-sm font-medium">
-                    {row.key}
-                  </label>
-                  {HELP[row.key] ? (
-                    <p className="mt-1 text-xs text-[var(--text-muted)]">{HELP[row.key]}</p>
-                  ) : null}
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <input
-                      id={`s-${row.key}`}
-                      name="value"
-                      defaultValue={raw}
-                      readOnly={isJsonBlob}
-                      className="focus:border-brand-500 h-10 min-w-0 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm outline-none read-only:bg-[var(--surface-2)] read-only:text-[var(--text-muted)]"
-                    />
-                    <button type="submit" disabled={isJsonBlob} className={btnCls}>
-                      Save
-                    </button>
-                  </div>
-                  {isJsonBlob ? (
-                    <p className="mt-2 text-xs text-[var(--text-muted)]">
-                      Structured value — editing this needs a dedicated form, which is not built
-                      yet. Shown read-only rather than risking a malformed write.
-                    </p>
-                  ) : null}
-                </form>
-              );
-            })}
-          </div>
-        </section>
-      ))}
-    </div>
+  const panels: Panel[] = ordered.map(([group, rows]) => ({
+    id: group,
+    label: GROUP_LABELS[group] ?? group,
+    content: <Section title={GROUP_LABELS[group] ?? group}>{rows.map(field)}</Section>,
+  }));
+
+  return (
+    <>
+      <PageHeader
+        title="Settings"
+        description="Brand, header, footer, contact and SEO defaults. These values are what the public site renders, so a change here shows everywhere, including page titles and share cards."
+      />
+      {panels.length ? (
+        <FormShell action={saveSettings} panels={panels} />
+      ) : (
+        <p className="m-0 text-sm text-[#64748B]">
+          No settings rows yet. Run the migrations to create them.
+        </p>
+      )}
+    </>
   );
 }

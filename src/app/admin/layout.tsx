@@ -1,7 +1,12 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { Suspense } from 'react';
 import { requireRole } from '@/lib/auth';
 import { signOut } from '@/lib/admin-actions';
+import { setPreviewRole } from '@/lib/preview-role-actions';
+import { createClient } from '@/lib/supabase-server';
+import { getSettings, settingText } from '@/lib/queries';
+import { AdminShell, type NavCounts } from '@/components/admin/shell';
+import { FlashToast, Toaster } from '@/components/admin/toaster';
 
 // Admin is per-user and permission-gated: never cached, never prerendered.
 export const dynamic = 'force-dynamic';
@@ -11,73 +16,47 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const NAV = [
-  { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/listings', label: 'Listings' },
-  { href: '/admin/reviews', label: 'Reviews' },
-  { href: '/admin/claims', label: 'Claims' },
-  { href: '/admin/inbox', label: 'Inbox' },
-  { href: '/admin/subscribers', label: 'Subscribers' },
-  { href: '/admin/categories', label: 'Categories' },
-  { href: '/admin/locations', label: 'Locations' },
-  { href: '/admin/blog', label: 'Blog' },
-  { href: '/admin/media', label: 'Media' },
-  { href: '/admin/content', label: 'Content' },
-  { href: '/admin/menus', label: 'Menus' },
-  { href: '/admin/pages', label: 'Pages & sections' },
-  { href: '/admin/seo', label: 'SEO' },
-  { href: '/admin/redirects', label: 'Redirects' },
-  { href: '/admin/users', label: 'Users' },
-  { href: '/admin/settings', label: 'Settings' },
-];
+/** The sidebar badges: work waiting in each moderation queue. */
+async function queueCounts(): Promise<NavCounts> {
+  const supabase = await createClient();
+  const count = async (table: string, column: string, value: string) => {
+    const { count: n } = await supabase
+      .from(table)
+      .select('*', { count: 'exact', head: true })
+      .eq(column, value);
+    return n ?? 0;
+  };
+  const [listings, reviews, claims, inbox] = await Promise.all([
+    count('listings', 'status', 'pending'),
+    count('reviews', 'status', 'pending'),
+    count('claims', 'status', 'new'),
+    count('form_submissions', 'status', 'new'),
+  ]);
+  return { listings, reviews, claims, inbox };
+}
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // Enforced here in the layout so no admin route can render without a role,
   // and again inside every action — a layout check alone would not protect a
   // Server Action, which is reachable as its own endpoint.
   const user = await requireRole('moderator');
+  const [counts, settings] = await Promise.all([queueCounts(), getSettings()]);
 
   return (
-    <div className="container-page py-8">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
-        <div>
-          <p className="font-display text-xl font-bold">Admin</p>
-          <p className="text-sm text-[var(--text-muted)]">
-            {user.displayName ?? user.email} · {user.role.replace('_', ' ')}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-brand-700 text-sm hover:underline">
-            View site
-          </Link>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="h-9 rounded-lg border border-[var(--border)] px-3 text-sm hover:bg-[var(--surface-2)]"
-            >
-              Sign out
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-[12rem_1fr]">
-        <nav aria-label="Admin" className="lg:sticky lg:top-24 lg:self-start">
-          <ul className="flex flex-wrap gap-2 lg:flex-col">
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="block rounded-lg px-3 py-2 text-sm hover:bg-[var(--surface-2)]"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="min-w-0">{children}</div>
-      </div>
-    </div>
+    <AdminShell
+      brand={settingText(settings, 'brand.name', 'RankYouSite')}
+      role={user.role}
+      actualRole={user.actualRole}
+      setPreviewRole={setPreviewRole}
+      userName={user.displayName ?? user.email ?? 'Signed in'}
+      counts={counts}
+      signOut={signOut}
+    >
+      {children}
+      <Toaster />
+      <Suspense>
+        <FlashToast />
+      </Suspense>
+    </AdminShell>
   );
 }
