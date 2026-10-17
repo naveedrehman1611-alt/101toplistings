@@ -7,6 +7,7 @@ import { writeAudit } from './audit';
 import { check, runAndReturn } from './action-flow';
 import { FormError, bool, num, required, slugFrom, slugify, text, uuid } from './form-data';
 import { canonicalUrl, parseTags, readMinutes, type TagInput } from './blog-input';
+import { notifyIndexNow } from './indexnow';
 
 // Each action re-checks the role itself: a Server Action is a public endpoint,
 // so the admin layout's check does not protect it. RLS enforces it a third time.
@@ -121,6 +122,13 @@ export async function saveBlogPost(fd: FormData) {
         await supabase.from('blog_posts').update(patch).eq('id', id).select('*').maybeSingle(),
       );
       await writeTags(supabase, id, tags);
+      // A published post, or one just unpublished, changed what search engines should show.
+      if (isPublished || before.is_published) {
+        notifyIndexNow([
+          `/blog/${row.slug}`,
+          ...(before.slug !== row.slug ? [`/blog/${before.slug}`] : []),
+        ]);
+      }
       await writeAudit(
         user.id,
         'update',
@@ -144,6 +152,7 @@ export async function saveBlogPost(fd: FormData) {
         .single(),
     );
     await writeTags(supabase, after.id, tags);
+    if (isPublished) notifyIndexNow([`/blog/${row.slug}`]);
     await writeAudit(user.id, 'create', 'blog_post', after.id, null, {
       ...after,
       tags: await tagNames(supabase, after.id),

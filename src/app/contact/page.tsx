@@ -10,6 +10,7 @@ import type { SectionValues } from '@/lib/content/schema';
 import type { CONTACT_PAGE } from '@/lib/content/pages/company';
 import { HighlightedHeading } from '@/components/company/highlighted';
 import { servicePage } from '@/lib/service-pages';
+import { TrackEvent } from '@/components/analytics-events';
 
 const TITLE = 'Contact Us | SEO Services & Business Listings';
 const DESCRIPTION =
@@ -139,6 +140,7 @@ export default async function ContactPage({
 }: {
   searchParams: Promise<{
     sent?: string;
+    form?: string;
     error?: string;
     subject?: string | string[];
     service?: string | string[];
@@ -195,6 +197,12 @@ export default async function ContactPage({
             {form.heading}
           </h2>
 
+          {sp.sent ? (
+            <TrackEvent
+              name="generate_lead"
+              params={{ form: sp.form === 'audit' ? 'seo_audit' : 'contact' }}
+            />
+          ) : null}
           {sp.sent ? (
             <div
               role="status"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 /**
  * A directory count for the stats strip: exact below 1,000, then K or M with one
@@ -25,23 +25,24 @@ function format(n: number, kind: CountFormat): string {
 const DURATION = 1600;
 
 /**
- * Counts up from zero to `to` the first time it scrolls into view (so on load
- * when it is on screen). The visible digits are hidden from assistive tech,
- * which reads the final value at once; under reduced motion it jumps there.
+ * The final value, rendered on the server so crawlers and no-JS readers see
+ * the real number. A counter that starts below the fold resets to zero before
+ * first paint and counts up the first time it scrolls into view; one already on
+ * screen at hydration keeps its value, since resetting it would visibly flash.
+ * Under reduced motion nothing animates.
  */
 export function CountUp({ to, format: kind }: { to: number; format: CountFormat }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState(to);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const box = el.getBoundingClientRect();
+    if (box.top < window.innerHeight && box.bottom > 0) return;
+    setValue(0);
     let frame = 0;
     const run = () => {
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        setValue(to);
-        return;
-      }
       const start = performance.now();
       const tick = (now: number) => {
         const t = Math.min((now - start) / DURATION, 1);
@@ -59,15 +60,13 @@ export function CountUp({ to, format: kind }: { to: number; format: CountFormat 
     return () => {
       observer.disconnect();
       cancelAnimationFrame(frame);
+      setValue(to);
     };
   }, [to]);
 
   return (
-    <>
-      <span ref={ref} aria-hidden className="tabular-nums">
-        {format(value, kind)}
-      </span>
-      <span className="sr-only">{format(to, kind)}</span>
-    </>
+    <span ref={ref} className="tabular-nums">
+      {format(value, kind)}
+    </span>
   );
 }

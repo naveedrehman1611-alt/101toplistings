@@ -7,6 +7,7 @@ import { check, runAndReturn } from './action-flow';
 import { FormError, text } from './form-data';
 import { SEARCH_TAG, tableTag } from './supabase';
 import { notifyListingDecisions } from './listing-notifications';
+import { notifyIndexNow } from './indexnow';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -131,6 +132,13 @@ export async function bulkListingAction(fd: FormData) {
               : 'update',
         'listing',
         before.map((b) => ({ id: b.id, before: b, after: afterById.get(b.id) ?? null })),
+      );
+
+      // Newly approved listings, and public ones this changed or took down.
+      notifyIndexNow(
+        before
+          .filter((b) => (op === 'approve') !== (b.status === 'approved'))
+          .map((b) => `/listing/${b.slug}`),
       );
 
       // Only listings whose status this changed: re-approving never re-sends.

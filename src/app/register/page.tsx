@@ -7,6 +7,7 @@ import { SITE_URL } from '@/lib/supabase';
 import { Breadcrumbs } from '@/components/ui';
 import { GoogleSignIn } from '@/components/google-sign-in';
 import { getPageContent } from '@/lib/content/get';
+import { TrackEvent } from '@/components/analytics-events';
 import { nextParam } from '@/lib/legacy-redirects';
 
 export const dynamic = 'force-dynamic';
@@ -80,6 +81,7 @@ export default async function RegisterPage({
         <h1 className="font-headline-lg text-headline-lg">{c.heading}</h1>
         {c.intro ? <p className="mt-3 text-[var(--text-muted)]">{c.intro}</p> : null}
 
+        {sp.sent ? <TrackEvent name="sign_up" params={{ method: 'email' }} /> : null}
         {sp.sent ? (
           <p
             role="status"
