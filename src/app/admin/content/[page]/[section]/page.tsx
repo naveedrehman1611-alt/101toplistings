@@ -56,7 +56,12 @@ export default async function EditContent({
             </span>
           ) : null}
           <div className="ml-auto flex gap-2">
-            <a href={pageSpec.path} target="_blank" rel="noopener noreferrer" className={`${btn.secondary} hover:no-underline`}>
+            <a
+              href={pageSpec.path}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${btn.secondary} hover:no-underline`}
+            >
               View page ↗
             </a>
             {row ? (

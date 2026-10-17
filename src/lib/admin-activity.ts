@@ -55,7 +55,9 @@ const NOUN: Record<string, string> = {
 };
 
 /** Which filter tab an entity belongs to in the audit log. */
-export function auditArea(entityType: string): 'listing' | 'review' | 'content' | 'user' | 'settings' {
+export function auditArea(
+  entityType: string,
+): 'listing' | 'review' | 'content' | 'user' | 'settings' {
   if (entityType === 'listing' || entityType === 'claim') return 'listing';
   if (entityType === 'review') return 'review';
   if (entityType === 'profile') return 'user';
@@ -73,7 +75,18 @@ export const AREA_COLOR: Record<ReturnType<typeof auditArea>, string> = {
 
 function pick(o: Record<string, unknown> | null): string | null {
   if (!o) return null;
-  for (const k of ['name', 'title', 'label', 'display_name', 'email', 'source', 'route', 'key', 'path', 'heading']) {
+  for (const k of [
+    'name',
+    'title',
+    'label',
+    'display_name',
+    'email',
+    'source',
+    'route',
+    'key',
+    'path',
+    'heading',
+  ]) {
     const v = o[k];
     if (typeof v === 'string' && v.trim()) {
       if (k === 'source' && typeof o.destination === 'string') return `${v} → ${o.destination}`;

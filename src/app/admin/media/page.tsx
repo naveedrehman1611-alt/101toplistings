@@ -53,13 +53,14 @@ export default async function AdminMedia({
       .eq('folder', folder)
       .order('created_at', { ascending: false })
       .limit(PAGE_SIZE),
-    ...FOLDERS.map(async (f) =>
-      (
-        await supabase
-          .from('media')
-          .select('id', { count: 'exact', head: true })
-          .eq('folder', f.key)
-      ).count ?? 0,
+    ...FOLDERS.map(
+      async (f) =>
+        (
+          await supabase
+            .from('media')
+            .select('id', { count: 'exact', head: true })
+            .eq('folder', f.key)
+        ).count ?? 0,
     ),
   ]);
   const rows = (data ?? []) as Row[];
@@ -89,7 +90,11 @@ export default async function AdminMedia({
               className="block w-full text-sm file:mr-3 file:h-8 file:rounded-md file:border file:border-solid file:border-[#E2E8F0] file:bg-white file:px-3 file:font-semibold"
             />
           </FormField>
-          <FormField label="Alt text" htmlFor="m-alt" help="Describe what the image shows, for screen readers and search engines.">
+          <FormField
+            label="Alt text"
+            htmlFor="m-alt"
+            help="Describe what the image shows, for screen readers and search engines."
+          >
             <input id="m-alt" name="alt" maxLength={300} className={inputCls} />
           </FormField>
         </ModalForm>
@@ -116,7 +121,9 @@ export default async function AdminMedia({
           );
         })}
         <span className="ml-auto text-[13px] text-[#64748B]">
-          {count && count > rows.length ? `Newest ${rows.length} of ${count}` : `${rows.length} images`}
+          {count && count > rows.length
+            ? `Newest ${rows.length} of ${count}`
+            : `${rows.length} images`}
           {missing ? ` · ${missing} missing alt text` : ''}
         </span>
       </div>
@@ -148,11 +155,17 @@ export default async function AdminMedia({
                 </a>
                 <div className="flex flex-col gap-2 px-3 py-2.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="flex-1 truncate font-mono text-[12.5px] font-semibold" title={name}>
+                    <span
+                      className="flex-1 truncate font-mono text-[12.5px] font-semibold"
+                      title={name}
+                    >
                       {name}
                     </span>
                     <span className="text-[11.5px] whitespace-nowrap text-[#94A3B8]">
-                      {[m.width && m.height ? `${m.width}×${m.height}` : null, formatBytes(m.size_bytes)]
+                      {[
+                        m.width && m.height ? `${m.width}×${m.height}` : null,
+                        formatBytes(m.size_bytes),
+                      ]
                         .filter(Boolean)
                         .join(' · ')}
                     </span>

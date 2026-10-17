@@ -6,7 +6,11 @@ import { getCurrentUser, roleAtLeast } from './auth';
 export type SearchHit = { group: string; label: string; sub: string; href: string };
 
 /** ilike wildcards in user input would widen the match; strip them. */
-const clean = (q: string) => q.replace(/[%_\\,()]/g, ' ').trim().slice(0, 80);
+const clean = (q: string) =>
+  q
+    .replace(/[%_\\,()]/g, ' ')
+    .trim()
+    .slice(0, 80);
 
 /**
  * The ⌘K palette's record search. Read-only, and each group is gated by the
@@ -31,14 +35,25 @@ export async function adminSearch(query: string): Promise<SearchHit[]> {
       ? supabase.from('blog_posts').select('id, title, is_published').ilike('title', like).limit(3)
       : Promise.resolve({ data: [] as { id: string; title: string; is_published: boolean }[] }),
     roleAtLeast(user.role, 'admin')
-      ? supabase.from('profiles').select('id, display_name, role').ilike('display_name', like).limit(3)
-      : Promise.resolve({ data: [] as { id: string; display_name: string | null; role: string }[] }),
+      ? supabase
+          .from('profiles')
+          .select('id, display_name, role')
+          .ilike('display_name', like)
+          .limit(3)
+      : Promise.resolve({
+          data: [] as { id: string; display_name: string | null; role: string }[],
+        }),
   ]);
 
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ');
   const hits: SearchHit[] = [];
   for (const l of listings.data ?? [])
-    hits.push({ group: 'Listing', label: l.name, sub: cap(l.status), href: `/admin/listings/${l.id}` });
+    hits.push({
+      group: 'Listing',
+      label: l.name,
+      sub: cap(l.status),
+      href: `/admin/listings/${l.id}`,
+    });
   for (const p of posts.data ?? [])
     hits.push({
       group: 'Post',

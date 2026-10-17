@@ -29,7 +29,11 @@ export function OgPicker({ options }: { options: OgOption[] }) {
             >
               {/* A plain img: thumbnails from Storage need no optimising here. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={o.url} alt="" className="aspect-[1.91/1] w-full bg-[#F1F5F9] object-cover" />
+              <img
+                src={o.url}
+                alt=""
+                className="aspect-[1.91/1] w-full bg-[#F1F5F9] object-cover"
+              />
               <div className="truncate px-1.5 py-[5px] font-mono text-[10.5px] text-[#475569]">
                 {o.name}
               </div>
@@ -43,7 +47,8 @@ export function OgPicker({ options }: { options: OgOption[] }) {
       )}
       <div className="text-[12.5px] text-[#64748B]">
         {pick ? `Selected: ${pick.name}.` : 'No image selected — the site default is used.'}{' '}
-        Recommended 1200×630. <b className="font-semibold text-[#92400E]">Preview: not saved yet.</b>
+        Recommended 1200×630.{' '}
+        <b className="font-semibold text-[#92400E]">Preview: not saved yet.</b>
       </div>
     </div>
   );

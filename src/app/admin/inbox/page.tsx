@@ -3,7 +3,16 @@ import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { setSubmissionStatus } from '@/lib/moderation-actions';
 import { REPORT_REASONS } from '@/lib/report-reasons';
-import { CellText, ErrorNotice, PageHeader, Pill, ago, label, rowAct, toneOf } from '@/components/admin/kit';
+import {
+  CellText,
+  ErrorNotice,
+  PageHeader,
+  Pill,
+  ago,
+  label,
+  rowAct,
+  toneOf,
+} from '@/components/admin/kit';
 import { DataTable, type TableRow } from '@/components/admin/data-table';
 import { InfoDialog } from '@/components/admin/dialog';
 

@@ -3,7 +3,14 @@ import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { addSection, deleteSection, moveSection, toggleSection } from '@/lib/section-actions';
 import { SECTION_TYPES, isHomeSectionType } from '@/lib/sections';
-import { FormField, PageHeader, PreviewNotice, inputCls, rowAct, selectCls } from '@/components/admin/kit';
+import {
+  FormField,
+  PageHeader,
+  PreviewNotice,
+  inputCls,
+  rowAct,
+  selectCls,
+} from '@/components/admin/kit';
 import { ConfirmButton, ModalForm } from '@/components/admin/dialog';
 import { OrderRow, moveBtn } from '@/components/admin/order-list';
 import { TabbedCard } from '@/components/admin/tabbed-card';
@@ -32,7 +39,17 @@ function preview(text: string | null): string | null {
   return t.length > 120 ? `${t.slice(0, 119)}…` : t;
 }
 
-function SectionRow({ s, n, first, last }: { s: Section; n: number; first: boolean; last: boolean }) {
+function SectionRow({
+  s,
+  n,
+  first,
+  last,
+}: {
+  s: Section;
+  n: number;
+  first: boolean;
+  last: boolean;
+}) {
   // Only builder sections can be added back, so a page's own header is not deletable.
   const deletable = isHomeSectionType(s.section_type);
   const name = preview(s.heading) ?? s.section_key;
@@ -43,7 +60,12 @@ function SectionRow({ s, n, first, last }: { s: Section; n: number; first: boole
     </>
   );
   return (
-    <OrderRow n={n} label={name} sub={`${typeLabel(s.section_type)} · ${s.section_key}`} hidden={!s.is_enabled}>
+    <OrderRow
+      n={n}
+      label={name}
+      sub={`${typeLabel(s.section_type)} · ${s.section_key}`}
+      hidden={!s.is_enabled}
+    >
       <form action={moveSection}>
         {ids}
         <input type="hidden" name="direction" value="up" />
@@ -122,7 +144,9 @@ export default async function AdminPages() {
             <SectionRow key={s.id} s={s} n={i + 1} first={i === 0} last={i === rows.length - 1} />
           ))}
           {rows.length === 0 ? (
-            <p className="m-0 px-4 py-8 text-center text-sm text-[#64748B]">No sections on this page yet.</p>
+            <p className="m-0 px-4 py-8 text-center text-sm text-[#64748B]">
+              No sections on this page yet.
+            </p>
           ) : null}
         </>
       ),
@@ -151,7 +175,11 @@ export default async function AdminPages() {
               })}
             </select>
           </FormField>
-          <FormField label="Heading" htmlFor="sec-heading" help="Optional: you can also add it in the section editor.">
+          <FormField
+            label="Heading"
+            htmlFor="sec-heading"
+            help="Optional: you can also add it in the section editor."
+          >
             <input id="sec-heading" name="heading" maxLength={200} className={inputCls} />
           </FormField>
         </ModalForm>
@@ -171,13 +199,15 @@ export default async function AdminPages() {
         actions={[{ label: 'Preview homepage ↗', href: '/', external: true }]}
       />
       <PreviewNotice>
-        The live homepage currently uses the fixed Stitch layout, so edits to the homepage sections are
-        saved here but do not change the homepage yet.
+        The live homepage currently uses the fixed Stitch layout, so edits to the homepage sections
+        are saved here but do not change the homepage yet.
       </PreviewNotice>
       {tabs.length ? (
         <TabbedCard tabs={tabs} />
       ) : (
-        <p className="m-0 text-sm text-[#64748B]">No pages exist. Run the migrations to create them.</p>
+        <p className="m-0 text-sm text-[#64748B]">
+          No pages exist. Run the migrations to create them.
+        </p>
       )}
     </>
   );

@@ -53,6 +53,8 @@ export type BulkAction = {
   confirm?: { title: string; body?: string; ok: string; danger?: boolean };
   /** Downloads the selected rows' `csv` values instead of calling the server. */
   exportCsv?: { filename: string; header: string[] };
+  /** A client-only action, for preview screens with no server write yet. */
+  run?: (ids: string[]) => void;
 };
 
 export type Tab = { label: string; href: string; active: boolean };
@@ -128,7 +130,8 @@ export function DataTable({
         (serverFilters || clientFilter === 'all' || r.filter === clientFilter) &&
         (!needle || (r.search ?? '').toLowerCase().includes(needle)),
     );
-    if (sort) list = [...list].sort((a, b) => cmp(a.sort?.[sort.key], b.sort?.[sort.key]) * sort.dir);
+    if (sort)
+      list = [...list].sort((a, b) => cmp(a.sort?.[sort.key], b.sort?.[sort.key]) * sort.dir);
     return list;
   }, [rows, q, clientFilter, serverFilters, sort]);
 
@@ -153,16 +156,20 @@ export function DataTable({
       downloadCsv(a.exportCsv.filename, a.exportCsv.header, chosen);
       return;
     }
+    if (a.run) {
+      a.run(sel);
+      setSel([]);
+      return;
+    }
     if (!a.op) return;
     const ids = sel;
     startBusy(async () => {
       const res = await runBulk(a.op!, ids, a.arg);
       if (res.failed === 0) toast(`${res.done} ${res.done === 1 ? 'item' : 'items'} updated`);
       else
-        toast(
-          `${res.done} updated, ${res.failed} failed${res.error ? `: ${res.error}` : ''}`,
-          { tone: 'error' },
-        );
+        toast(`${res.done} updated, ${res.failed} failed${res.error ? `: ${res.error}` : ''}`, {
+          tone: 'error',
+        });
       setSel([]);
       router.refresh();
     });
@@ -211,7 +218,8 @@ export function DataTable({
           {filters?.map((f) => {
             const on = current === f.value;
             const count =
-              f.count ?? (f.value === 'all' ? rows.length : rows.filter((r) => r.filter === f.value).length);
+              f.count ??
+              (f.value === 'all' ? rows.length : rows.filter((r) => r.filter === f.value).length);
             const cls =
               'flex h-[30px] shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 text-[13px] font-semibold whitespace-nowrap hover:no-underline';
             const style = {

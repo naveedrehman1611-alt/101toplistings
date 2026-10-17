@@ -25,7 +25,13 @@ export function PostEditor({
     <>
       <Section title="Post">
         <FormField label="Title" htmlFor="p-title" required full>
-          <input id="p-title" name="title" required defaultValue={post?.title} className={inputCls} />
+          <input
+            id="p-title"
+            name="title"
+            required
+            defaultValue={post?.title}
+            className={inputCls}
+          />
         </FormField>
         <FormField label="Slug" htmlFor="p-slug" help="Leave blank to make one from the title.">
           <div className="flex items-center overflow-hidden rounded-lg border border-[#E2E8F0] bg-white focus-within:border-[#1884E7]">
@@ -39,7 +45,12 @@ export function PostEditor({
           </div>
         </FormField>
         <FormField label="Category" htmlFor="p-cat">
-          <select id="p-cat" name="category_id" defaultValue={post?.category_id ?? ''} className={selectCls}>
+          <select
+            id="p-cat"
+            name="category_id"
+            defaultValue={post?.category_id ?? ''}
+            className={selectCls}
+          >
             <option value="">None</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -48,11 +59,33 @@ export function PostEditor({
             ))}
           </select>
         </FormField>
-        <FormField label="Tags" htmlFor="p-tags" full help="Separate with commas. New tags are created; this list replaces the post’s tags.">
-          <input id="p-tags" name="tags" defaultValue={tags.join(', ')} placeholder="Local SEO, Reviews" className={inputCls} />
+        <FormField
+          label="Tags"
+          htmlFor="p-tags"
+          full
+          help="Separate with commas. New tags are created; this list replaces the post’s tags."
+        >
+          <input
+            id="p-tags"
+            name="tags"
+            defaultValue={tags.join(', ')}
+            placeholder="Local SEO, Reviews"
+            className={inputCls}
+          />
         </FormField>
-        <FormField label="Standfirst" htmlFor="p-stand" full help="The short intro under the title.">
-          <textarea id="p-stand" name="standfirst" rows={2} defaultValue={post?.standfirst ?? ''} className={textareaCls} />
+        <FormField
+          label="Standfirst"
+          htmlFor="p-stand"
+          full
+          help="The short intro under the title."
+        >
+          <textarea
+            id="p-stand"
+            name="standfirst"
+            rows={2}
+            defaultValue={post?.standfirst ?? ''}
+            className={textareaCls}
+          />
         </FormField>
         <FormField
           label="Body"
@@ -60,8 +93,9 @@ export function PostEditor({
           full
           help={
             <>
-              Markdown supported: <code>## Heading</code>, <code>**bold**</code>, <code>*italic*</code>,{' '}
-              <code>[text](https://…)</code> and lists. Reading time is worked out on save.
+              Markdown supported: <code>## Heading</code>, <code>**bold**</code>,{' '}
+              <code>*italic*</code>, <code>[text](https://…)</code> and lists. Reading time is
+              worked out on save.
             </>
           }
         >
@@ -86,18 +120,55 @@ export function PostEditor({
               : 'Off keeps it as a draft that only staff can see.'
           }
         />
-        <SwitchField name="is_featured" label="Featured on blog home" defaultChecked={post?.is_featured} />
+        <SwitchField
+          name="is_featured"
+          label="Featured on blog home"
+          defaultChecked={post?.is_featured}
+        />
       </Section>
 
       <Section title="SEO">
-        <FormField label="SEO title" htmlFor="p-seot" full help="Aim for 60 characters or fewer. Blank uses the post title.">
-          <input id="p-seot" name="seo_title" defaultValue={post?.seo_title ?? ''} className={inputCls} />
+        <FormField
+          label="SEO title"
+          htmlFor="p-seot"
+          full
+          help="Aim for 60 characters or fewer. Blank uses the post title."
+        >
+          <input
+            id="p-seot"
+            name="seo_title"
+            defaultValue={post?.seo_title ?? ''}
+            className={inputCls}
+          />
         </FormField>
-        <FormField label="Meta description" htmlFor="p-seod" full help="Aim for 160 characters or fewer.">
-          <textarea id="p-seod" name="seo_description" rows={3} defaultValue={post?.seo_description ?? ''} className={textareaCls} />
+        <FormField
+          label="Meta description"
+          htmlFor="p-seod"
+          full
+          help="Aim for 160 characters or fewer."
+        >
+          <textarea
+            id="p-seod"
+            name="seo_description"
+            rows={3}
+            defaultValue={post?.seo_description ?? ''}
+            className={textareaCls}
+          />
         </FormField>
-        <FormField label="Canonical URL" htmlFor="p-can" full help="Leave blank to use this post’s own address.">
-          <input id="p-can" name="canonical_url" type="url" defaultValue={post?.canonical_url ?? ''} placeholder="https://" className={inputCls} />
+        <FormField
+          label="Canonical URL"
+          htmlFor="p-can"
+          full
+          help="Leave blank to use this post’s own address."
+        >
+          <input
+            id="p-can"
+            name="canonical_url"
+            type="url"
+            defaultValue={post?.canonical_url ?? ''}
+            placeholder="https://"
+            className={inputCls}
+          />
         </FormField>
         <FormField label="Social share image (OG)" full isNew>
           <OgPicker options={ogOptions} />

@@ -1,7 +1,15 @@
 import { createClient } from '@/lib/supabase-server';
 import { requireRole } from '@/lib/auth';
 import { deleteBlogCategory, saveBlogCategory } from '@/lib/blog-actions';
-import { CellText, FormField, PageHeader, btn, inputCls, rowAct, textareaCls } from '@/components/admin/kit';
+import {
+  CellText,
+  FormField,
+  PageHeader,
+  btn,
+  inputCls,
+  rowAct,
+  textareaCls,
+} from '@/components/admin/kit';
 import { DataTable, type TableRow } from '@/components/admin/data-table';
 import { ConfirmButton, ModalForm } from '@/components/admin/dialog';
 import { BLOG_TABS } from '@/components/admin/blog-tabs';
@@ -32,17 +40,40 @@ function Fields({ c }: { c?: Row }) {
           <input id={`bs-${k}`} name="slug" defaultValue={c?.slug} className={inputCls} />
         </FormField>
         <FormField label="Sort order" htmlFor={`bo-${k}`}>
-          <input id={`bo-${k}`} name="sort_order" type="number" defaultValue={c?.sort_order ?? 0} className={inputCls} />
+          <input
+            id={`bo-${k}`}
+            name="sort_order"
+            type="number"
+            defaultValue={c?.sort_order ?? 0}
+            className={inputCls}
+          />
         </FormField>
       </div>
       <FormField label="Description" htmlFor={`bd-${k}`}>
-        <textarea id={`bd-${k}`} name="description" rows={3} defaultValue={c?.description ?? ''} className={textareaCls} />
+        <textarea
+          id={`bd-${k}`}
+          name="description"
+          rows={3}
+          defaultValue={c?.description ?? ''}
+          className={textareaCls}
+        />
       </FormField>
       <FormField label="SEO title" htmlFor={`bt-${k}`}>
-        <input id={`bt-${k}`} name="seo_title" defaultValue={c?.seo_title ?? ''} className={inputCls} />
+        <input
+          id={`bt-${k}`}
+          name="seo_title"
+          defaultValue={c?.seo_title ?? ''}
+          className={inputCls}
+        />
       </FormField>
       <FormField label="SEO description" htmlFor={`be-${k}`}>
-        <textarea id={`be-${k}`} name="seo_description" rows={2} defaultValue={c?.seo_description ?? ''} className={textareaCls} />
+        <textarea
+          id={`be-${k}`}
+          name="seo_description"
+          rows={2}
+          defaultValue={c?.seo_description ?? ''}
+          className={textareaCls}
+        />
       </FormField>
     </>
   );
@@ -78,13 +109,22 @@ export default async function AdminBlogCategories() {
           {c.name}
         </CellText>,
         <CellText key="c">{n}</CellText>,
-        <code key="u" className="max-w-full truncate rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[12.5px]">
+        <code
+          key="u"
+          className="max-w-full truncate rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[12.5px]"
+        >
           {c.slug}
         </code>,
       ],
       actions: (
         <>
-          <ModalForm trigger="Edit" triggerClassName={rowAct.base} title={`Edit ${c.name}`} action={saveBlogCategory} ok="Save">
+          <ModalForm
+            trigger="Edit"
+            triggerClassName={rowAct.base}
+            title={`Edit ${c.name}`}
+            action={saveBlogCategory}
+            ok="Save"
+          >
             <Fields c={c} />
           </ModalForm>
           <form action={deleteBlogCategory}>
@@ -92,7 +132,11 @@ export default async function AdminBlogCategories() {
             <ConfirmButton
               className={rowAct.bad}
               title={`Delete ${c.name}?`}
-              body={n ? `It still has ${n} post(s); move them to another category first.` : 'This can’t be undone.'}
+              body={
+                n
+                  ? `It still has ${n} post(s); move them to another category first.`
+                  : 'This can’t be undone.'
+              }
               ok="Delete"
               danger
             >
@@ -106,8 +150,17 @@ export default async function AdminBlogCategories() {
 
   return (
     <>
-      <PageHeader title="Blog" description="Posts and blog categories. A category that still has posts can’t be deleted.">
-        <ModalForm trigger="Add blog category" triggerClassName={btn.primary} title="Add blog category" action={saveBlogCategory} ok="Add">
+      <PageHeader
+        title="Blog"
+        description="Posts and blog categories. A category that still has posts can’t be deleted."
+      >
+        <ModalForm
+          trigger="Add blog category"
+          triggerClassName={btn.primary}
+          title="Add blog category"
+          action={saveBlogCategory}
+          ok="Add"
+        >
           <Fields />
         </ModalForm>
       </PageHeader>

@@ -71,7 +71,12 @@ export default async function AdminSeo() {
       filter: v.noindex ? 'noindex' : 'indexed',
       selectable: false,
       search: [label, route, v.title, v.description].join(' '),
-      sort: { page: label, title: v.title, noindex: v.noindex ? 1 : 0, sitemap: v.inSitemap ? 1 : 0 },
+      sort: {
+        page: label,
+        title: v.title,
+        noindex: v.noindex ? 1 : 0,
+        sitemap: v.inSitemap ? 1 : 0,
+      },
       cells: [
         <CellText
           key="p"
@@ -127,11 +132,25 @@ export default async function AdminSeo() {
           <FormField
             label="SEO title"
             htmlFor={`st-${route}`}
-            help={route === '/' ? 'Used as the whole title.' : 'The brand name is added after it automatically. Blank keeps the page’s own title.'}
+            help={
+              route === '/'
+                ? 'Used as the whole title.'
+                : 'The brand name is added after it automatically. Blank keeps the page’s own title.'
+            }
           >
-            <input id={`st-${route}`} name="title" maxLength={120} defaultValue={v.title} className={inputCls} />
+            <input
+              id={`st-${route}`}
+              name="title"
+              maxLength={120}
+              defaultValue={v.title}
+              className={inputCls}
+            />
           </FormField>
-          <FormField label="Meta description" htmlFor={`sd-${route}`} help="Up to about 160 characters.">
+          <FormField
+            label="Meta description"
+            htmlFor={`sd-${route}`}
+            help="Up to about 160 characters."
+          >
             <textarea
               id={`sd-${route}`}
               name="description"
@@ -150,8 +169,17 @@ export default async function AdminSeo() {
             </>
           ) : (
             <>
-              <SwitchField name="noindex" label="Hide from search engines (noindex)" defaultChecked={v.noindex} help="Also leaves the page out of the sitemap." />
-              <SwitchField name="in_sitemap" label="Include in sitemap" defaultChecked={v.inSitemap} />
+              <SwitchField
+                name="noindex"
+                label="Hide from search engines (noindex)"
+                defaultChecked={v.noindex}
+                help="Also leaves the page out of the sitemap."
+              />
+              <SwitchField
+                name="in_sitemap"
+                label="Include in sitemap"
+                defaultChecked={v.inSitemap}
+              />
             </>
           )}
         </ModalForm>

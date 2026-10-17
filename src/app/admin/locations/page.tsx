@@ -55,7 +55,11 @@ function Common({ loc, k }: { loc?: Loc; k: string }) {
       <FormField label="Name" htmlFor={`n-${k}`} required>
         <input id={`n-${k}`} name="name" required defaultValue={loc?.name} className={inputCls} />
       </FormField>
-      <FormField label="Slug" htmlFor={`s-${k}`} help="Blank = from the name. Must be unique across countries, regions and cities.">
+      <FormField
+        label="Slug"
+        htmlFor={`s-${k}`}
+        help="Blank = from the name. Must be unique across countries, regions and cities."
+      >
         <input id={`s-${k}`} name="slug" defaultValue={loc?.slug} className={inputCls} />
       </FormField>
     </>
@@ -66,10 +70,24 @@ function Coords({ loc, k }: { loc?: Loc; k: string }) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <FormField label="Latitude" htmlFor={`la-${k}`}>
-        <input id={`la-${k}`} name="latitude" type="number" step="any" defaultValue={loc?.latitude ?? ''} className={inputCls} />
+        <input
+          id={`la-${k}`}
+          name="latitude"
+          type="number"
+          step="any"
+          defaultValue={loc?.latitude ?? ''}
+          className={inputCls}
+        />
       </FormField>
       <FormField label="Longitude" htmlFor={`lo-${k}`}>
-        <input id={`lo-${k}`} name="longitude" type="number" step="any" defaultValue={loc?.longitude ?? ''} className={inputCls} />
+        <input
+          id={`lo-${k}`}
+          name="longitude"
+          type="number"
+          step="any"
+          defaultValue={loc?.longitude ?? ''}
+          className={inputCls}
+        />
       </FormField>
     </div>
   );
@@ -81,7 +99,13 @@ function CountryFields({ c }: { c?: Country }) {
     <>
       <Common loc={c} k={k} />
       <FormField label="ISO code" htmlFor={`iso-${k}`}>
-        <input id={`iso-${k}`} name="iso2" defaultValue={c?.iso2 ?? ''} placeholder="GB" className={inputCls} />
+        <input
+          id={`iso-${k}`}
+          name="iso2"
+          defaultValue={c?.iso2 ?? ''}
+          placeholder="GB"
+          className={inputCls}
+        />
       </FormField>
       <Coords loc={c} k={k} />
     </>
@@ -127,7 +151,13 @@ function CityFields({
   return (
     <>
       <FormField label="Region" htmlFor={`cr-${k}`} required>
-        <select id={`cr-${k}`} name="region_id" required defaultValue={c?.region_id ?? ''} className={selectCls}>
+        <select
+          id={`cr-${k}`}
+          name="region_id"
+          required
+          defaultValue={c?.region_id ?? ''}
+          className={selectCls}
+        >
           <option value="">Choose…</option>
           {regions.map((r) => (
             <option key={r.id} value={r.id}>
@@ -139,9 +169,19 @@ function CityFields({
       <Common loc={c} k={k} />
       <Coords loc={c} k={k} />
       <FormField label="Intro text for the city page" htmlFor={`ci-${k}`}>
-        <textarea id={`ci-${k}`} name="intro_copy" rows={3} defaultValue={c?.intro_copy ?? ''} className={textareaCls} />
+        <textarea
+          id={`ci-${k}`}
+          name="intro_copy"
+          rows={3}
+          defaultValue={c?.intro_copy ?? ''}
+          className={textareaCls}
+        />
       </FormField>
-      <SwitchField name="is_featured" label="Featured on the home page" defaultChecked={c?.is_featured} />
+      <SwitchField
+        name="is_featured"
+        label="Featured on the home page"
+        defaultChecked={c?.is_featured}
+      />
     </>
   );
 }
@@ -188,7 +228,11 @@ export default async function AdminLocations() {
             <span className="truncate">
               {'— '.repeat(depth)}
               {table === 'cities' ? (
-                <Link href={`/city/${loc.slug}`} target="_blank" className="text-[#062347] hover:text-[#1884E7]">
+                <Link
+                  href={`/city/${loc.slug}`}
+                  target="_blank"
+                  className="text-[#062347] hover:text-[#1884E7]"
+                >
                   {loc.name}
                 </Link>
               ) : (
@@ -236,31 +280,61 @@ export default async function AdminLocations() {
   const pushCity = (x: City) => {
     placed.add(x.id);
     rows.push(
-      row('cities', x, 2, regionName.get(x.region_id) ?? '', (
-        <ModalForm trigger="Edit" triggerClassName={rowAct.base} title={`Edit ${x.name}`} action={saveCity} ok="Save">
+      row(
+        'cities',
+        x,
+        2,
+        regionName.get(x.region_id) ?? '',
+        <ModalForm
+          trigger="Edit"
+          triggerClassName={rowAct.base}
+          title={`Edit ${x.name}`}
+          action={saveCity}
+          ok="Save"
+        >
           <CityFields c={x} regions={regions} countryName={countryName} />
-        </ModalForm>
-      )),
+        </ModalForm>,
+      ),
     );
   };
   const pushRegion = (x: Region) => {
     placed.add(x.id);
     rows.push(
-      row('regions', x, 1, countryName.get(x.country_id) ?? '', (
-        <ModalForm trigger="Edit" triggerClassName={rowAct.base} title={`Edit ${x.name}`} action={saveRegion} ok="Save">
+      row(
+        'regions',
+        x,
+        1,
+        countryName.get(x.country_id) ?? '',
+        <ModalForm
+          trigger="Edit"
+          triggerClassName={rowAct.base}
+          title={`Edit ${x.name}`}
+          action={saveRegion}
+          ok="Save"
+        >
           <RegionFields r={x} countries={countries} />
-        </ModalForm>
-      )),
+        </ModalForm>,
+      ),
     );
     cities.filter((y) => y.region_id === x.id).forEach(pushCity);
   };
   for (const x of countries) {
     rows.push(
-      row('countries', x, 0, x.iso2 ?? '', (
-        <ModalForm trigger="Edit" triggerClassName={rowAct.base} title={`Edit ${x.name}`} action={saveCountry} ok="Save">
+      row(
+        'countries',
+        x,
+        0,
+        x.iso2 ?? '',
+        <ModalForm
+          trigger="Edit"
+          triggerClassName={rowAct.base}
+          title={`Edit ${x.name}`}
+          action={saveCountry}
+          ok="Save"
+        >
           <CountryFields c={x} />
-        </ModalForm>
-      )),
+        </ModalForm>,
+      ),
     );
     regions.filter((y) => y.country_id === x.id).forEach(pushRegion);
   }
@@ -283,16 +357,34 @@ export default async function AdminLocations() {
             Load starter data
           </ConfirmButton>
         </form>
-        <ModalForm trigger="Add country" triggerClassName={btn.secondary} title="Add country" action={saveCountry} ok="Add">
+        <ModalForm
+          trigger="Add country"
+          triggerClassName={btn.secondary}
+          title="Add country"
+          action={saveCountry}
+          ok="Add"
+        >
           <CountryFields />
         </ModalForm>
         {countries.length ? (
-          <ModalForm trigger="Add region" triggerClassName={btn.secondary} title="Add region" action={saveRegion} ok="Add">
+          <ModalForm
+            trigger="Add region"
+            triggerClassName={btn.secondary}
+            title="Add region"
+            action={saveRegion}
+            ok="Add"
+          >
             <RegionFields countries={countries} />
           </ModalForm>
         ) : null}
         {regions.length ? (
-          <ModalForm trigger="Add city" triggerClassName={btn.primary} title="Add city" action={saveCity} ok="Add">
+          <ModalForm
+            trigger="Add city"
+            triggerClassName={btn.primary}
+            title="Add city"
+            action={saveCity}
+            ok="Add"
+          >
             <CityFields regions={regions} countryName={countryName} />
           </ModalForm>
         ) : null}

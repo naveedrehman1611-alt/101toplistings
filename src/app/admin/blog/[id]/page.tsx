@@ -48,7 +48,12 @@ export default async function EditBlogPost({ params }: { params: Promise<{ id: s
           </Pill>
           <div className="ml-auto flex gap-2">
             {p.is_published ? (
-              <a href={`/blog/${p.slug}`} target="_blank" rel="noopener noreferrer" className={`${btn.secondary} hover:no-underline`}>
+              <a
+                href={`/blog/${p.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${btn.secondary} hover:no-underline`}
+              >
                 View on site ↗
               </a>
             ) : null}

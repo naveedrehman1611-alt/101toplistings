@@ -1,7 +1,16 @@
 import { createClient } from '@/lib/supabase-server';
 import { requireRole, roleAtLeast } from '@/lib/auth';
 import { deleteSubscriber, setSubscriberStatus } from '@/lib/subscriber-actions';
-import { CellText, ErrorNotice, PageHeader, Pill, ago, label, rowAct, toneOf } from '@/components/admin/kit';
+import {
+  CellText,
+  ErrorNotice,
+  PageHeader,
+  Pill,
+  ago,
+  label,
+  rowAct,
+  toneOf,
+} from '@/components/admin/kit';
 import { DataTable, type BulkAction, type TableRow } from '@/components/admin/data-table';
 import { ConfirmButton } from '@/components/admin/dialog';
 
@@ -101,7 +110,10 @@ export default async function AdminSubscribers({
     { label: 'Reactivate', tone: 'ok', op: 'subscriber_status', arg: 'active' },
     {
       label: 'Export selected',
-      exportCsv: { filename: 'subscribers-selected.csv', header: ['Email', 'Source', 'Status', 'Joined'] },
+      exportCsv: {
+        filename: 'subscribers-selected.csv',
+        header: ['Email', 'Source', 'Status', 'Joined'],
+      },
     },
   ];
   if (canDelete)
@@ -123,7 +135,9 @@ export default async function AdminSubscribers({
         title="Subscribers"
         description={`Newsletter list from the sign-up form in the site footer. ${counts[0]?.toLocaleString('en-GB')} in total.`}
         // A plain download link: next/link would prefetch, and so build, the file.
-        actions={[{ label: 'Export CSV', href: '/admin/subscribers/export', primary: true, download: true }]}
+        actions={[
+          { label: 'Export CSV', href: '/admin/subscribers/export', primary: true, download: true },
+        ]}
       />
       {error ? <ErrorNotice>Could not load subscribers: {error.message}</ErrorNotice> : null}
       <DataTable

@@ -93,7 +93,12 @@ export default async function AdminBlog() {
             Edit
           </Link>
           {p.is_published ? (
-            <a href={`/blog/${p.slug}`} target="_blank" rel="noopener noreferrer" className={`${rowAct.base} hover:no-underline`}>
+            <a
+              href={`/blog/${p.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${rowAct.base} hover:no-underline`}
+            >
               View ↗
             </a>
           ) : null}

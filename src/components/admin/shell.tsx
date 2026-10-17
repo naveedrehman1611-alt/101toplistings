@@ -143,7 +143,15 @@ export function AdminShell({
               onClick={() => setPal(true)}
               className="ml-auto flex h-9 w-[380px] min-w-40 shrink cursor-pointer items-center gap-2.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] pr-2.5 pl-3 text-left text-[13.5px] text-[#64748B] hover:border-[#CBD5E1]"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden
+              >
                 <circle cx="11" cy="11" r="7" />
                 <path d="m20 20-3.5-3.5" />
               </svg>
@@ -199,10 +207,7 @@ function Palette({ role, onClose }: { role: Role; onClose: () => void }) {
   useEffect(() => {
     const term = q.trim();
     const n = ++seq.current;
-    if (term.length < 2) {
-      setHits([]);
-      return;
-    }
+    if (term.length < 2) return;
     const t = window.setTimeout(async () => {
       const res = await adminSearch(term);
       if (n === seq.current) setHits(res);
@@ -217,7 +222,8 @@ function Palette({ role, onClose }: { role: Role; onClose: () => void }) {
       for (const it of g.items)
         if (roleAtLeast(role, it.min) && (!needle || it.label.toLowerCase().includes(needle)))
           pages.push({ group: 'Page', label: it.label, sub: g.group, href: it.href });
-    return [...pages, ...hits].slice(0, 12);
+    // Short queries match pages only; stale record hits are ignored.
+    return [...pages, ...(needle.length >= 2 ? hits : [])].slice(0, 12);
   }, [q, hits, role]);
 
   const go = (r?: Result) => {

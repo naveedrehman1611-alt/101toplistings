@@ -51,7 +51,10 @@ export default async function AdminContent({
                 href={`/admin/content?page=${id}`}
                 aria-current={on ? 'page' : undefined}
                 className="flex items-center rounded-md px-2.5 py-2 text-[13.5px] font-medium hover:bg-[#F8FAFC] hover:no-underline"
-                style={{ background: on ? '#F1F5F9' : undefined, color: on ? '#062347' : '#475569' }}
+                style={{
+                  background: on ? '#F1F5F9' : undefined,
+                  color: on ? '#062347' : '#475569',
+                }}
               >
                 <span className="flex-1 truncate">{p.label}</span>
                 <span className="ml-2 text-[11.5px] whitespace-nowrap text-[#94A3B8]">
@@ -66,7 +69,12 @@ export default async function AdminContent({
           <div className="flex min-w-0 flex-col gap-4">
             <div className="flex items-center gap-3">
               <h2 className="font-display m-0 flex-1 text-lg font-bold">{page.label}</h2>
-              <a href={page.path} target="_blank" rel="noopener noreferrer" className="text-[13px] font-semibold">
+              <a
+                href={page.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[13px] font-semibold"
+              >
                 View page ↗
               </a>
             </div>
@@ -87,7 +95,9 @@ export default async function AdminContent({
                       </div>
                       <p className="mt-1 mb-0 text-[13px] text-[#64748B]">
                         {section.description ?? ''}
-                        {row ? `${section.description ? ' · ' : ''}Saved ${new Date(row.updated_at).toLocaleDateString('en-GB')}` : ''}
+                        {row
+                          ? `${section.description ? ' · ' : ''}Saved ${new Date(row.updated_at).toLocaleDateString('en-GB')}`
+                          : ''}
                       </p>
                     </div>
                     {row ? (

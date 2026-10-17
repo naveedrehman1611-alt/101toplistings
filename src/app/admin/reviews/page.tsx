@@ -113,10 +113,7 @@ export default async function AdminReviews({
       search: [text, author, listing].join(' '),
       sort: { text, listing, rating: r.rating, status: r.status, date: r.created_at },
       cells: [
-        <CellText
-          key="t"
-          sub={r.reply_body ? `↳ Replied: ${r.reply_body}` : `by ${author}`}
-        >
+        <CellText key="t" sub={r.reply_body ? `↳ Replied: ${r.reply_body}` : `by ${author}`}>
           “{text}”
         </CellText>,
         <CellText key="l" bold>

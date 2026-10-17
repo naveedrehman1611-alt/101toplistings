@@ -27,7 +27,9 @@ function Input({
   name: string;
   defaultValue?: string | number | null;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'defaultValue'>) {
-  return <input id={id} name={name} defaultValue={defaultValue ?? ''} className={inputCls} {...rest} />;
+  return (
+    <input id={id} name={name} defaultValue={defaultValue ?? ''} className={inputCls} {...rest} />
+  );
 }
 
 /**
@@ -74,7 +76,12 @@ export function ListingEditor({
           <Input id="l-name" name="name" required defaultValue={l?.name} />
         </FormField>
         <FormField label="Category" htmlFor="l-cat">
-          <select id="l-cat" name="category_id" defaultValue={l?.category_id ?? ''} className={selectCls}>
+          <select
+            id="l-cat"
+            name="category_id"
+            defaultValue={l?.category_id ?? ''}
+            className={selectCls}
+          >
             <option value="">—</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
@@ -83,11 +90,27 @@ export function ListingEditor({
             ))}
           </select>
         </FormField>
-        <FormField label="Tagline" htmlFor="l-tag" full help="One line shown under the name on listing cards.">
-          <Input id="l-tag" name="tagline" defaultValue={l?.tagline} placeholder="e.g. Family-run since 1986" />
+        <FormField
+          label="Tagline"
+          htmlFor="l-tag"
+          full
+          help="One line shown under the name on listing cards."
+        >
+          <Input
+            id="l-tag"
+            name="tagline"
+            defaultValue={l?.tagline}
+            placeholder="e.g. Family-run since 1986"
+          />
         </FormField>
         <FormField label="Description" htmlFor="l-desc" full>
-          <textarea id="l-desc" name="description" rows={6} defaultValue={l?.description ?? ''} className={textareaCls} />
+          <textarea
+            id="l-desc"
+            name="description"
+            rows={6}
+            defaultValue={l?.description ?? ''}
+            className={textareaCls}
+          />
         </FormField>
       </Section>
     ),
@@ -121,10 +144,21 @@ export function ListingEditor({
         </Section>
         <Section title="Location">
           <FormField label="Street address" htmlFor="l-addr" full>
-            <Input id="l-addr" name="address" defaultValue={l?.address} placeholder="Shop no., building, street" />
+            <Input
+              id="l-addr"
+              name="address"
+              defaultValue={l?.address}
+              placeholder="Shop no., building, street"
+            />
           </FormField>
           <FormField label="City" htmlFor="l-city" required>
-            <select id="l-city" name="city_id" required defaultValue={l?.city_id ?? ''} className={selectCls}>
+            <select
+              id="l-city"
+              name="city_id"
+              required
+              defaultValue={l?.city_id ?? ''}
+              className={selectCls}
+            >
               <option value="">Choose…</option>
               {cities.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -133,7 +167,12 @@ export function ListingEditor({
               ))}
             </select>
           </FormField>
-          <FormField label="Area" htmlFor="l-area" isNew help="Preview: the area is shown but not saved from here yet.">
+          <FormField
+            label="Area"
+            htmlFor="l-area"
+            isNew
+            help="Preview: the area is shown but not saved from here yet."
+          >
             {/* No name: saveListingAsStaff does not write area_id yet. */}
             <select id="l-area" defaultValue={l?.area_id ?? ''} className={selectCls}>
               <option value="">{areas.length ? 'None' : 'No areas in this city yet'}</option>
@@ -156,7 +195,13 @@ export function ListingEditor({
             htmlFor="l-lng"
             help="Right-click the place in Google Maps to copy coordinates. Needed for distance and “nearest” search."
           >
-            <Input id="l-lng" name="longitude" type="number" step="any" defaultValue={l?.longitude} />
+            <Input
+              id="l-lng"
+              name="longitude"
+              type="number"
+              step="any"
+              defaultValue={l?.longitude}
+            />
           </FormField>
         </Section>
       </>
@@ -247,7 +292,13 @@ export function ListingEditor({
       <>
         <Section title="Status">
           <FormField label="Status" htmlFor="l-status" required>
-            <select id="l-status" name="status" required defaultValue={l?.status ?? 'approved'} className={selectCls}>
+            <select
+              id="l-status"
+              name="status"
+              required
+              defaultValue={l?.status ?? 'approved'}
+              className={selectCls}
+            >
               {['approved', 'pending', 'draft', 'rejected', 'suspended'].map((s) => (
                 <option key={s} value={s}>
                   {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -255,8 +306,19 @@ export function ListingEditor({
               ))}
             </select>
           </FormField>
-          <FormField label="Verification" htmlFor="l-ver" required help="Verified shows the teal badge on the listing.">
-            <select id="l-ver" name="verification" required defaultValue={l?.verification ?? 'unverified'} className={selectCls}>
+          <FormField
+            label="Verification"
+            htmlFor="l-ver"
+            required
+            help="Verified shows the teal badge on the listing."
+          >
+            <select
+              id="l-ver"
+              name="verification"
+              required
+              defaultValue={l?.verification ?? 'unverified'}
+              className={selectCls}
+            >
               {['unverified', 'pending', 'verified', 'rejected'].map((s) => (
                 <option key={s} value={s}>
                   {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -265,7 +327,11 @@ export function ListingEditor({
             </select>
           </FormField>
           {l ? (
-            <FormField label="Owner account" full help="Owners manage their listing from /dashboard. Approve a claim to change it.">
+            <FormField
+              label="Owner account"
+              full
+              help="Owners manage their listing from /dashboard. Approve a claim to change it."
+            >
               <div className="flex h-[38px] items-center rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-sm text-[#475569]">
                 {ownerName ?? 'No owner'}
               </div>
@@ -293,8 +359,19 @@ export function ListingEditor({
           <FormField label="SEO title" htmlFor="l-seot" full help="Aim for 60 characters or fewer.">
             <Input id="l-seot" name="seo_title" defaultValue={l?.seo_title} />
           </FormField>
-          <FormField label="Meta description" htmlFor="l-seod" full help="Aim for 160 characters or fewer.">
-            <textarea id="l-seod" name="seo_description" rows={3} defaultValue={l?.seo_description ?? ''} className={textareaCls} />
+          <FormField
+            label="Meta description"
+            htmlFor="l-seod"
+            full
+            help="Aim for 160 characters or fewer."
+          >
+            <textarea
+              id="l-seod"
+              name="seo_description"
+              rows={3}
+              defaultValue={l?.seo_description ?? ''}
+              className={textareaCls}
+            />
           </FormField>
           <FormField label="Social share image (OG)" full isNew>
             <OgPicker options={ogOptions} />

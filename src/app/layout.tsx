@@ -173,7 +173,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             trustLine={settingText(settings, 'footer.trust_line').trim()}
             copyright={settingText(settings, 'footer.copyright', brand)}
             email={email}
-            address={settingText(settings, 'contact.address').trim() || 'Manchester, United Kingdom'}
+            address={
+              settingText(settings, 'contact.address').trim() || 'Manchester, United Kingdom'
+            }
             social={social}
             content={{
               footer: site.footer,

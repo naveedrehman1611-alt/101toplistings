@@ -18,6 +18,14 @@ const C = {
   red: '#B91C1C',
 };
 
+/** Now, the start of the 14-day chart window (midnight), and one week ago. */
+function timeWindow() {
+  const now = Date.now();
+  const since14 = new Date(now - 13 * DAY);
+  since14.setHours(0, 0, 0, 0);
+  return { now, since14, since7: new Date(now - 7 * DAY).toISOString() };
+}
+
 export default async function AdminDashboard() {
   const user = await requireRole('moderator');
   const isEditor = roleAtLeast(user.role, 'editor');
@@ -27,10 +35,7 @@ export default async function AdminDashboard() {
   const head = (table: string) => supabase.from(table).select('*', { count: 'exact', head: true });
   const n = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0;
 
-  const now = Date.now();
-  const since14 = new Date(now - 13 * DAY);
-  since14.setHours(0, 0, 0, 0);
-  const since7 = new Date(now - 7 * DAY).toISOString();
+  const { now, since14, since7 } = timeWindow();
 
   const [
     pending,
@@ -79,14 +84,64 @@ export default async function AdminDashboard() {
   ]);
 
   const kpis = [
-    { label: 'Pending listings', value: pending, sub: 'Needs review', color: C.gold, href: '/admin/listings?status=pending', warn: true },
-    { label: 'Approved', value: approved, sub: `+${approvedWeek} this week`, color: C.green, href: '/admin/listings?status=approved' },
-    { label: 'Rejected', value: rejected, sub: 'All time', color: C.red, href: '/admin/listings?status=rejected' },
-    { label: 'Total listings', value: total, sub: 'All statuses', color: C.navy, href: '/admin/listings' },
-    { label: 'Pending reviews', value: reviews, sub: 'Needs review', color: C.gold, href: '/admin/reviews?status=pending', warn: true },
-    { label: 'Categories', value: categories, sub: `${topCategories} top-level`, color: C.blue, href: isEditor ? '/admin/categories' : undefined },
-    { label: 'Cities', value: cities, sub: `${areas} areas`, color: C.teal, href: isEditor ? '/admin/locations' : undefined },
-    { label: 'Blog posts', value: posts, sub: `${published} published`, color: C.logo, href: isEditor ? '/admin/blog' : undefined },
+    {
+      label: 'Pending listings',
+      value: pending,
+      sub: 'Needs review',
+      color: C.gold,
+      href: '/admin/listings?status=pending',
+      warn: true,
+    },
+    {
+      label: 'Approved',
+      value: approved,
+      sub: `+${approvedWeek} this week`,
+      color: C.green,
+      href: '/admin/listings?status=approved',
+    },
+    {
+      label: 'Rejected',
+      value: rejected,
+      sub: 'All time',
+      color: C.red,
+      href: '/admin/listings?status=rejected',
+    },
+    {
+      label: 'Total listings',
+      value: total,
+      sub: 'All statuses',
+      color: C.navy,
+      href: '/admin/listings',
+    },
+    {
+      label: 'Pending reviews',
+      value: reviews,
+      sub: 'Needs review',
+      color: C.gold,
+      href: '/admin/reviews?status=pending',
+      warn: true,
+    },
+    {
+      label: 'Categories',
+      value: categories,
+      sub: `${topCategories} top-level`,
+      color: C.blue,
+      href: isEditor ? '/admin/categories' : undefined,
+    },
+    {
+      label: 'Cities',
+      value: cities,
+      sub: `${areas} areas`,
+      color: C.teal,
+      href: isEditor ? '/admin/locations' : undefined,
+    },
+    {
+      label: 'Blog posts',
+      value: posts,
+      sub: `${published} published`,
+      color: C.logo,
+      href: isEditor ? '/admin/blog' : undefined,
+    },
   ];
 
   // New submissions per day for the last 14 days, today last.

@@ -31,12 +31,36 @@ function LinkFields({ item, menuId }: { item?: Item; menuId?: string }) {
       {item ? <input type="hidden" name="id" value={item.id} /> : null}
       {menuId ? <input type="hidden" name="menu_id" value={menuId} /> : null}
       <FormField label="Label" htmlFor={`ml-${k}`} required>
-        <input id={`ml-${k}`} name="label" required maxLength={80} defaultValue={item?.label} placeholder="e.g. Deals" className={inputCls} />
+        <input
+          id={`ml-${k}`}
+          name="label"
+          required
+          maxLength={80}
+          defaultValue={item?.label}
+          placeholder="e.g. Deals"
+          className={inputCls}
+        />
       </FormField>
-      <FormField label="Link" htmlFor={`mu-${k}`} required help="A path on this site, such as /business-directory, or a full https:// address.">
-        <input id={`mu-${k}`} name="url" required defaultValue={item?.url} placeholder="/deals" className={inputCls} />
+      <FormField
+        label="Link"
+        htmlFor={`mu-${k}`}
+        required
+        help="A path on this site, such as /business-directory, or a full https:// address."
+      >
+        <input
+          id={`mu-${k}`}
+          name="url"
+          required
+          defaultValue={item?.url}
+          placeholder="/deals"
+          className={inputCls}
+        />
       </FormField>
-      <SwitchField name="is_visible" label="Visible" defaultChecked={item ? item.is_visible : true} />
+      <SwitchField
+        name="is_visible"
+        label="Visible"
+        defaultChecked={item ? item.is_visible : true}
+      />
     </>
   );
 }
@@ -90,7 +114,12 @@ export default async function AdminMenus() {
                 <form action={moveMenuItem}>
                   <input type="hidden" name="id" value={item.id} />
                   <input type="hidden" name="direction" value="up" />
-                  <button type="submit" className={moveBtn} disabled={pos <= 0} aria-label={`Move ${item.label} up`}>
+                  <button
+                    type="submit"
+                    className={moveBtn}
+                    disabled={pos <= 0}
+                    aria-label={`Move ${item.label} up`}
+                  >
                     ↑
                   </button>
                 </form>
@@ -112,7 +141,13 @@ export default async function AdminMenus() {
                     {item.is_visible ? 'Hide' : 'Show'}
                   </button>
                 </form>
-                <ModalForm trigger="Edit" triggerClassName={rowAct.base} title={`Edit “${item.label}”`} action={saveMenuItem} ok="Save">
+                <ModalForm
+                  trigger="Edit"
+                  triggerClassName={rowAct.base}
+                  title={`Edit “${item.label}”`}
+                  action={saveMenuItem}
+                  ok="Save"
+                >
                   <LinkFields item={item} />
                 </ModalForm>
                 <form action={deleteMenuItem}>
@@ -131,7 +166,9 @@ export default async function AdminMenus() {
             );
           })}
           {list.length === 0 ? (
-            <p className="m-0 px-4 py-8 text-center text-sm text-[#64748B]">No links in this menu yet.</p>
+            <p className="m-0 px-4 py-8 text-center text-sm text-[#64748B]">
+              No links in this menu yet.
+            </p>
           ) : null}
         </>
       ),

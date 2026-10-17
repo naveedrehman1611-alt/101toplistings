@@ -46,7 +46,11 @@ function CategoryFields({ rows, editing }: { rows: Row[]; editing?: Row }) {
           className={inputCls}
         />
       </FormField>
-      <FormField label="Slug" htmlFor={`cs-${k}`} help="Used in the URL. Leave blank to make one from the name.">
+      <FormField
+        label="Slug"
+        htmlFor={`cs-${k}`}
+        help="Used in the URL. Leave blank to make one from the name."
+      >
         <input id={`cs-${k}`} name="slug" defaultValue={editing?.slug} className={inputCls} />
       </FormField>
       <div className="grid grid-cols-2 gap-3">

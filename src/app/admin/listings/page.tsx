@@ -249,7 +249,12 @@ export default async function AdminListings({
             label: 'Reject',
             op: 'listing_status',
             arg: 'rejected',
-            confirm: { title: 'Reject {n} listings?', body: 'They stay off the public site.', ok: 'Reject', danger: true },
+            confirm: {
+              title: 'Reject {n} listings?',
+              body: 'They stay off the public site.',
+              ok: 'Reject',
+              danger: true,
+            },
           },
           { label: 'Suspend', op: 'listing_status', arg: 'suspended' },
           ...(canDelete

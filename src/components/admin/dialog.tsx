@@ -283,7 +283,12 @@ export function InfoDialog({
           width={width}
           onCancel={() => setOpen(false)}
           footer={
-            <button type="button" autoFocus className={btn.secondary} onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              autoFocus
+              className={btn.secondary}
+              onClick={() => setOpen(false)}
+            >
               Close
             </button>
           }

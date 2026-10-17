@@ -19,18 +19,24 @@ export default async function EditListing({ params }: { params: Promise<{ id: st
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const supabase = await createClient();
-  const [{ data: listing }, { data: hours }, options, { data: amenities }, { data: chosen }, ogOptions] =
-    await Promise.all([
-      supabase.from('listings').select(`${LISTING_EDIT_COLUMNS}, area_id`).eq('id', id).maybeSingle(),
-      supabase
-        .from('opening_hours')
-        .select('day_of_week, opens_at, closes_at, is_closed, is_24h')
-        .eq('listing_id', id),
-      getListingFormOptions(),
-      supabase.from('amenities').select('id, name').order('sort_order').order('name'),
-      supabase.from('listing_amenities').select('amenity_id').eq('listing_id', id),
-      getOgOptions(),
-    ]);
+  const [
+    { data: listing },
+    { data: hours },
+    options,
+    { data: amenities },
+    { data: chosen },
+    ogOptions,
+  ] = await Promise.all([
+    supabase.from('listings').select(`${LISTING_EDIT_COLUMNS}, area_id`).eq('id', id).maybeSingle(),
+    supabase
+      .from('opening_hours')
+      .select('day_of_week, opens_at, closes_at, is_closed, is_24h')
+      .eq('listing_id', id),
+    getListingFormOptions(),
+    supabase.from('amenities').select('id, name').order('sort_order').order('name'),
+    supabase.from('listing_amenities').select('amenity_id').eq('listing_id', id),
+    getOgOptions(),
+  ]);
   if (!listing) notFound();
   const l = listing as unknown as EditableListing & {
     area_id: string | null;
