@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { Role } from '@/lib/role-order';
 import { roleAtLeast } from '@/lib/role-order';
 import { adminSearch, type SearchHit } from '@/lib/admin-search-actions';
+import { toast } from './toaster';
 import { ADMIN_NAV, ROLE_LABEL, activeItem } from './nav';
 
 export type NavCounts = Partial<Record<'listings' | 'reviews' | 'claims' | 'inbox', number>>;
@@ -19,20 +20,42 @@ export type NavCounts = Partial<Record<'listings' | 'reviews' | 'claims' | 'inbo
 export function AdminShell({
   brand,
   role,
+  actualRole,
   userName,
   counts,
   signOut,
+  setPreviewRole,
   children,
 }: {
   brand: string;
+  /** The role in effect: the user's own, or a lower one being previewed. */
   role: Role;
+  actualRole: Role;
+  setPreviewRole: (role: string) => Promise<void>;
   userName: string;
   counts: NavCounts;
   signOut: () => Promise<void>;
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [pal, setPal] = useState(false);
+  // "Preview as" offers the user's own role and every staff role below it.
+  const previewable = (['moderator', 'editor', 'admin', 'super_admin'] as Role[]).filter((r) =>
+    roleAtLeast(actualRole, r),
+  );
+  const changeRole = async (r: Role) => {
+    await setPreviewRole(r);
+    toast(
+      r === actualRole
+        ? `Back to your own role (${ROLE_LABEL[r]})`
+        : `Previewing as ${ROLE_LABEL[r]}`,
+    );
+    // A screen the new role cannot open falls back to the dashboard.
+    const item = activeItem(pathname)?.item;
+    if (item && !roleAtLeast(r, item.min)) router.push('/admin');
+    else router.refresh();
+  };
   const here = activeItem(pathname);
 
   useEffect(() => {
@@ -115,7 +138,10 @@ export function AdminShell({
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13px] font-semibold">{userName}</div>
-              <div className="text-[11.5px] text-[#8FA3BF]">{ROLE_LABEL[role]}</div>
+              <div className="text-[11.5px] text-[#8FA3BF]">
+                {ROLE_LABEL[role]}
+                {role !== actualRole ? ' (preview)' : ''}
+              </div>
             </div>
             <form action={signOut}>
               <button
@@ -160,13 +186,32 @@ export function AdminShell({
                 ⌘K
               </span>
             </button>
+            {previewable.length > 1 ? (
+              <label className="flex items-center gap-2 text-xs whitespace-nowrap text-[#64748B]">
+                Preview as
+                <select
+                  value={role}
+                  onChange={(e) => changeRole(e.target.value as Role)}
+                  className="h-[34px] rounded-lg border border-[#E2E8F0] bg-white px-2 text-[13px] font-semibold text-[#062347]"
+                  style={role !== actualRole ? { borderColor: '#F59E0B' } : undefined}
+                >
+                  {previewable.map((r) => (
+                    <option key={r} value={r}>
+                      {ROLE_LABEL[r]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <a
               href="/"
               target="_blank"
               rel="noopener noreferrer"
+              title="View site"
+              aria-label="View site"
               className="text-[13px] font-semibold whitespace-nowrap text-[#1884E7] hover:text-[#062347] hover:no-underline"
             >
-              View site ↗
+              ↗
             </a>
           </header>
 

@@ -23,7 +23,12 @@ function timeWindow() {
   const now = Date.now();
   const since14 = new Date(now - 13 * DAY);
   since14.setHours(0, 0, 0, 0);
-  return { now, since14, since7: new Date(now - 7 * DAY).toISOString() };
+  return {
+    now,
+    since14,
+    since7: new Date(now - 7 * DAY).toISOString(),
+    since30: new Date(now - 30 * DAY).toISOString(),
+  };
 }
 
 export default async function AdminDashboard() {
@@ -35,7 +40,7 @@ export default async function AdminDashboard() {
   const head = (table: string) => supabase.from(table).select('*', { count: 'exact', head: true });
   const n = async (q: PromiseLike<{ count: number | null }>) => (await q).count ?? 0;
 
-  const { now, since14, since7 } = timeWindow();
+  const { now, since14, since7, since30 } = timeWindow();
 
   const [
     pending,
@@ -44,6 +49,7 @@ export default async function AdminDashboard() {
     suspended,
     total,
     approvedWeek,
+    rejected30,
     categories,
     topCategories,
     cities,
@@ -62,6 +68,7 @@ export default async function AdminDashboard() {
     n(head('listings').eq('status', 'suspended')),
     n(head('listings')),
     n(head('listings').eq('status', 'approved').gte('published_at', since7)),
+    n(head('listings').eq('status', 'rejected').gte('updated_at', since30)),
     n(head('categories')),
     n(head('categories').is('parent_id', null)),
     n(head('cities')),
@@ -101,8 +108,8 @@ export default async function AdminDashboard() {
     },
     {
       label: 'Rejected',
-      value: rejected,
-      sub: 'All time',
+      value: rejected30,
+      sub: 'Last 30 days',
       color: C.red,
       href: '/admin/listings?status=rejected',
     },

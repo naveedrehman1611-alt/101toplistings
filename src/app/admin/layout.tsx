@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { requireRole } from '@/lib/auth';
 import { signOut } from '@/lib/admin-actions';
+import { setPreviewRole } from '@/lib/preview-role-actions';
 import { createClient } from '@/lib/supabase-server';
 import { getSettings, settingText } from '@/lib/queries';
 import { AdminShell, type NavCounts } from '@/components/admin/shell';
@@ -45,6 +46,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <AdminShell
       brand={settingText(settings, 'brand.name', 'RankYouSite')}
       role={user.role}
+      actualRole={user.actualRole}
+      setPreviewRole={setPreviewRole}
       userName={user.displayName ?? user.email ?? 'Signed in'}
       counts={counts}
       signOut={signOut}
