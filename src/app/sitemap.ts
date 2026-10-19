@@ -14,7 +14,7 @@ import {
   MIN_CITY_LISTINGS_TO_INDEX,
   getSitemapExclusions,
 } from '@/lib/seo';
-import { SERVICE_PAGES } from '@/lib/service-pages';
+import { SERVICE_PAGES, WEB_DEVELOPMENT_BASE } from '@/lib/service-pages';
 import { BLOG_CLUSTERS, getClusterPostCounts } from '@/lib/blog-clusters';
 
 export const revalidate = 3600;
@@ -85,7 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority:
         p === ''
           ? 1
-          : p === '/business-directory' || p === '/seo-services'
+          : p === '/business-directory' || p === '/seo-services' || p === WEB_DEVELOPMENT_BASE
             ? 0.9
             : p === '/privacy' || p === '/terms'
               ? 0.3

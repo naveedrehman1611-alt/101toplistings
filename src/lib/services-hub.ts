@@ -26,6 +26,7 @@ export const HUB_CATEGORIES: HubCategory[] = [
   { id: 'platform', title: 'Platform-Specific SEO Services', icon: 'language' },
   { id: 'ecommerce', title: 'Ecommerce SEO Services', icon: 'shopping_bag' },
   { id: 'specialty', title: 'Specialty & Niche SEO Services', icon: 'verified' },
+  { id: 'web', title: 'Web Development Services', icon: 'data_object' },
   { id: 'industry', title: 'Industry-Specific SEO Services', icon: 'business_center' },
 ];
 

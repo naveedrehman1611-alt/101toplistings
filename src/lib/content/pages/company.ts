@@ -511,6 +511,7 @@ export const CONTACT_PAGE = definePage({
             { subject: 'Report a problem' },
             { subject: 'SEO services' },
             { subject: 'Digital marketing' },
+            { subject: 'Web development' },
             { subject: 'Guest posting' },
             { subject: 'Link building' },
             { subject: 'Other' },

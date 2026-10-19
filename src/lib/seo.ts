@@ -24,6 +24,19 @@ export const SEO_ROUTES = [
   { route: '/seo-services/link-building', label: 'Link building' },
   { route: '/seo-services/content-marketing', label: 'Content marketing' },
   { route: '/digital-marketing', label: 'Digital marketing' },
+  { route: '/web-development-services', label: 'Web development' },
+  {
+    route: '/web-development-services/wordpress-development',
+    label: 'Web development: WordPress',
+  },
+  {
+    route: '/web-development-services/nextjs-react-development',
+    label: 'Web development: Next.js & React',
+  },
+  {
+    route: '/web-development-services/ecommerce-website-development',
+    label: 'Web development: Ecommerce',
+  },
   { route: '/seo-audit', label: 'SEO audit' },
   { route: '/pricing', label: 'Pricing' },
   { route: '/blog', label: 'Blog' },

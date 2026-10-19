@@ -6,19 +6,29 @@ import { PageHero } from '@/components/page-hero';
 import { HubSectionHeader } from '@/components/services-hub/hub-section-header';
 import { HubCtaBand, HUB_BUTTON } from '@/components/services-hub/hub-cta-band';
 import { ServiceCard } from '@/components/services-hub/service-card';
+import { WhatsAppCta } from '@/components/services-hub/whatsapp-cta';
 import { getPageContent } from '@/lib/content/get';
 import { serviceKey } from '@/lib/content/pages/services';
-import { DEFAULT_AREA_SERVED, quoteHref, servicePage, type ServicePage } from '@/lib/service-pages';
+import {
+  DEFAULT_AREA_SERVED,
+  WEB_DEVELOPMENT_BASE,
+  quoteHref,
+  servicePage,
+  type ServicePage,
+} from '@/lib/service-pages';
 import { hubTitle } from '@/lib/services-hub';
 import { SITE_URL } from '@/lib/supabase';
+import { whatsappHref } from '@/lib/whatsapp';
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /**
- * Shared layout for the SEO service pages and /digital-marketing, in the style of
- * the /seo-services hub: navy hero, white "What's included" cards, a numbered
- * process, a native <details> FAQ (no client JS), related hub cards and the green
- * CTA band. `extra` renders after "What's included", inside the page container.
+ * Shared layout for the SEO service pages, /digital-marketing and the web
+ * development pages, in the style of the /seo-services hub: navy hero, white
+ * "What's included" cards, a numbered process, a native <details> FAQ (no client
+ * JS), related hub cards and the green CTA band. `extra` renders after "What's
+ * included", inside the page container. Web development pages swap the SEO
+ * audit buttons for a WhatsApp chat, since their visitors want a quote.
  *
  * The copy comes from Admin → Content: this page's own section under "Service
  * pages" (keyed by slug) and the shared labels under "Service pages: shared
@@ -61,13 +71,16 @@ export async function ServicePageView({
     (pages[serviceKey(s.slug)] as (typeof pages)[string] | undefined)?.tag ?? s.tag;
 
   const isMarketing = page.slug === 'digital-marketing';
+  const isWeb = page.category === 'web';
+  const isWebLanding = isWeb && page.path === WEB_DEVELOPMENT_BASE;
+  const home = { label: t.hero.crumb_home, href: '/' };
   const trail = isMarketing
-    ? [{ label: t.hero.crumb_home, href: '/' }, { label: t.hero.crumb_marketing }]
-    : [
-        { label: t.hero.crumb_home, href: '/' },
-        { label: t.hero.crumb_hub, href: '/seo-services' },
-        { label: page.name },
-      ];
+    ? [home, { label: t.hero.crumb_marketing }]
+    : isWebLanding
+      ? [home, { label: t.hero.crumb_web }]
+      : isWeb
+        ? [home, { label: t.hero.crumb_web, href: WEB_DEVELOPMENT_BASE }, { label: page.name }]
+        : [home, { label: t.hero.crumb_hub, href: '/seo-services' }, { label: page.name }];
   const service = {
     '@context': 'https://schema.org',
     '@type': 'Service',
@@ -81,9 +94,13 @@ export async function ServicePageView({
   const related = page.related.flatMap((slug) =>
     extraSlugs.includes(slug) ? [] : (servicePage(slug) ?? []),
   );
-  // /digital-marketing sits outside the hub sections, so it keeps its own tag.
-  const eyebrow = isMarketing ? tag : hubTitle(hub, page.hub) || tag;
+  // /digital-marketing and the web development landing page head their own
+  // groups rather than sit in a hub section, so they keep their own tag.
+  const eyebrow = isMarketing || isWebLanding ? tag : hubTitle(hub, page.hub) || tag;
   const isAudit = cta.href === '/seo-audit';
+  const whatsapp = isWeb
+    ? whatsappHref(t.hero.whatsapp_message.replaceAll('{service}', page.name).trim() || undefined)
+    : '';
   // A list emptied in the admin drops its figure and its block.
   const stats = [
     { value: includes.length, label: t.hero.stat_includes },
@@ -108,8 +125,13 @@ export async function ServicePageView({
             <Icon name={isAudit ? t.hero.audit_icon : t.hero.quote_icon} size={18} />
             {cta.label}
           </Link>
-          {/* The second button offers whichever of audit and quote the first one doesn't. */}
-          {isAudit ? (
+          {/* On web pages the second button is a WhatsApp chat. Elsewhere it offers
+              whichever of audit and quote the first one doesn't. */}
+          {isWeb ? (
+            t.hero.whatsapp_button ? (
+              <WhatsAppCta href={whatsapp} label={t.hero.whatsapp_button} />
+            ) : null
+          ) : isAudit ? (
             <Link
               href={quoteHref(page.slug)}
               className={`${HUB_BUTTON} border border-white/40 text-white hover:bg-white/10`}
@@ -293,7 +315,22 @@ export async function ServicePageView({
         </div>
       ) : null}
 
-      {t.cta.visible ? (
+      {isWeb ? (
+        t.web_cta.visible ? (
+          <HubCtaBand
+            heading={t.web_cta.heading}
+            body={t.web_cta.body}
+            primary={{ label: t.web_cta.quote_label, href: quoteHref(page.slug) }}
+            primaryIcon={t.web_cta.quote_icon}
+            quoteLabel=""
+            quoteHref={quoteHref(page.slug)}
+          >
+            {t.hero.whatsapp_button ? (
+              <WhatsAppCta href={whatsapp} label={t.hero.whatsapp_button} />
+            ) : null}
+          </HubCtaBand>
+        ) : null
+      ) : t.cta.visible ? (
         <HubCtaBand
           heading={t.cta.heading}
           body={t.cta.body}

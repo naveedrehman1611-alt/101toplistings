@@ -94,6 +94,8 @@ const SEO_SERVICES_PAGE = definePage({
         ecommerce_icon: groupIcon('ecommerce', 'Ecommerce group'),
         specialty_title: groupTitle('specialty', 'Specialty group'),
         specialty_icon: groupIcon('specialty', 'Specialty group'),
+        web_title: groupTitle('web', 'Web development group'),
+        web_icon: groupIcon('web', 'Web development group'),
         count_one: text('Count label, one', 'Service', {
           max: 30,
           hint: 'The pill beside each heading, as in “1 Service”.',
@@ -256,7 +258,8 @@ const SEO_AUDIT_PAGE = definePage({
 });
 
 // ---------------------------------------------------------------------------
-// Service pages (/seo-services/<slug> and /digital-marketing)
+// Service pages (/seo-services/<slug>, /digital-marketing and
+// /web-development-services[/<slug>])
 // ---------------------------------------------------------------------------
 
 /** Steps for a service page that sets none of its own. */
@@ -298,7 +301,9 @@ function serviceSection(p: ServicePage) {
       cta: link(
         'Main button',
         { label: p.ctaLabel, href: p.ctaHref },
-        'When it links to /seo-audit, the second button offers a quote; otherwise it offers the free audit.',
+        p.category === 'web'
+          ? 'The second button opens a WhatsApp chat.'
+          : 'When it links to /seo-audit, the second button offers a quote; otherwise it offers the free audit.',
       ),
       includes: list('What’s included cards', {
         noun: 'card',
@@ -362,6 +367,7 @@ const SERVICE_TEMPLATE_PAGE = definePage({
         crumb_marketing: text('Breadcrumb: digital marketing page', 'Digital marketing', {
           max: 60,
         }),
+        crumb_web: text('Breadcrumb: web development page', 'Web development', { max: 60 }),
         stat_includes: text('Figure 1 label (number of included items)', 'Deliverables', {
           max: 40,
         }),
@@ -386,6 +392,14 @@ const SERVICE_TEMPLATE_PAGE = definePage({
           'mail',
           'On whichever button asks for a quote or contact.',
         ),
+        whatsapp_button: text('WhatsApp button', 'Chat on WhatsApp', {
+          max: 40,
+          hint: 'Shown on the web development pages, in the hero and the call to action band. Opens a WhatsApp chat with the service named.',
+        }),
+        whatsapp_message: text('WhatsApp message', "Hi, I'm interested in {service}.", {
+          max: 200,
+          hint: '{service} becomes the page’s service name.',
+        }),
       },
     }),
     included: defineSection({
@@ -422,7 +436,7 @@ const SERVICE_TEMPLATE_PAGE = definePage({
     related: defineSection({
       label: 'Related services',
       description:
-        'Cards for sibling services. Also used for the service cards on /digital-marketing.',
+        'Cards for sibling services. Also used for the service cards on /digital-marketing and /web-development-services.',
       fields: {
         heading: text('Heading', 'Related services', { max: 80 }),
         icon: icon('Heading icon', 'hub'),
@@ -461,6 +475,24 @@ const SERVICE_TEMPLATE_PAGE = definePage({
         secondary_icon: icon('Second button icon', 'mail'),
       },
     }),
+    web_cta: defineSection({
+      label: 'Call to action band: web development',
+      description:
+        'The green band above the footer on the web development pages, in place of the one above. Its second button is the WhatsApp button from Hero.',
+      fields: {
+        heading: text('Heading', 'Ready to build a website that ranks?', { max: 120 }),
+        body: text(
+          'Text',
+          'Tell us what you need and get a clear quote, or message us on WhatsApp.',
+          { max: 200 },
+        ),
+        quote_label: text('Main button', 'Request a Quote', {
+          max: 40,
+          hint: 'Opens the contact form with the service named.',
+        }),
+        quote_icon: icon('Main button icon', 'mail'),
+      },
+    }),
   },
 });
 
@@ -490,10 +522,66 @@ const DIGITAL_MARKETING_PAGE = definePage({
   },
 });
 
+// ---------------------------------------------------------------------------
+// /web-development-services (the rest of the page is its service page above)
+// ---------------------------------------------------------------------------
+
+const WEB_DEVELOPMENT_PAGE = definePage({
+  label: 'Web development',
+  path: '/web-development-services',
+  sections: {
+    sub_services: defineSection({
+      label: 'Our web development services',
+      description:
+        'The block after “What’s included” listing the web development pages. The rest of this page is under “Service pages” → Web development.',
+      fields: {
+        heading: text('Heading', 'Our web development services', { max: 80 }),
+        icon: icon('Heading icon', 'data_object'),
+        count: text('Count label', 'Services', { max: 30, hint: 'As in “3 Services”.' }),
+        intro: textarea(
+          'Intro text',
+          'Each type of website has its own page, so you can start with the one that fits your project.',
+          { max: 400 },
+        ),
+      },
+    }),
+    technologies: defineSection({
+      label: 'Technologies',
+      description: 'The block after the services, listing what we build with.',
+      fields: {
+        heading: text('Heading', 'Technologies we build with', { max: 80 }),
+        icon: icon('Heading icon', 'build'),
+        count: text('Count label', 'Technologies', { max: 30, hint: 'As in “8 Technologies”.' }),
+        intro: textarea(
+          'Intro text',
+          'We pick the stack that suits your site, your team and your budget, not the other way round.',
+          { max: 400 },
+        ),
+        items: list('Technologies', {
+          noun: 'technology',
+          max: 24,
+          item: { name: text('Name', '', { max: 40 }) },
+          default: [
+            { name: 'React' },
+            { name: 'Next.js' },
+            { name: 'WordPress' },
+            { name: 'WooCommerce' },
+            { name: 'Shopify' },
+            { name: 'Tailwind CSS' },
+            { name: 'Supabase' },
+            { name: 'Headless CMS' },
+          ],
+        }),
+      },
+    }),
+  },
+});
+
 export const SERVICES_PAGES = {
   seo_services: SEO_SERVICES_PAGE,
   seo_audit: SEO_AUDIT_PAGE,
   service: SERVICE_PAGE,
   service_template: SERVICE_TEMPLATE_PAGE,
   digital_marketing: DIGITAL_MARKETING_PAGE,
+  web_development: WEB_DEVELOPMENT_PAGE,
 } satisfies Record<string, PageSpec>;

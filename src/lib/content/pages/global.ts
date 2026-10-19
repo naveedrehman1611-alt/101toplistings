@@ -67,7 +67,7 @@ const header = defineSection({
 const services_menu = defineSection({
   label: 'Services menu',
   description:
-    'The "SEO Services" drop-down in the header (and its section in the phone menu). The services listed in it come from the service pages.',
+    'The "SEO Services" drop-down in the header (and its section in the phone menu): SEO, marketing and web development services. The services listed in it come from the service pages.',
   hideable: false,
   fields: {
     label: text('Menu label', 'SEO Services', {
@@ -78,6 +78,7 @@ const services_menu = defineSection({
     seo_heading: text('First column heading', 'SEO', { max: 40 }),
     links_heading: text('Second column heading', 'Links & Authority', { max: 40 }),
     marketing_heading: text('Third column heading', 'Content & Marketing', { max: 40 }),
+    web_heading: text('Fourth column heading', 'Web Development', { max: 40 }),
     note: text('Note at the bottom', 'Not sure where to start?', { max: 80 }),
     note_link: link('Link after the note', { label: 'Get an SEO audit', href: '/seo-audit' }),
     view_all: link('"View all" link', { label: 'View all SEO services', href: '/seo-services' }),
@@ -117,6 +118,7 @@ const footer_quick_links = defineSection({
       default: [
         { link: { label: 'Home', href: '/' } },
         { link: { label: 'All SEO Services', href: '/seo-services' } },
+        { link: { label: 'Web Development', href: '/web-development-services' } },
         { link: { label: 'Business Directory', href: '/business-directory' } },
         { link: { label: 'SEO Blog', href: '/blog' } },
         { link: { label: 'About Us', href: '/about' } },

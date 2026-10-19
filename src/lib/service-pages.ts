@@ -3,18 +3,28 @@ import { CORE_PAGES, TECHNICAL_PAGES } from '@/lib/services/core';
 import { LINKS_AI_PAGES } from '@/lib/services/links-ai';
 import { PLATFORM_ECOMMERCE_PAGES } from '@/lib/services/platform-ecommerce';
 import { INDUSTRY_PAGES } from '@/lib/services/industries';
+import { WEB_DEVELOPMENT_PAGES } from '@/lib/services/web-development';
 
 /**
- * The SEO and digital marketing service pages: one list that drives each page
- * (/seo-services/<slug> and /digital-marketing), the /seo-services hub cards, the
- * header's Services menu, the OfferCatalog JSON-LD and the sitemap.
+ * The SEO, digital marketing and web development service pages: one list that
+ * drives each page (/seo-services/<slug>, /digital-marketing and
+ * /web-development-services[/<slug>]), the /seo-services hub cards, the header's
+ * Services menu, the OfferCatalog JSON-LD and the sitemap.
  */
 
-export type ServiceCategoryId = 'seo' | 'links' | 'marketing';
+export type ServiceCategoryId = 'seo' | 'links' | 'marketing' | 'web';
 
 /** Section on the /seo-services hub. */
 export type HubCategoryId =
-  'core' | 'technical' | 'links' | 'ai' | 'platform' | 'ecommerce' | 'specialty' | 'industry';
+  | 'core'
+  | 'technical'
+  | 'links'
+  | 'ai'
+  | 'platform'
+  | 'ecommerce'
+  | 'specialty'
+  | 'web'
+  | 'industry';
 
 export type ServicePage = {
   slug: string;
@@ -594,6 +604,7 @@ export const SERVICE_PAGES: ServicePage[] = [
   ...TECHNICAL_PAGES,
   ...LINKS_AI_PAGES,
   ...PLATFORM_ECOMMERCE_PAGES,
+  ...WEB_DEVELOPMENT_PAGES,
   ...INDUSTRY_PAGES,
 ];
 
@@ -605,20 +616,27 @@ export function servicePage(slug: string): ServicePage | undefined {
 export type ServiceNavItem = Pick<ServicePage, 'slug' | 'path' | 'name' | 'icon' | 'category'>;
 
 export function serviceNavItems(): ServiceNavItem[] {
-  return MENU_SERVICE_PAGES.map(({ slug, path, name, icon, category }) => ({
-    slug,
-    path,
-    name,
-    icon,
-    category,
-  }));
+  return [...MENU_SERVICE_PAGES, ...WEB_DEVELOPMENT_PAGES].map(
+    ({ slug, path, name, icon, category }) => ({
+      slug,
+      path,
+      name,
+      icon,
+      category,
+    }),
+  );
 }
 
+/** The web development pages: the landing page and the pages under it. */
+export const WEB_DEVELOPMENT_BASE = '/web-development-services';
+
 /**
- * The contact form with the SEO services subject and this service named in the
- * message. The service goes by its slug, so the URL stays lowercase; the
- * contact page turns it back into the service's name.
+ * The contact form with the service's subject (web development or SEO
+ * services) and this service named in the message. The service goes by its
+ * slug, so the URL stays lowercase; the contact page turns it back into the
+ * service's name.
  */
 export function quoteHref(slug: string): string {
-  return `/contact?subject=seo%20services&service=${encodeURIComponent(slug)}`;
+  const subject = servicePage(slug)?.category === 'web' ? 'web%20development' : 'seo%20services';
+  return `/contact?subject=${subject}&service=${encodeURIComponent(slug)}`;
 }
