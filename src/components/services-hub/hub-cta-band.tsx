@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { Icon, type IconName } from '@/components/icon';
 
 /** Button base shared with the hub hero's CTAs; add the fill and text colours. */
@@ -9,7 +10,8 @@ export const HUB_BUTTON =
  * Full-width green band above the footer. Both lines are plain white: white on
  * #0c8226 is 5.0:1, and any translucent white drops under AA for 14px text.
  * Every piece of copy can be passed in (from Admin → Content); the defaults are
- * the band's original copy, for callers that pass only the quote link.
+ * the band's original copy, for callers that pass only the quote link. An
+ * empty label drops its button; `children` are further buttons after them.
  */
 export function HubCtaBand({
   quoteHref,
@@ -19,6 +21,7 @@ export function HubCtaBand({
   quoteLabel = 'Request a Quote',
   primaryIcon = 'fact_check',
   quoteIcon = 'mail',
+  children,
 }: {
   quoteHref: string;
   heading?: string;
@@ -27,6 +30,7 @@ export function HubCtaBand({
   quoteLabel?: string;
   primaryIcon?: IconName;
   quoteIcon?: IconName;
+  children?: ReactNode;
 }) {
   return (
     <section aria-labelledby="hub-cta-heading" className="bg-primary-container py-7">
@@ -59,6 +63,7 @@ export function HubCtaBand({
               {quoteLabel}
             </Link>
           ) : null}
+          {children}
         </div>
       </div>
     </section>

@@ -61,7 +61,9 @@ export default async function ServicesPage() {
   const categories = groups.filter((c) => c.id !== 'industry');
   const industries = groups.find((c) => c.id === 'industry');
   const industryCount = industries?.services.length ?? 0;
-  const serviceCount = SERVICE_PAGES.length - industryCount;
+  // The "SEO Services" figure leaves out the web development pages shown on the hub too.
+  const webCount = groups.find((c) => c.id === 'web')?.services.length ?? 0;
+  const serviceCount = SERVICE_PAGES.length - industryCount - webCount;
 
   const trail = [{ label: 'Home', href: '/' }, { label: 'SEO services' }];
   // Built from SERVICE_PAGES so the structured data always matches the cards.

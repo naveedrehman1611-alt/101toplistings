@@ -37,6 +37,7 @@ const hero = defineSection({
       default: [
         { link: { label: 'Browse Businesses', href: '/business-directory' } },
         { link: { label: 'Explore SEO Services', href: '/seo-services' } },
+        { link: { label: 'Web Development', href: '/web-development-services' } },
       ],
     }),
     photo: image(
