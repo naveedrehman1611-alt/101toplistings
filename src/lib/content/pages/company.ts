@@ -1,6 +1,7 @@
 import {
   definePage,
   defineSection,
+  image,
   icon,
   link,
   list,
@@ -54,11 +55,11 @@ export const ABOUT_PAGE = definePage({
         'Eyebrow, headline, intro, checklist, buttons and the four cards on the right. Until you save this section, a heading saved for this page in Admin → Pages & sections is shown instead; after that, this one wins.',
       hideable: false,
       fields: {
-        eyebrow: text('Eyebrow', 'SEO for the UK, USA & Europe', { max: 80 }),
-        ...headingFields('About', '{brand}', '', 'Headline'),
+        eyebrow: text('Eyebrow', 'Free Listings + SEO for Businesses Worldwide', { max: 80 }),
+        ...headingFields('About', '{brand}', '– Free Business Directory & SEO Agency', 'Headline'),
         intro: textarea(
           'Intro text',
-          '{brand} is an SEO and business directory team helping companies across the UK, the United States and Europe win more customers from search. We combine technical SEO, content and ethical link building with a directory that puts real businesses in front of real buyers, and we report every result in plain English.',
+          '{brand} is a free business directory and SEO agency for businesses in Pakistan, the UK, the USA, the UAE and Europe. Any business can add a free business listing and get found by local customers. When you need more visibility, our team grows your traffic with technical SEO, local SEO, content and ethical link building, and we report every result in plain English.',
           { max: 800 },
         ),
         points: list('Checklist', {
@@ -66,7 +67,7 @@ export const ABOUT_PAGE = definePage({
           max: 8,
           item: { text: text('Point', '', { max: 160 }) },
           default: [
-            { text: 'Campaigns for businesses across the UK, USA and Europe' },
+            { text: 'Free business listings in 80+ cities, reviewed before they go live' },
             { text: 'Every strategy built around your market, language and local search results' },
             { text: 'Monthly reporting in plain English, scheduled around your time zone' },
             { text: 'White-hat methods only: nothing that puts your domain at risk' },
@@ -111,21 +112,25 @@ export const ABOUT_PAGE = definePage({
         'Positioning statement, buttons, the green headline card, live stats and badges.',
       fields: {
         eyebrow: text('Eyebrow', 'About {brand}', { max: 80 }),
-        ...headingFields('A Specialist', 'SEO Partner', 'for International Businesses'),
+        ...headingFields(
+          'A Free Business Directory',
+          'and SEO Partner',
+          'for Businesses Worldwide',
+        ),
         heading_line2: text('Heading, second line', 'Built on Real Results.', { max: 120 }),
         body: textarea(
           'Text',
-          'We are not a generalist marketing agency that offers SEO as an add-on. Search is what we do: getting businesses found on Google, in local map results, in trusted directories and increasingly in AI-generated answers.\n\nWhether you are a London law firm, a Texas home-services company or a Berlin e-commerce brand, the process is the same: understand the market, fix what holds the site back, publish content buyers want, and earn authority the honest way.',
+          'We are not a generalist marketing agency that offers SEO as an add-on. Search is what we do: getting businesses found on Google, in local map results, in trusted directories and increasingly in AI-generated answers. Unlike many free local business listing sites and SEO listing sites, every profile on {brand} is checked by a person before it goes live.\n\nWhether you are a London law firm, a Texas home-services company or a Berlin e-commerce brand, the process is the same: understand the market, fix what holds the site back, publish content buyers want, and earn authority the honest way.',
           { max: 1500, hint: PARAGRAPHS_HINT },
         ),
         primary_icon: icon('Main button icon', 'fact_check'),
         primary: link('Main button', { label: 'Get a Free SEO Audit', href: '/seo-audit' }),
         secondary: link('Second button', { label: 'Request a Proposal', href: QUOTE_HREF }),
         secondary_icon: icon('Second button icon', 'mail'),
-        card_title: text('Green card, big text', 'UK · US · EU', { max: 40 }),
+        card_title: text('Green card, big text', 'PK · UK · US · UAE · EU', { max: 40 }),
         card_text: text(
           'Green card, small text',
-          'SEO campaigns built for English-speaking and European markets',
+          'Free business listings and SEO campaigns for local and international markets',
           { max: 160 },
         ),
         stat_listings: text('Stat label: businesses listed', 'Businesses listed in our directory', {
@@ -160,7 +165,7 @@ export const ABOUT_PAGE = definePage({
         ...headingFields('From a Business Directory to a', 'Full-Service SEO Partner', ''),
         body: textarea(
           'Story',
-          '{brand} started as a business directory with one simple rule: list real businesses with details that actually help a customer decide. Reviewing listing after listing taught us exactly what makes a business visible in search, and what keeps it invisible.\n\nBusiness owners kept asking us the same question: *why can’t people find us?* So we turned that knowledge into a dedicated SEO service for companies in the UK, the USA and across Europe, from local trades to national e-commerce brands.\n\nToday every client gets the same structured process, the same [professional SEO services](/seo-services) and the same honest reporting, whatever their size or market.',
+          '{brand} started as a free business directory with one simple rule: list real businesses with details that actually help a customer decide. Reviewing listing after listing taught us exactly what makes a business visible in search, and what keeps it invisible.\n\nBusiness owners kept asking us the same question: *why can’t people find us?* So we turned that knowledge into a dedicated SEO service for companies in the UK, the USA and across Europe, from local trades to national e-commerce brands.\n\nToday every client gets the same structured process, the same [professional SEO services](/seo-services) and the same honest reporting, whatever their size or market.',
           { max: 2500, hint: `${PARAGRAPHS_HINT} ${MARKDOWN_HINT}`, markdown: 'inline' },
         ),
         timeline_heading: text('Timeline heading', 'What your first 90 days look like', {
@@ -221,7 +226,7 @@ export const ABOUT_PAGE = definePage({
             {
               icon: 'travel_explore',
               title: 'Search-First Focus',
-              body: 'We do search: SEO, local visibility and business listings. Not paid ads, not social, not web design on the side. That focus is why our work goes deep.',
+              body: 'We do search: SEO, local visibility and business listings. Not paid ads and not social media management. That focus is why our work goes deep.',
             },
             {
               icon: 'verified',
@@ -254,6 +259,14 @@ export const ABOUT_PAGE = definePage({
       fields: {
         eyebrow: text('Eyebrow', 'Meet the founder', { max: 60 }),
         name: text('Name', 'Naveed ur Rehman', { max: 80 }),
+        photo: image(
+          'Photo',
+          {
+            src: '/images/founder-naveed-ur-rehman.webp',
+            alt: 'Naveed ur Rehman, founder of {brand}',
+          },
+          'A square head-and-shoulders photo, 400×400 or larger. Also used as the Person schema image. Remove it to show initials instead.',
+        ),
         role: text('Role', 'Founder & SEO Lead', { max: 80 }),
         experience: text('Experience line', '10+ years in SEO', {
           max: 60,

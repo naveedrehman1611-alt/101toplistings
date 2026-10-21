@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   findSection,
@@ -22,9 +23,9 @@ import { SITE_URL } from '@/lib/supabase';
 
 export const revalidate = 3600;
 
-const TITLE = 'About Us | SEO Agency for UK, US & European Businesses';
+const TITLE = 'About | Free Business Directory & SEO Agency';
 const DESCRIPTION =
-  'Meet the SEO and business directory team helping companies across the UK, USA and Europe grow organic traffic with white-hat, transparent, revenue-focused SEO.';
+  'RankYouSite is a free business directory and white-hat SEO agency. Add a free business listing and get found on Google, Maps and AI search worldwide.';
 export async function generateMetadata(): Promise<Metadata> {
   return seoMetadata('/about', {
     title: TITLE,
@@ -321,7 +322,7 @@ function Positioning({ c, stats }: { c: Content['positioning']; stats: Directory
 }
 
 /** Story with first-90-days timeline left, values list right. */
-/** The founder: initials avatar, name, role, experience badge, bio and profile link. */
+/** The founder: photo (or initials),  name, role, experience badge, bio and profile link. */
 function Founder({ c }: { c: Content['founder'] }) {
   const initials = c.name
     .split(/\s+/)
@@ -334,12 +335,23 @@ function Founder({ c }: { c: Content['founder'] }) {
     <section aria-labelledby="about-founder" className="bg-ink-50 py-20 lg:py-[100px]">
       <div className="container-page grid items-start gap-10 lg:grid-cols-[280px_1fr]">
         <div className="border-border-subtle rounded-[16px] border bg-white p-8 text-center">
-          <span
-            aria-hidden="true"
-            className="bg-hero-navy font-display mx-auto grid size-28 place-items-center rounded-full text-3xl font-extrabold text-white"
-          >
-            {initials}
-          </span>
+          {c.photo.src ? (
+            <Image
+              src={c.photo.src}
+              alt={c.photo.alt}
+              width={224}
+              height={224}
+              sizes="112px"
+              className="bg-hero-navy mx-auto size-28 rounded-full object-cover"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="bg-hero-navy font-display mx-auto grid size-28 place-items-center rounded-full text-3xl font-extrabold text-white"
+            >
+              {initials}
+            </span>
+          )}
           <p className="font-display text-on-surface mt-5 text-lg font-extrabold">{c.name}</p>
           {c.role ? <p className="mt-1 text-sm text-[var(--text-muted)]">{c.role}</p> : null}
           {c.experience ? (

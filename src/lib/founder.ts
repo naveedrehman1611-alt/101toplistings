@@ -8,7 +8,13 @@ import { SITE_URL } from '@/lib/supabase';
 
 export const FOUNDER_ID = `${SITE_URL}/about#founder`;
 
-export type FounderFields = { name: string; role: string; profile_url: string };
+export type FounderFields = {
+  name: string;
+  role: string;
+  profile_url: string;
+  /** The photo's URL, absolute or a /public path. */
+  photo?: { src: string };
+};
 
 export function founderPersonSchema(f: FounderFields): Record<string, unknown> {
   const profile = /^https?:\/\//.test(f.profile_url.trim()) ? f.profile_url.trim() : '';
@@ -18,6 +24,9 @@ export function founderPersonSchema(f: FounderFields): Record<string, unknown> {
     name: f.name,
     ...(f.role ? { jobTitle: f.role } : {}),
     url: `${SITE_URL}/about`,
+    ...(f.photo?.src
+      ? { image: f.photo.src.startsWith('/') ? `${SITE_URL}${f.photo.src}` : f.photo.src }
+      : {}),
     worksFor: { '@id': `${SITE_URL}/#organization` },
     ...(profile ? { sameAs: [profile] } : {}),
   };
