@@ -182,12 +182,15 @@ export function Hero({
         </p>
 
         <h1 className="font-display mt-6 text-[40px] leading-[1.03] font-extrabold tracking-tight sm:text-5xl lg:mt-[18px] lg:text-[64px]">
+          {/* The {' '} between lines keeps words apart in the H1's text content
+              (crawlers read "Listing. Get", not "Listing.Get"); `block` still breaks the lines. */}
           {lines(c.heading).map((line, i) => (
             <span key={i} className="block">
+              {i > 0 ? ' ' : null}
               {line}
             </span>
           ))}
-          {c.highlight ? <span className="text-hero-green-light block">{c.highlight}</span> : null}
+          {c.highlight ? <span className="text-hero-green-light block"> {c.highlight}</span> : null}
         </h1>
 
         {/* From lg the lines break where the mockup's do: no max-width gives both breaks. */}
