@@ -53,11 +53,14 @@ export function ListingCard({
       <div
         className={`bg-surface-container-low relative overflow-hidden ${featured ? 'h-56' : 'h-40'}`}
       >
-        {/* Decorative: the name below is the link's accessible text. */}
+        {/* Described for image search: name, category and city. */}
         {listing.cover_url ? (
           <Image
             src={listing.cover_url}
-            alt=""
+            alt={[listing.name, categoryName, cityName ? `in ${cityName}` : '']
+              .filter(Boolean)
+              .join(' – ')
+              .replace(' – in ', ' in ')}
             fill
             sizes={
               featured

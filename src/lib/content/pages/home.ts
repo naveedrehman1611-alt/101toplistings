@@ -5,11 +5,11 @@ const hero = defineSection({
   description: 'The navy banner at the top: badge, headline, buttons, search bar and photo.',
   hideable: false,
   fields: {
-    badge: text('Badge', 'Business Directory + SEO & Digital Marketing', {
+    badge: text('Badge', 'Free Business Directory + SEO Services', {
       max: 80,
       hint: 'The pill above the headline. On narrow phones it wraps at " + ".',
     }),
-    heading: textarea('Headline', 'List Your Business.\nGet Found Online.', {
+    heading: textarea('Headline', 'Add Your Free Business Listing.\nGet Found Online.', {
       max: 200,
       hint: 'The page H1. Each line is shown on its own line.',
     }),
@@ -19,7 +19,7 @@ const hero = defineSection({
     }),
     intro: textarea(
       'Intro text',
-      'Discover businesses worldwide, create a powerful business listing, and get SEO & digital marketing services to grow your visibility, traffic, and leads.',
+      '{brand} is a free business directory where you can add a free business listing in minutes and get found by customers in Pakistan, the UK, the USA, the UAE and Europe. Want more traffic and leads? Our SEO & digital marketing services help your business rank higher on Google and AI search.',
       { max: 400 },
     ),
     primary: link('Main button', { label: 'Add Your Business', href: '/add-business' }),
@@ -44,7 +44,7 @@ const hero = defineSection({
       'Photo',
       {
         src: '/images/hero-city.webp',
-        alt: 'City skyline at sunset with a laptop showing local SEO growth charts',
+        alt: 'Laptop showing SEO growth charts and a map pin over a city skyline. Free business listing and SEO services',
       },
       'Shown top right on desktop, faded behind the text on phones. Best at 910×756 or larger in the same shape, with the subject top right. Leave the alt text blank if the photo is purely decorative.',
     ),
@@ -159,7 +159,7 @@ const why_choose = defineSection({
   description: 'Centred cards explaining why to search this directory.',
   fields: {
     eyebrow: text('Small heading above', 'User Experience Advantage', { max: 60 }),
-    heading: text('Heading', 'Why Choose {brand} for Local Business Search?', {
+    heading: text('Heading', 'Why {brand} Is One of the Best Free Local Business Listing Sites', {
       max: 120,
       hint: '{brand} is replaced by the brand name from Settings.',
     }),

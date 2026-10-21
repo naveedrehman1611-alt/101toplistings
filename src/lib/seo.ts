@@ -118,7 +118,7 @@ export const SHARE_IMAGE = {
   url: '/opengraph-image',
   width: 1200,
   height: 630,
-  alt: 'RankYouSite — business directory and SEO services',
+  alt: 'RankYouSite: add a free business listing and grow with SEO',
 };
 
 /** `${SITE_URL}/path` for a site path ("/" is SITE_URL itself); an absolute URL is kept. */
