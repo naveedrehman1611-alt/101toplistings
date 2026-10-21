@@ -1,6 +1,7 @@
 import {
   definePage,
   defineSection,
+  image,
   icon,
   link,
   list,
@@ -258,6 +259,14 @@ export const ABOUT_PAGE = definePage({
       fields: {
         eyebrow: text('Eyebrow', 'Meet the founder', { max: 60 }),
         name: text('Name', 'Naveed ur Rehman', { max: 80 }),
+        photo: image(
+          'Photo',
+          {
+            src: '/images/founder-naveed-ur-rehman.webp',
+            alt: 'Naveed ur Rehman, founder of {brand}',
+          },
+          'A square head-and-shoulders photo, 400×400 or larger. Also used as the Person schema image. Remove it to show initials instead.',
+        ),
         role: text('Role', 'Founder & SEO Lead', { max: 80 }),
         experience: text('Experience line', '10+ years in SEO', {
           max: 60,
