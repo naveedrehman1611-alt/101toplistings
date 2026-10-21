@@ -22,9 +22,9 @@ import { SITE_URL } from '@/lib/supabase';
 
 export const revalidate = 3600;
 
-const TITLE = 'About Us | SEO Agency for UK, US & European Businesses';
+const TITLE = 'About | Free Business Directory & SEO Agency';
 const DESCRIPTION =
-  'Meet the SEO and business directory team helping companies across the UK, USA and Europe grow organic traffic with white-hat, transparent, revenue-focused SEO.';
+  'RankYouSite is a free business directory and white-hat SEO agency. Add a free business listing and get found on Google, Maps and AI search worldwide.';
 export async function generateMetadata(): Promise<Metadata> {
   return seoMetadata('/about', {
     title: TITLE,
