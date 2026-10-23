@@ -13,7 +13,7 @@ const TITLE = 'Business, SEO & Digital Marketing Blog';
 const DESCRIPTION =
   'A business directory, SEO and digital marketing blog: practical guides on listings, local visibility, rankings and growing your business online.';
 
-export const revalidate = 600;
+export const revalidate = 3600;
 export async function generateMetadata(): Promise<Metadata> {
   const posts = await getBlogPosts();
   return seoMetadata('/blog', {

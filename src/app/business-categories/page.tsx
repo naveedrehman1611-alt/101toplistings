@@ -8,7 +8,7 @@ import { seoMetadata } from '@/lib/seo';
 import { getPageContent } from '@/lib/content/get';
 import { InlineMarkdown } from '@/components/markdown';
 
-export const revalidate = 600;
+export const revalidate = 3600;
 const TITLE = 'Business Categories | Find Companies by Industry';
 const DESCRIPTION =
   'Browse businesses by industry and category. Discover companies, services, and local providers in the directory.';

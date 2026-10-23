@@ -10,7 +10,7 @@ import { seoMetadata } from '@/lib/seo';
 import { getPageContent } from '@/lib/content/get';
 import { HighlightedHeading } from '@/components/company/highlighted';
 
-export const revalidate = 600;
+export const revalidate = 3600;
 
 const TITLE = 'Featured Businesses | Top Business Listings';
 const DESCRIPTION =

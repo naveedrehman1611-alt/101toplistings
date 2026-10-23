@@ -17,7 +17,7 @@ import { chunk } from '@/lib/chunk';
  */
 const CITIES_PER_LIST = 48;
 
-export const revalidate = 600;
+export const revalidate = 3600;
 
 const TITLE = 'Business Directory by Country & City';
 const DESCRIPTION =

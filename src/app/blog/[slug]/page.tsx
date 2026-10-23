@@ -13,7 +13,7 @@ import { InlineMarkdown } from '@/components/markdown';
 import { getPageContent } from '@/lib/content/get';
 import { fill } from '@/components/browse/fill';
 
-export const revalidate = 600;
+export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const posts = await getBlogPosts();
