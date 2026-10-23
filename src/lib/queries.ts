@@ -219,8 +219,16 @@ export async function searchListingsResult(
   args: SearchArgs,
 ): Promise<{ listings: ListingCard[]; failed: boolean }> {
   const browse = !args.query && args.lat === undefined && args.lng === undefined;
+  // Only the views people and crawlers actually repeat are stored: default
+  // sort, first three pages. Every other sort/page combination was written to
+  // the cache once and almost never read again, which is what used up the
+  // Vercel Hobby "ISR Writes" quota (225K writes vs 112K reads, Oct 2026).
+  const cacheable =
+    browse &&
+    (args.sort ?? 'newest') === 'newest' &&
+    (args.offset ?? 0) < (args.limit ?? 12) * 3;
   try {
-    const rows = browse
+    const rows = cacheable
       ? // Normalised so equivalent calls share one cache entry.
         await cachedRpcSearch({
           categoryId: args.categoryId,

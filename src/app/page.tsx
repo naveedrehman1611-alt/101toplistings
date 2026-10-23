@@ -26,7 +26,7 @@ import { CtaBanner } from '@/components/home/cta-banner';
 import { Faq } from '@/components/home/faq';
 import { FinalCta } from '@/components/home/final-cta';
 
-export const revalidate = 300; // ISR — §1.5 rendering table
+export const revalidate = 3600; // ISR — §1.5 rendering table
 
 // Strategy title and description; an override held by the SEO manager for "/" still wins.
 export async function generateMetadata(): Promise<Metadata> {

@@ -34,7 +34,7 @@ import { jsonLdHtml } from '@/lib/json-ld';
 import { getPageContent } from '@/lib/content/get';
 import { getCityCountry } from '@/lib/locations';
 
-export const revalidate = 600;
+export const revalidate = 86400;
 
 // Prerender the newest listings only. Anything outside this window is rendered
 // on first request and then cached by ISR for `revalidate` seconds, so build

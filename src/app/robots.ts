@@ -8,7 +8,16 @@ import { SITE_URL } from '@/lib/supabase';
 // out of the index. /admin is not linked publicly, so it stays blocked.
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/admin'] }],
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        // Sort and filter variants of category/city pages are near-duplicates
+        // of the canonical page; letting bots crawl every combination rendered
+        // and cached thousands of pages nobody reads.
+        disallow: ['/admin', '/*?*sort=', '/*?*q=', '/*?*city=', '/*?*category='],
+      },
+    ],
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

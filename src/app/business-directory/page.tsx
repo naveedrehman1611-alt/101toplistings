@@ -13,7 +13,7 @@ import { ResultsToolbar } from '@/components/browse/results-toolbar';
 import { seoMetadata } from '@/lib/seo';
 import { getPageContent } from '@/lib/content/get';
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 const TITLE = 'Business Directory | Find & List Businesses';
 const DESCRIPTION =
