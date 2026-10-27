@@ -1,5 +1,6 @@
 import Script from 'next/script';
 import { ContactClickTracking } from '@/components/analytics-events';
+import { deployEnv } from '@/lib/deploy-env';
 
 /**
  * GA4. Loaded with `lazyOnload` (browser idle time, after the page's own
@@ -13,8 +14,8 @@ import { ContactClickTracking } from '@/components/analytics-events';
 export default function GoogleAnalytics() {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
   if (!gaId) return null;
-  // Vercel preview deployments would otherwise count their visits as real traffic.
-  if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production') return null;
+  // Preview deployments (Vercel, Netlify) would otherwise count their visits as real traffic.
+  if (deployEnv() === 'preview') return null;
   return (
     <>
       <Script id="ga4-init" strategy="lazyOnload">

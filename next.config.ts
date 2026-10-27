@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import { LEGACY_REDIRECTS } from './src/lib/legacy-redirects';
+import { isProductionDeploy } from './src/lib/deploy-env';
 
 // Listing and library images are served from the public Supabase Storage bucket
 // (migration 0015). next/image only optimises remote images whose host is listed
@@ -28,15 +29,15 @@ const redirectVercelHost =
 
 // SITE_URL (src/lib/supabase.ts) falls back to http://localhost:3000, which a
 // production build would bake into the sitemap, canonicals and JSON-LD. Warn
-// loudly in the Vercel build log rather than failing the build.
-if (process.env.VERCEL_ENV === 'production' && siteIsLocal) {
+// loudly in the build log rather than failing the build.
+if (isProductionDeploy() && siteIsLocal) {
   const raw = process.env.NEXT_PUBLIC_SITE_URL;
   console.warn(
     [
       '',
       `⚠️  NEXT_PUBLIC_SITE_URL is ${raw ? `"${raw}"` : 'not set'} in this production build.`,
       `    The sitemap, canonical URLs and JSON-LD will be built from ${raw ? `"${raw}"` : 'http://localhost:3000'}.`,
-      '    Fix: Vercel → Project → Settings → Environment Variables, set',
+      '    Fix: in the host\'s environment variables (Netlify, Vercel or the VPS env file), set',
       '    NEXT_PUBLIC_SITE_URL to the live domain (e.g. https://www.rankyousite.com)',
       '    for the Production environment, then redeploy.',
       '',
@@ -112,6 +113,10 @@ const nextConfig: NextConfig = {
       ...LEGACY_REDIRECTS.map((r) => ({ ...r, permanent: true })),
     ];
   },
+  // A self-contained server bundle for a VPS (`node .next/standalone/server.js`),
+  // opted into by the build that ships to one. Netlify and Vercel build their own
+  // output and must not get it.
+  ...(process.env.NEXT_OUTPUT === 'standalone' ? { output: 'standalone' as const } : {}),
   experimental: {
     serverActions: {
       // Uploads go through Server Actions, whose body is capped at 1 MB by

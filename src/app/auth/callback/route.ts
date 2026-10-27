@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase-server';
+import { SITE_URL } from '@/lib/supabase';
+import { isProductionDeploy } from '@/lib/deploy-env';
 
 /**
  * Landing point for every link Supabase Auth emails out: password recovery,
@@ -43,8 +45,12 @@ export async function GET(request: NextRequest) {
   const tokenHash = params.get('token_hash');
   const type = params.get('type') as EmailOtpType | null;
 
-  // Built against the request's own origin, never a value from the query string.
-  const to = (path: string) => NextResponse.redirect(new URL(path, request.nextUrl.origin));
+  // Never a value from the query string. In production the canonical SITE_URL:
+  // behind a reverse proxy (a VPS with Caddy/nginx) request.nextUrl.origin is
+  // the address Node listens on, e.g. http://localhost:3000, not the domain the
+  // visitor used. Previews keep their own origin so sign-in stays on the preview.
+  const origin = isProductionDeploy() ? SITE_URL : request.nextUrl.origin;
+  const to = (path: string) => NextResponse.redirect(new URL(path, origin));
 
   // Supabase itself redirects here with ?error= when a link is expired or reused.
   let ok = false;
