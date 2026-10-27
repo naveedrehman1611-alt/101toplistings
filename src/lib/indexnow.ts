@@ -1,5 +1,6 @@
 import { after } from 'next/server';
 import { SITE_URL } from './supabase';
+import { isProductionDeploy } from './deploy-env';
 
 /**
  * IndexNow: tells Bing (and the other engines that share it, such as Yandex)
@@ -19,9 +20,9 @@ const ENDPOINT = 'https://api.indexnow.org/indexnow';
  * pings: a preview or local URL would be rejected, and would be noise.
  */
 export function notifyIndexNow(paths: string[]): void {
-  if (paths.length === 0 || process.env.VERCEL_ENV !== 'production') return;
+  if (paths.length === 0 || !isProductionDeploy()) return;
   const host = new URL(SITE_URL).host;
-  if (host.endsWith('.vercel.app') || host.startsWith('localhost')) return;
+  if (host.endsWith('.vercel.app') || host.endsWith('.netlify.app') || host.startsWith('localhost')) return;
   const urlList = [...new Set(paths)].map((p) => `${SITE_URL}${p}`);
   after(async () => {
     try {
