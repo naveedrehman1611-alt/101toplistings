@@ -72,7 +72,7 @@ export function ListingRow({
     >
       <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-[var(--surface-2)] sm:size-20">
         {row.coverUrl ? (
-          <Image src={row.coverUrl} alt="" fill sizes="80px" className="object-cover" />
+          <Image src={row.coverUrl} alt={row.name} fill sizes="80px" className="object-cover" />
         ) : (
           <div
             aria-hidden
