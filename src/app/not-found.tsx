@@ -30,7 +30,7 @@ export default async function NotFound() {
         </form>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {c.links.map(({ link }, i) => (
-            <Button key={`${link.href}|${i}`} href={link.href} variant="ghost">
+            <Button key={`nf-link-${i}`} href={link.href} variant="ghost">
               {link.label}
             </Button>
           ))}
