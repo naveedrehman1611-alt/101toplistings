@@ -234,11 +234,11 @@ export function Header({
             {/* gap-4 until xl and gap-6 from xl: with the services and tools triggers, anything
                 wider squeezes the logo once the admin adds a fifth or sixth menu link. */}
             <nav aria-label="Primary" className="hidden items-center gap-4 lg:flex xl:gap-6">
-              {primary.map((item) => {
+              {primary.map((item, i) => {
                 if (item === servicesLink) {
                   return (
                     <ServicesMegaMenu
-                      key={`${item.url}|${item.label}`}
+                      key={`nav-${i}`}
                       services={services}
                       content={servicesMenu}
                       label={item.label}
@@ -248,7 +248,7 @@ export function Header({
                 if (item === toolsLink) {
                   return (
                     <ToolsMegaMenu
-                      key={`${item.url}|${item.label}`}
+                      key={`nav-${i}`}
                       label={item.label}
                       tools={tools}
                     />
@@ -257,7 +257,7 @@ export function Header({
                 const active = isActive(pathname, item.url);
                 return (
                   <Link
-                    key={`${item.url}|${item.label}`}
+                    key={`nav-${i}`}
                     href={item.url}
                     aria-current={active ? 'page' : undefined}
                     className={`rounded-sm whitespace-nowrap transition-colors ${focusRing} ${
@@ -358,12 +358,12 @@ export function Header({
             </div>
 
             <ul className="flex flex-col gap-1">
-              {drawerItems.map((item) => {
+              {drawerItems.map((item, i) => {
                 if (item === drawerServicesLink) return servicesSection(item.label);
                 if (item === drawerToolsLink) return toolsSection(item.label);
                 const active = isActive(pathname, item.url);
                 return (
-                  <li key={`${item.url}|${item.label}`}>
+                  <li key={`nav-${i}`}>
                     <Link
                       href={item.url}
                       onClick={close}
