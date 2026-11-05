@@ -257,7 +257,7 @@ export function Footer({
               </h2>
               <ul className="mt-6 space-y-3">
                 {column.links.map((link, i) => (
-                  <li key={`${link.href}|${i}`} className="flex items-baseline gap-2.5">
+                  <li key={`footer-link-${i}`} className="flex items-baseline gap-2.5">
                     <span
                       aria-hidden
                       className={`size-1.5 shrink-0 -translate-y-0.5 rounded-full ${
