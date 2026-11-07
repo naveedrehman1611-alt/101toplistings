@@ -16,7 +16,7 @@ import { chunk } from '@/lib/chunk';
 
 export const revalidate = 3600;
 
-const TITLE = 'SEO Services | Rank Higher & Grow Online';
+const TITLE = 'SEO Services – Technical, Local & On-Page SEO';
 const DESCRIPTION =
   'Improve rankings, organic traffic, authority, and leads with technical SEO, on-page SEO, local SEO, link building, and content.';
 

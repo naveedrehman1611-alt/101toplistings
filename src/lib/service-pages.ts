@@ -340,7 +340,7 @@ export const MENU_SERVICE_PAGES: ServicePage[] = [
     slug: 'link-building',
     path: '/seo-services/link-building',
     name: 'Link building',
-    title: 'Link Building Services | Earn Quality Backlinks',
+    title: 'Link Building & Guest Posting Services',
     description:
       'Grow website authority with relevant, quality-focused link building: opportunity research, personal outreach, linkable content and clear link reporting.',
     h1: 'Link building services',
@@ -514,7 +514,7 @@ export const MENU_SERVICE_PAGES: ServicePage[] = [
     slug: 'digital-marketing',
     path: '/digital-marketing',
     name: 'Digital marketing',
-    title: 'Digital Marketing Services | Grow Your Business Online',
+    title: 'Digital Marketing & SEO Services for Small Businesses',
     description:
       'Grow your online presence with search-led digital marketing: SEO, content marketing, local search, link building and a clear plan with plain-language reporting.',
     h1: 'Digital marketing services',

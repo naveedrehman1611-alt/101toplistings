@@ -114,7 +114,7 @@ export const CORE_PAGES: ServicePage[] = [
     slug: 'seo-consulting',
     path: '/seo-services/seo-consulting',
     name: 'SEO Consulting',
-    title: 'SEO Consulting Services | Expert Guidance for Teams',
+    title: 'SEO Consulting Services | Hire an SEO Consultant',
     description:
       'SEO consulting for in-house teams and founders: expert strategy, prioritised roadmaps, reviews and training while your own people do the implementation.',
     h1: 'SEO consulting services',
@@ -373,7 +373,7 @@ export const TECHNICAL_PAGES: ServicePage[] = [
     slug: 'seo-migration',
     path: '/seo-services/seo-migration',
     name: 'SEO Migration',
-    title: 'SEO Migration Services | Protect Rankings on Launch',
+    title: 'SEO Migration Services | Keep Rankings After a Site Move',
     description:
       'SEO migration support for domain changes, replatforming and redesigns: URL mapping, redirects, staging checks and post-launch monitoring to limit traffic loss.',
     h1: 'SEO migration services',
@@ -458,7 +458,7 @@ export const TECHNICAL_PAGES: ServicePage[] = [
     slug: 'seo-penalty-removal',
     path: '/seo-services/seo-penalty-removal',
     name: 'SEO Penalty Removal',
-    title: 'SEO Penalty Removal | Recover From Google Penalties',
+    title: 'SEO Penalty Removal Services | Google Penalty Recovery',
     description:
       'Diagnose and recover from Google manual actions and algorithmic drops: backlink and content clean-up, reconsideration requests and prevention advice.',
     h1: 'SEO penalty removal services',

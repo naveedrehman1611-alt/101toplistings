@@ -31,7 +31,7 @@ export const revalidate = 3600; // ISR — §1.5 rendering table
 // Strategy title and description; an override held by the SEO manager for "/" still wins.
 export async function generateMetadata(): Promise<Metadata> {
   const brand = settingText(await getSettings(), 'brand.name', 'RankYouSite');
-  const title = `Free Business Directory Listing & SEO Services | ${brand}`;
+  const title = `Free Business Listing Site & Directory + SEO Services | ${brand}`;
   const description = `Add your free business listing on ${brand}, a free business directory for Pakistan, UK, USA, UAE & Europe. Get found online and grow with SEO services.`;
   return seoMetadata('/', {
     title: { absolute: title },

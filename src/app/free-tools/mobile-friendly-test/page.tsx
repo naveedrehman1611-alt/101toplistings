@@ -5,7 +5,7 @@ import { MobileTest } from './mobile-test';
 export function generateMetadata() {
   return toolMetadata(
     'mobile-friendly-test',
-    'Free Mobile-Friendly Test — Check Any Page on a Phone',
+    'Mobile Friendly Test — Free Mobile Site Test Tool',
     'Is your website mobile-friendly? Check the viewport, font sizes, tap targets, content width and mobile Core Web Vitals, with a phone screenshot. Free, no signup.',
   );
 }

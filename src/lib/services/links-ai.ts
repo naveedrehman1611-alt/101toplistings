@@ -12,7 +12,7 @@ export const LINKS_AI_PAGES: ServicePage[] = [
     slug: 'white-label-seo',
     path: '/seo-services/white-label-seo',
     name: 'White Label SEO',
-    title: 'White Label SEO Services | Unbranded SEO for Agencies',
+    title: 'White Label SEO Services & Audits for Agencies',
     description:
       'We do the SEO work under your agency’s brand, from audits to link building, and deliver unbranded reports so you keep the client and the relationship.',
     h1: 'White label SEO services',
@@ -201,7 +201,7 @@ export const LINKS_AI_PAGES: ServicePage[] = [
     slug: 'geo-services',
     path: '/seo-services/geo-services',
     name: 'GEO Services',
-    title: 'GEO Services | Generative Engine Optimization',
+    title: 'GEO & AI SEO Services | Get Cited in AI Search',
     description:
       'Generative engine optimization improves how AI assistants and AI Overviews understand, mention and cite your brand, built on entity clarity and trusted sources.',
     h1: 'GEO services',

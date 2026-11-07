@@ -11,7 +11,7 @@ import { HighlightedHeading } from '@/components/company/highlighted';
 
 export const revalidate = 3600;
 
-const TITLE = 'Add Your Business Online';
+const TITLE = 'Add Your Business Free – Free Business Listing';
 const DESCRIPTION =
   'Create a free business listing and help customers discover your company, services, location, and website. Every listing is reviewed before it goes live.';
 

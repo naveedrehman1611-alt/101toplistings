@@ -15,9 +15,9 @@ import { getPageContent } from '@/lib/content/get';
 
 export const revalidate = 3600;
 
-const TITLE = 'Business Directory | Find & List Businesses';
+const TITLE = 'Free Business Directory – Browse & List Businesses';
 const DESCRIPTION =
-  'Discover businesses by category and location, or add your business listing to reach more customers online.';
+  'A free business directory: browse businesses by category and city, or add a free business listing to reach more customers online.';
 
 export async function generateMetadata({
   searchParams,

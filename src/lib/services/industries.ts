@@ -185,7 +185,7 @@ export const INDUSTRY_PAGES: ServicePage[] = [
     slug: 'home-services-seo',
     path: '/seo-services/home-services-seo',
     name: 'Home Services SEO',
-    title: 'Home Services SEO | Calls from Local Customers',
+    title: 'Home Services SEO | Fencing, Landscaping & Restoration',
     description:
       'SEO for plumbing, repair, cleaning and home service firms: map pack visibility, service-area pages, reviews and call tracking that turn searches into jobs.',
     h1: 'Home services SEO',
@@ -355,7 +355,7 @@ export const INDUSTRY_PAGES: ServicePage[] = [
     slug: 'small-business-seo',
     path: '/seo-services/small-business-seo',
     name: 'Small Business SEO',
-    title: 'Small Business SEO | Practical Plans That Fit',
+    title: 'Small Business SEO Services | Practical Plans That Fit',
     description:
       'SEO for small businesses with limited time and budget: a short priority list covering your profile, key pages and reviews, so effort goes where it pays.',
     h1: 'Small business SEO',
