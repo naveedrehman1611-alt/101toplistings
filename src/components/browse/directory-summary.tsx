@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { DirectoryFacets, FacetCount } from '@/lib/browse';
+import type { DirectoryStats } from '@/lib/directory-stats';
 import type { SectionValues } from '@/lib/content/schema';
 import type { DIRECTORY_PAGES } from '@/lib/content/pages/directory';
 import { listingsHref, type ListingsParams } from './href';
@@ -12,21 +13,27 @@ export type DirectorySummaryContent = SectionValues<
 
 export function DirectorySummary({
   facets,
+  stats: shared,
   params,
   content: c,
 }: {
   facets: DirectoryFacets;
+  /** Directory-wide figures, so this box matches the header, homepage and About page. */
+  stats: DirectoryStats;
   params: ListingsParams;
   content: DirectorySummaryContent;
 }) {
   if (facets.total === 0) return null;
 
   const stats = [
-    { label: c.stat_listings, value: facets.total },
+    { label: c.stat_businesses_listed, value: shared.businessesListed ?? facets.total },
     { label: c.stat_featured, value: facets.featured },
     { label: c.stat_phone, value: facets.withPhone },
-    { label: c.stat_categories, value: facets.categoryCount },
-    { label: c.stat_cities, value: facets.cityCount },
+    {
+      label: c.stat_categories_with_listings,
+      value: shared.categoriesWithListings ?? facets.categoryCount,
+    },
+    { label: c.stat_cities_with_listings, value: shared.citiesWithListings ?? facets.cityCount },
   ];
   const hasChips = facets.topCategories.length > 0 || facets.topCities.length > 0;
 

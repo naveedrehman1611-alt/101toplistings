@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { Icon, type IconName } from '@/components/icon';
-import type { DirectoryStats, ReviewSummary } from '@/lib/queries';
+import type { ReviewSummary } from '@/lib/queries';
+import type { DirectoryStats } from '@/lib/directory-stats';
 import type { SectionValues } from '@/lib/content/schema';
 import type { HOME_PAGE } from '@/lib/content/pages/home';
 import { CountUp } from './count-up';
@@ -107,8 +108,8 @@ export function HeroStats({
   stats: DirectoryStats;
   reviews: ReviewSummary | null;
 }) {
-  const listings = stats.listings ?? 0;
-  const cities = stats.cities ?? 0;
+  const listings = stats.businessesListed ?? 0;
+  const cities = stats.citiesWithListings ?? 0;
   const cells: { key: string; content: ReactNode }[] = [];
   if (listings > 0) {
     cells.push({
@@ -118,7 +119,7 @@ export function HeroStats({
           icon={c.listings_icon}
           tone="text-brand-600"
           value={<CountUp to={listings} format="compact" />}
-          label={c.listings_label}
+          label={c.businesses_listed_label}
         />
       ),
     });
@@ -131,7 +132,7 @@ export function HeroStats({
           icon={c.cities_icon}
           tone="text-accent-500"
           value={<CountUp to={cities} format="compact" />}
-          label={c.cities_label}
+          label={c.cities_with_listings_label}
         />
       ),
     });

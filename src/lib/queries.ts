@@ -734,27 +734,6 @@ async function readCount(what: string, q: PromiseLike<CountResult>): Promise<num
 /** Row count only: a HEAD request, so no rows cross the wire. */
 const HEAD_COUNT = { count: 'exact', head: true } as const;
 
-/** Each figure is null when its count failed, so the page hides it instead of printing 0. */
-export type DirectoryStats = {
-  listings: number | null;
-  verified: number | null;
-  cities: number | null;
-  categories: number | null;
-};
-
-export const getDirectoryStats = cache(async function getDirectoryStats(): Promise<DirectoryStats> {
-  const [listings, verified, cities, categories] = await Promise.all([
-    readCount('public_listings.count', supabase.from('public_listings').select('id', HEAD_COUNT)),
-    readCount(
-      'public_listings.countVerified',
-      supabase.from('public_listings').select('id', HEAD_COUNT).eq('verification', 'verified'),
-    ),
-    readCount('cities.count', supabase.from('cities').select('id', HEAD_COUNT)),
-    readCount('categories.count', supabase.from('categories').select('id', HEAD_COUNT)),
-  ]);
-  return { listings, verified, cities, categories };
-});
-
 /** Per id, so cache() can deduplicate it within a render. */
 const countCityListings = cache(async function countCityListings(
   cityId: string,

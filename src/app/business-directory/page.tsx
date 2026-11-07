@@ -10,6 +10,7 @@ import { listingsHref, type ListingsParams } from '@/components/browse/href';
 import { ListingRow } from '@/components/browse/listing-row';
 import { Pager } from '@/components/browse/pager';
 import { ResultsToolbar } from '@/components/browse/results-toolbar';
+import { getDirectoryStats } from '@/lib/directory-stats';
 import { seoMetadata } from '@/lib/seo';
 import { getPageContent } from '@/lib/content/get';
 import { paragraphs } from '@/lib/content/schema';
@@ -57,12 +58,13 @@ export default async function ListingsPage({
   const sort = parseBrowseSort(sp.sort);
   const q = sp.q?.trim().slice(0, 100) || undefined;
 
-  const [sections, categories, cities, content, shared] = await Promise.all([
+  const [sections, categories, cities, content, shared, stats] = await Promise.all([
     getPageSections('listings'),
     getCategories(),
     getCities(),
     getPageContent('business_directory'),
     getPageContent('directory_shared'),
+    getDirectoryStats(),
   ]);
   const { hero, summary, empty, about, faq } = content;
   // Filters travel as slugs so the URL stays readable; unknown slugs are ignored.
@@ -123,11 +125,12 @@ export default async function ListingsPage({
         stats={
           filtered
             ? undefined
-            : [
-                { value: total, label: hero.stat_listings },
-                { value: categories.length, label: hero.stat_categories },
-                { value: cities.length, label: hero.stat_cities },
-              ]
+            : // The same figures as the homepage and About page (lib/directory-stats).
+              [
+                { value: stats.businessesListed, label: hero.stat_businesses_listed },
+                { value: stats.citiesWithListings, label: hero.stat_cities_with_listings },
+                { value: stats.categoriesAvailable, label: hero.stat_categories_available },
+              ].filter((s): s is { value: number; label: string } => s.value !== null)
         }
       />
       <div className="container-page py-10 md:py-12">
@@ -148,7 +151,7 @@ export default async function ListingsPage({
 
         {facets && summary.visible ? (
           <div className="mt-10">
-            <DirectorySummary facets={facets} params={params} content={summary} />
+            <DirectorySummary facets={facets} stats={stats} params={params} content={summary} />
           </div>
         ) : null}
 
