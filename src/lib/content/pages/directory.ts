@@ -179,6 +179,67 @@ const BUSINESS_DIRECTORY = definePage({
         past_end_button: text('Page number too high: button', 'Go to page 1', { max: 30 }),
       },
     }),
+    about: defineSection({
+      label: 'Why use a free business directory',
+      description:
+        'Text block under the listings, on the first unfiltered page only, with a button to the add-business form.',
+      fields: {
+        heading: text('Heading', 'Why Use a Free Business Directory?', { max: 120 }),
+        body: textarea(
+          'Text',
+          'Customers rarely find a new business by typing its exact name. They search for a service and a place, then compare the options they see. A free business directory puts your company in those lists, next to a short description, your phone number, opening hours and a link to your website.\n\nEvery listing on {brand} sits in a category and a city, so people browsing [business categories](/business-categories) or [locations](/locations) can reach it. Each listing also links to your own website, which helps search engines confirm your business name, address and phone number.\n\nA listing costs nothing and takes a few minutes. Our team reviews each one before it goes live, which keeps the directory useful for the people searching it.',
+          {
+            max: 2000,
+            hint: 'A blank line starts a new paragraph. Links are written [like this](/path). {brand} is replaced with the site name.',
+            markdown: 'inline',
+          },
+        ),
+        button: link('Button', { label: 'Add Your Free Business Listing', href: '/add-business' }),
+      },
+    }),
+    faq: defineSection({
+      label: 'Frequently asked questions',
+      description:
+        'Questions under the text block, on the first unfiltered page only. They also feed the FAQ structured data, so keep the answers plain text.',
+      fields: {
+        heading: text('Heading', 'Free Business Directory FAQs', { max: 80 }),
+        items: list('Questions', {
+          noun: 'question',
+          max: 12,
+          item: {
+            question: text('Question', '', { max: 200 }),
+            answer: textarea('Answer', '', { max: 1200 }),
+          },
+          default: [
+            {
+              question: 'Is this business directory really free?',
+              answer:
+                'Yes. Adding a standard business listing is free and stays free. A featured listing, which is shown first in category and city results, is an optional paid upgrade.',
+            },
+            {
+              question: 'How do I add a free business listing?',
+              answer:
+                'Open the Add Business page, fill in your business name, category, city, contact details and a short description, then submit. Our team reviews the listing and publishes it once it is approved.',
+            },
+            {
+              question: 'How long does it take for my listing to go live?',
+              answer:
+                'Every listing is checked by a person before it is published, so it is not instant. Most listings are reviewed within a few working days.',
+            },
+            {
+              question: 'Which countries can list a business?',
+              answer:
+                'Businesses from any country can add a listing. The directory is organised by city, so customers can browse the businesses near them.',
+            },
+            {
+              question: 'My business is already listed. How do I update it?',
+              answer:
+                'Use the Claim Your Business page to request control of the listing. Once the claim is verified, you can edit the details, photos and opening hours yourself.',
+            },
+          ],
+        }),
+      },
+    }),
   },
 });
 
