@@ -23,6 +23,10 @@ const FALLBACK: ErrorPageContent = {
   retry: 'Try again',
   home: { label: 'Home', href: '/' },
   reference: 'Reference:',
+  updated_heading: 'This page has been updated',
+  updated_text:
+    'A new version of the site went live while this page was open. Reload the page and try again. Anything you typed but did not save will need to be entered again.',
+  updated_reload: 'Reload page',
 };
 
 export function ErrorContentProvider({

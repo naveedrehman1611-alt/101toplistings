@@ -1,0 +1,10 @@
+# Build settings (command, publish directory) stay in the Netlify UI; this file
+# only adds build-time environment.
+
+[build.environment]
+  # Skew protection: a page opened before a deploy keeps talking to the deploy
+  # it was loaded from. Without it, saving a form (any Server Action) on a page
+  # left open across a deploy fails with "Failed to find Server Action", and the
+  # admin shows "This page didn't load". Supported by the Netlify Next.js
+  # runtime on Next 14.1.4+ with no next.config changes.
+  NETLIFY_NEXT_SKEW_PROTECTION = "true"

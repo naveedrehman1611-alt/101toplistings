@@ -1,9 +1,20 @@
 'use client';
 
 import { useEffect } from 'react';
+import { unstable_isUnrecognizedActionError } from 'next/navigation';
 import { Icon } from '@/components/icon';
 import { Button } from '@/components/ui';
 import { useErrorContent } from '@/components/error-content';
+
+/**
+ * True when the page was loaded from a deploy that is no longer live: a form
+ * posted to a Server Action the new build does not have, or a script chunk
+ * that was replaced. Reloading fetches the current version and fixes it.
+ */
+function isFromOlderDeploy(error: unknown): boolean {
+  if (unstable_isUnrecognizedActionError(error)) return true;
+  return error instanceof globalThis.Error && error.name === 'ChunkLoadError';
+}
 
 export default function Error({
   error,
@@ -13,6 +24,7 @@ export default function Error({
   retry: () => void;
 }) {
   const c = useErrorContent();
+  const stale = isFromOlderDeploy(error);
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -26,16 +38,21 @@ export default function Error({
         <p className="font-label-sm text-label-sm text-primary-container mt-6 tracking-wider uppercase">
           {c.eyebrow}
         </p>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface mt-2">{c.heading}</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-3">{c.text}</p>
+        <h1 className="font-headline-lg text-headline-lg text-on-surface mt-2">
+          {stale ? c.updated_heading : c.heading}
+        </h1>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-3">
+          {stale ? c.updated_text : c.text}
+        </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           {/* Same classes as the primary <Button>, which has no onClick prop. */}
           <button
             type="button"
-            onClick={() => retry()}
+            // retry() re-renders with the same outdated code, so only a reload helps.
+            onClick={() => (stale ? window.location.reload() : retry())}
             className="bg-primary-container font-label-md text-label-md text-on-primary hover:bg-primary focus-visible:ring-primary-container inline-flex h-11 items-center justify-center gap-2 rounded-lg px-5 shadow-xs transition hover:shadow-[0_4px_12px_rgba(12,130,38,0.25)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden"
           >
-            {c.retry}
+            {stale ? c.updated_reload : c.retry}
           </button>
           <Button href={c.home.href} variant="ghost">
             {c.home.label}
