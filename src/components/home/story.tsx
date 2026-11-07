@@ -1,5 +1,5 @@
 import { Icon } from '@/components/icon';
-import type { DirectoryStats } from '@/lib/queries';
+import type { DirectoryStats } from '@/lib/directory-stats';
 import type { SectionValues } from '@/lib/content/schema';
 import type { HOME_PAGE } from '@/lib/content/pages/home';
 
@@ -8,10 +8,18 @@ export type StoryContent = SectionValues<(typeof HOME_PAGE)['sections']['story']
 export function Story({ content: c, stats }: { content: StoryContent; stats: DirectoryStats }) {
   // Live counts only; a figure that failed to load, or is zero, is left out.
   const figures = [
-    { key: 'listings', label: c.listings_label, value: stats.listings },
-    { key: 'cities', label: c.cities_label, value: stats.cities },
-    { key: 'verified', label: c.verified_label, value: stats.verified },
-    { key: 'categories', label: c.categories_label, value: stats.categories },
+    { key: 'listings', label: c.businesses_listed_label, value: stats.businessesListed },
+    { key: 'cities', label: c.cities_with_listings_label, value: stats.citiesWithListings },
+    {
+      key: 'categories-listed',
+      label: c.categories_with_listings_label,
+      value: stats.categoriesWithListings,
+    },
+    {
+      key: 'categories-available',
+      label: c.categories_available_label,
+      value: stats.categoriesAvailable,
+    },
   ].filter(
     (f): f is { key: string; label: string; value: number } => f.value !== null && f.value > 0,
   );

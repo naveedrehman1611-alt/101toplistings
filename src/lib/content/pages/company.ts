@@ -133,17 +133,23 @@ export const ABOUT_PAGE = definePage({
           'Free business listings and SEO campaigns for local and international markets',
           { max: 160 },
         ),
-        stat_listings: text('Stat label: businesses listed', 'Businesses listed in our directory', {
+        stat_businesses_listed: text('Stat label: live listings', 'Businesses listed', {
           max: 60,
-          hint: 'The figures come from the directory; a stat with no figure is hidden.',
+          hint: 'Figures are live and match the homepage and directory; a stat with no figure is hidden.',
         }),
-        stat_verified: text('Stat label: verified profiles', 'Verified business profiles', {
+        stat_cities_with_listings: text(
+          'Stat label: cities with a listing',
+          'Cities with listings',
+          { max: 60 },
+        ),
+        stat_categories_with_listings: text(
+          'Stat label: categories with a listing',
+          'Categories with listings',
+          { max: 60 },
+        ),
+        stat_categories_available: text('Stat label: all categories', 'Categories available', {
           max: 60,
         }),
-        stat_categories: text('Stat label: categories', 'Industries and categories covered', {
-          max: 60,
-        }),
-        stat_cities: text('Stat label: cities', 'Cities and locations indexed', { max: 60 }),
         badges: list('Badges', {
           noun: 'badge',
           max: 8,

@@ -1,12 +1,8 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  findSection,
-  getDirectoryStats,
-  getPageSections,
-  type DirectoryStats,
-} from '@/lib/queries';
+import { findSection, getPageSections } from '@/lib/queries';
+import { getDirectoryStats, type DirectoryStats } from '@/lib/directory-stats';
 import { Breadcrumbs } from '@/components/ui';
 import { Icon, type IconName } from '@/components/icon';
 import { CountUp } from '@/components/home/count-up';
@@ -228,10 +224,10 @@ function Hero({
 function Positioning({ c, stats }: { c: Content['positioning']; stats: DirectoryStats }) {
   // Live directory figures; a count that failed is left out rather than shown as 0.
   const statTiles = [
-    { value: stats.listings, label: c.stat_listings },
-    { value: stats.verified, label: c.stat_verified },
-    { value: stats.categories, label: c.stat_categories },
-    { value: stats.cities, label: c.stat_cities },
+    { value: stats.businessesListed, label: c.stat_businesses_listed },
+    { value: stats.citiesWithListings, label: c.stat_cities_with_listings },
+    { value: stats.categoriesWithListings, label: c.stat_categories_with_listings },
+    { value: stats.categoriesAvailable, label: c.stat_categories_available },
   ].filter((s): s is { value: number; label: string } => s.value !== null && s.value > 0);
 
   return (

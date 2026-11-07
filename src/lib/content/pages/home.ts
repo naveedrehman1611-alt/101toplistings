@@ -57,9 +57,15 @@ const stats = defineSection({
     'The light band under the hero. The numbers are live from the directory; only their labels are edited here.',
   fields: {
     listings_icon: icon('Icon beside the number of businesses', 'handshake'),
-    listings_label: text('Label under the number of businesses', 'Active Businesses', { max: 40 }),
+    businesses_listed_label: text('Label under the number of live listings', 'Businesses listed', {
+      max: 40,
+    }),
     cities_icon: icon('Icon beside the number of cities', 'location_city'),
-    cities_label: text('Label under the number of cities', 'Cities Covered', { max: 40 }),
+    cities_with_listings_label: text(
+      'Label under the number of cities with a listing',
+      'Cities with listings',
+      { max: 40 },
+    ),
     reviewed_icon: icon('Icon beside "100%"', 'schedule'),
     reviewed_label: text('Label under "100%"', 'Reviewed Listings', {
       max: 40,
@@ -140,17 +146,25 @@ const story = defineSection({
         },
       ],
     }),
-    listings_label: text('Label under the number of listed businesses', 'Listed Businesses', {
+    businesses_listed_label: text('Label under the number of live listings', 'Businesses listed', {
       max: 40,
-      hint: 'The numbers are live from the directory; a count of zero is left out.',
+      hint: 'The numbers are live and match the directory and About page; a count of zero is left out.',
     }),
-    cities_label: text('Label under the number of cities', 'Cities Covered', { max: 40 }),
-    verified_label: text('Label under the number of verified businesses', 'Verified Businesses', {
-      max: 40,
-    }),
-    categories_label: text('Label under the number of categories', 'Business Categories', {
-      max: 40,
-    }),
+    cities_with_listings_label: text(
+      'Label under the number of cities with a listing',
+      'Cities with listings',
+      { max: 40 },
+    ),
+    categories_with_listings_label: text(
+      'Label under the number of categories with a listing',
+      'Categories with listings',
+      { max: 40 },
+    ),
+    categories_available_label: text(
+      'Label under the number of all categories',
+      'Categories available',
+      { max: 40 },
+    ),
   },
 });
 

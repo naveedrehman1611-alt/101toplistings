@@ -3,13 +3,13 @@ import {
   getCategories,
   getCities,
   getCityListingCounts,
-  getDirectoryStats,
   getListingHighlights,
   getReviewSummary,
   getSettings,
   searchListings,
   settingText,
 } from '@/lib/queries';
+import { getDirectoryStats } from '@/lib/directory-stats';
 import { seoMetadata } from '@/lib/seo';
 import { getPageContent } from '@/lib/content/get';
 import { Hero } from '@/components/home/hero';

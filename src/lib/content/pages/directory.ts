@@ -135,9 +135,18 @@ const BUSINESS_DIRECTORY = definePage({
           hint: `The page H1, also the last breadcrumb. ${PAGES_HEADER_HINT}`,
         }),
         intro: textarea('Intro text', '', { max: 400, hint: 'Leave blank for none.' }),
-        stat_listings: text('Figure label: listings', 'Listings', { max: 30 }),
-        stat_categories: text('Figure label: categories', 'Categories', { max: 30 }),
-        stat_cities: text('Figure label: cities', 'Cities', { max: 30 }),
+        stat_businesses_listed: text('Figure label: live listings', 'Businesses listed', {
+          max: 30,
+          hint: 'Figures are live and match the homepage and About page.',
+        }),
+        stat_cities_with_listings: text(
+          'Figure label: cities with a listing',
+          'Cities with listings',
+          { max: 30 },
+        ),
+        stat_categories_available: text('Figure label: all categories', 'Categories available', {
+          max: 30,
+        }),
       },
     }),
     summary: defineSection({
@@ -145,11 +154,21 @@ const BUSINESS_DIRECTORY = definePage({
       description: 'Figures and the top category and city chips above the first page of results.',
       fields: {
         heading: text('Heading', 'Directory at a glance', { max: 80 }),
-        stat_listings: text('Figure label: listings', 'Listings', { max: 30 }),
+        stat_businesses_listed: text('Figure label: live listings', 'Businesses listed', {
+          max: 30,
+        }),
         stat_featured: text('Figure label: featured', 'Featured', { max: 30 }),
         stat_phone: text('Figure label: with phone', 'With phone', { max: 30 }),
-        stat_categories: text('Figure label: categories', 'Categories', { max: 30 }),
-        stat_cities: text('Figure label: cities', 'Cities', { max: 30 }),
+        stat_categories_with_listings: text(
+          'Figure label: categories with a listing',
+          'Categories with listings',
+          { max: 30 },
+        ),
+        stat_cities_with_listings: text(
+          'Figure label: cities with a listing',
+          'Cities with listings',
+          { max: 30 },
+        ),
         top_categories: text('Top categories heading', 'Top categories', { max: 60 }),
         top_cities: text('Top cities heading', 'Top cities', { max: 60 }),
       },
