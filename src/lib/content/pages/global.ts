@@ -405,6 +405,16 @@ const error = defineSection({
       max: 30,
       hint: 'Shown with a code people can quote when they contact you.',
     }),
+    updated_heading: text('Site updated: heading', 'This page has been updated', {
+      max: 80,
+      hint: 'Shown instead when a new version of the site went live while the page was open, so a form on it can no longer be sent.',
+    }),
+    updated_text: textarea(
+      'Site updated: text',
+      'A new version of the site went live while this page was open. Reload the page and try again. Anything you typed but did not save will need to be entered again.',
+      { max: 300 },
+    ),
+    updated_reload: text('Site updated: reload button', 'Reload page', { max: 30 }),
   },
 });
 
