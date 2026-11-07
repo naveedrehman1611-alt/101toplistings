@@ -12,6 +12,10 @@ import { Pager } from '@/components/browse/pager';
 import { ResultsToolbar } from '@/components/browse/results-toolbar';
 import { seoMetadata } from '@/lib/seo';
 import { getPageContent } from '@/lib/content/get';
+import { paragraphs } from '@/lib/content/schema';
+import { JsonLd } from '@/components/json-ld';
+import { InlineMarkdown } from '@/components/markdown';
+import { Icon } from '@/components/icon';
 
 export const revalidate = 3600;
 
@@ -60,7 +64,7 @@ export default async function ListingsPage({
     getPageContent('business_directory'),
     getPageContent('directory_shared'),
   ]);
-  const { hero, summary, empty } = content;
+  const { hero, summary, empty, about, faq } = content;
   // Filters travel as slugs so the URL stays readable; unknown slugs are ignored.
   const cat = categories.find((c) => c.slug === sp.category);
   const city = cities.find((c) => c.slug === sp.city);
@@ -82,6 +86,12 @@ export default async function ListingsPage({
 
   const filtered = Boolean(q || cat || city);
   const params: ListingsParams = { q, category: cat?.slug, city: city?.slug, sort };
+  // The explainer and FAQs describe the directory itself, so they sit on the
+  // indexable view only: the first page with no filters.
+  const showGuide = page === 1 && !filtered;
+  const aboutParas = showGuide && about.visible ? paragraphs(about.body) : [];
+  // A hidden FAQ is left out of the FAQPage data too, so the data matches the page.
+  const faqs = showGuide && faq.visible ? faq.items : [];
   const pages = Math.min(MAX_PAGE, Math.max(1, Math.ceil(total / BROWSE_PER_PAGE)));
   const offset = (page - 1) * BROWSE_PER_PAGE;
   // A header kept in Admin → Pages (the older page sections) is shown until the hero
@@ -92,6 +102,19 @@ export default async function ListingsPage({
 
   return (
     <>
+      {faqs.length ? (
+        <JsonLd
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: faqs.map((f) => ({
+              '@type': 'Question',
+              name: f.question,
+              acceptedAnswer: { '@type': 'Answer', text: f.answer },
+            })),
+          }}
+        />
+      ) : null}
       <PageHero
         trail={[{ label: 'Home', href: '/' }, { label: heading }]}
         eyebrow={hero.eyebrow}
@@ -179,6 +202,50 @@ export default async function ListingsPage({
             />
           )}
         </section>
+
+        {aboutParas.length ? (
+          <section aria-labelledby="directory-about" className="mt-16 max-w-3xl">
+            <h2 id="directory-about" className="font-headline-md text-headline-md text-on-surface">
+              {about.heading}
+            </h2>
+            <div className="font-body-md text-body-md text-on-surface-variant mt-4 space-y-4">
+              {aboutParas.map((p, i) => (
+                <p key={i}>
+                  <InlineMarkdown text={p} />
+                </p>
+              ))}
+            </div>
+            {about.button.label && about.button.href ? (
+              <div className="mt-6">
+                <Button href={about.button.href}>{about.button.label} →</Button>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        {faqs.length ? (
+          <section aria-labelledby="directory-faq" className="mt-16 max-w-3xl">
+            <h2 id="directory-faq" className="font-headline-md text-headline-md text-on-surface">
+              {faq.heading}
+            </h2>
+            <div className="mt-6 flex flex-col gap-3">
+              {faqs.map((f, i) => (
+                <details key={i} className="surface-card group p-5">
+                  <summary className="font-title-md text-title-md text-on-surface flex cursor-pointer list-none items-center justify-between gap-4">
+                    {f.question}
+                    <Icon
+                      name="expand_more"
+                      className="text-secondary transition-transform group-open:rotate-180"
+                    />
+                  </summary>
+                  <p className="font-body-md text-body-md text-on-surface-variant mt-3">
+                    {f.answer}
+                  </p>
+                </details>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </>
   );
